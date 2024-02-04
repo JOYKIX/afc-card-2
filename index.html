@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>AFC Card</title>
+</head>
+
+<body>
+
+    <header>
+        <h1>AFC Card</h1>
+    </header>
+
+    <button id="sellDuplicatesBtn">Vendre les doubles</button>
+
+    <p id="flowerOfHibiscusDisplay">Fleur de Bissap : <span id="flowerCount">500</span></p>
+
+    <button id="openBoosterBtn">Ouvrir un booster - 50</button>
+
+    <div class="booster-container" id="boosterContainer"></div>
+
+    <div id="totalCardsIndicator"></div>
+
+    <div class="album-container" id="albumContainer" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
