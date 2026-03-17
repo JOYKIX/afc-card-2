@@ -7,6 +7,9 @@ const verificationCards = document.getElementById('verificationCards');
 const countPending = document.getElementById('countPending');
 const countApproved = document.getElementById('countApproved');
 const countRejected = document.getElementById('countRejected');
+const cardModal = document.getElementById('cardModal');
+const closeModalBtn = document.getElementById('closeCardModal');
+const modalBody = document.getElementById('cardModalBody');
 let currentUser = null;
 let isAdmin = false;
 
@@ -65,6 +68,47 @@ const renderVerificationSection = async () => {
   });
 };
 
+const setModalOpen = (isOpen) => {
+  cardModal.hidden = !isOpen;
+  document.body.classList.toggle('modal-open', isOpen);
+};
+
+const openCardModal = (card) => {
+  const imageMarkup = card.image
+    ? `<img src="${card.image}" alt="Illustration de la carte ${card.name}">`
+    : '<p class="hint">Aucune image fournie pour cette carte.</p>';
+
+  modalBody.innerHTML = `
+    <h3>${card.name || 'Carte'} · ${card.role || '-'}</h3>
+    <p><strong>Propriétaire :</strong> ${card.ownerNickname || '-'}</p>
+    <p><strong>Statut :</strong> ${card.status || 'pending'}</p>
+    <p><strong>Rang :</strong> ${card.rank || '-'} · <strong>Type :</strong> ${card.type || '-'} · <strong>Coût :</strong> ${card.cost ?? '-'}</p>
+    <p><strong>ATK:</strong> ${card.attack ?? '-'} · <strong>DEF:</strong> ${card.defense ?? '-'} · <strong>Moyenne:</strong> ${card.average ?? '-'}</p>
+    <p><strong>Compétences :</strong></p>
+    <p class="modal-abilities">${card.abilities || '-'}</p>
+    <div class="modal-image">${imageMarkup}</div>
+  `;
+
+  setModalOpen(true);
+};
+
+const moderateCard = async (cardId, status) => {
+  const now = Date.now();
+  await update(ref(db, `cards/${cardId}`), {
+    status,
+    moderatedBy: currentUser.uid,
+    moderatedAt: now,
+    updatedAt: now
+  });
+  await update(ref(db, `cardVerification/${cardId}`), {
+    status,
+    moderatedBy: currentUser.uid,
+    moderatedAt: now,
+    updatedAt: now
+  });
+  await loadPendingCards();
+};
+
 const loadPendingCards = async () => {
   if (!isAdmin || !currentUser) return;
 
@@ -87,48 +131,38 @@ const loadPendingCards = async () => {
       <h3>${card.name} · ${card.role}</h3>
       <p>Par ${card.ownerNickname} — Rang ${card.rank}, coût ${card.cost}, moyenne ${card.average}</p>
       <div class="actions">
+        <button type="button" class="ghost" data-action="view">Voir</button>
         <button type="button" data-action="approve">Valider</button>
         <button type="button" class="danger" data-action="reject">Refuser</button>
       </div>
     `;
 
+    item.querySelector('[data-action="view"]').addEventListener('click', () => openCardModal(card));
+
     item.querySelector('[data-action="approve"]').addEventListener('click', async () => {
-      const now = Date.now();
-      await update(ref(db, `cards/${cardId}`), {
-        status: 'approved',
-        moderatedBy: currentUser.uid,
-        moderatedAt: now,
-        updatedAt: now
-      });
-      await update(ref(db, `cardVerification/${cardId}`), {
-        status: 'approved',
-        moderatedBy: currentUser.uid,
-        moderatedAt: now,
-        updatedAt: now
-      });
-      await loadPendingCards();
+      await moderateCard(cardId, 'approved');
     });
 
     item.querySelector('[data-action="reject"]').addEventListener('click', async () => {
-      const now = Date.now();
-      await update(ref(db, `cards/${cardId}`), {
-        status: 'rejected',
-        moderatedBy: currentUser.uid,
-        moderatedAt: now,
-        updatedAt: now
-      });
-      await update(ref(db, `cardVerification/${cardId}`), {
-        status: 'rejected',
-        moderatedBy: currentUser.uid,
-        moderatedAt: now,
-        updatedAt: now
-      });
-      await loadPendingCards();
+      await moderateCard(cardId, 'rejected');
     });
 
     pendingCards.appendChild(item);
   });
 };
+
+closeModalBtn.addEventListener('click', () => setModalOpen(false));
+cardModal.addEventListener('click', (event) => {
+  if (event.target === cardModal) {
+    setModalOpen(false);
+  }
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && !cardModal.hidden) {
+    setModalOpen(false);
+  }
+});
 
 await initCommon({
   onUserChanged: async (user) => {
