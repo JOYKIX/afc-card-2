@@ -1,4 +1,4 @@
-import { checkAdmin, db, get, ref, update } from './firebase.js';
+import { checkAdmin, db, onValue, ref, update } from './firebase.js';
 import { initCommon } from './common.js';
 
 const adminNotice = document.getElementById('adminNotice');
@@ -7,28 +7,19 @@ const verificationCards = document.getElementById('verificationCards');
 const countPending = document.getElementById('countPending');
 const countApproved = document.getElementById('countApproved');
 const countRejected = document.getElementById('countRejected');
+const statusFilter = document.getElementById('statusFilter');
+const searchInput = document.getElementById('searchInput');
 
 let currentUser = null;
-let isAdmin = false;
+let cardsById = {};
+let verificationById = {};
 let pendingQueue = [];
+let unsubs = [];
 
-const updateReviewStats = async () => {
-  if (!isAdmin || !currentUser) {
-    countPending.textContent = '0';
-    countApproved.textContent = '0';
-    countRejected.textContent = '0';
-    return;
-  }
+const escapeHtml = (value = '') => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[char]);
 
-  const cardsSnapshot = await get(ref(db, 'cards'));
-  if (!cardsSnapshot.exists()) {
-    countPending.textContent = '0';
-    countApproved.textContent = '0';
-    countRejected.textContent = '0';
-    return;
-  }
-
-  const stats = Object.values(cardsSnapshot.val()).reduce(
+const refreshStats = () => {
+  const stats = Object.values(cardsById).reduce(
     (acc, card) => {
       if (card.status === 'pending') acc.pending += 1;
       if (card.status === 'approved') acc.approved += 1;
@@ -43,73 +34,86 @@ const updateReviewStats = async () => {
   countRejected.textContent = String(stats.rejected);
 };
 
-const renderVerificationSection = async () => {
-  const snapshot = await get(ref(db, 'cardVerification'));
-  verificationCards.innerHTML = '';
-
-  if (!snapshot.exists()) {
-    verificationCards.innerHTML = '<p>Aucune entrée de vérification.</p>';
-    return;
-  }
-
-  const entries = Object.values(snapshot.val()).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
-
-  entries.forEach((entry) => {
-    const item = document.createElement('article');
-    item.className = 'pending-item';
-    const info = entry.cardSnapshot || {};
-    item.innerHTML = `
-      <h3>${info.name || 'Carte'} · ${info.role || '-'}</h3>
-      <p>Par ${entry.ownerNickname || '-'} — Statut <strong>${entry.status || 'pending'}</strong></p>
-      <p>ATK ${info.attack ?? '-'} / DEF ${info.defense ?? '-'} · Rang ${info.rank || '-'} · Moyenne ${info.average ?? '-'}</p>
-    `;
-    verificationCards.appendChild(item);
-  });
+const buildPendingQueue = () => {
+  pendingQueue = Object.entries(cardsById)
+    .map(([cardId, card]) => ({ cardId, card }))
+    .filter(({ card }) => card.status === 'pending')
+    .sort((a, b) => (a.card.createdAt || 0) - (b.card.createdAt || 0));
 };
 
 const renderTinderCard = () => {
   tinderReview.innerHTML = '';
 
   if (pendingQueue.length === 0) {
-    tinderReview.innerHTML = '<p class="hint">Plus aucune carte en attente. Tu peux souffler 😌</p>';
+    tinderReview.innerHTML = '<p class="hint">Plus aucune carte en attente. File d\'attente vide ✅</p>';
     return;
   }
 
-  const current = pendingQueue[0];
-  const card = current.card;
+  const { card } = pendingQueue[0];
   const imageMarkup = card.image
-    ? `<img src="${card.image}" alt="Illustration de la carte ${card.name}">`
+    ? `<img src="${escapeHtml(card.image)}" alt="Illustration de ${escapeHtml(card.name || 'la carte')}">`
     : '<div class="booster-placeholder">Aucune image fournie</div>';
 
   tinderReview.innerHTML = `
-    <article class="tinder-card rank-${card.rank || 'D'}">
+    <article class="tinder-card rank-${escapeHtml(card.rank || 'D')}">
       <div class="tinder-image">${imageMarkup}</div>
       <div class="tinder-body">
-        <h3>${card.name || 'Carte'} · ${card.role || '-'}</h3>
-        <p>Par ${card.ownerNickname || '-'}</p>
-        <p>Rang ${card.rank || '-'} · Type ${card.type || '-'} · Coût ${card.cost ?? '-'}</p>
+        <h3>${escapeHtml(card.name || 'Carte')} · ${escapeHtml(card.role || '-')}</h3>
+        <p>Par ${escapeHtml(card.ownerNickname || '-')}</p>
+        <p>Rang ${escapeHtml(card.rank || '-')} · Type ${escapeHtml(card.type || '-')} · Coût ${card.cost ?? '-'}</p>
         <p>ATK ${card.attack ?? '-'} / DEF ${card.defense ?? '-'} · Moyenne ${card.average ?? '-'}</p>
-        <p class="modal-abilities">${card.abilities || '-'}</p>
+        <p class="modal-abilities">${escapeHtml(card.abilities || '-')}</p>
       </div>
       <div class="actions tinder-actions">
-        <button type="button" data-moderation="approve">Validé</button>
-        <button type="button" class="danger" data-moderation="reject">Refusé</button>
+        <button type="button" data-moderation="approved">Valider</button>
+        <button type="button" class="danger" data-moderation="rejected">Refuser</button>
       </div>
     </article>
   `;
 
-  tinderReview.querySelector('[data-moderation="approve"]').addEventListener('click', async () => {
-    await moderateCurrentCard('approved');
+  tinderReview.querySelectorAll('[data-moderation]').forEach((button) => {
+    button.addEventListener('click', async () => {
+      await moderateCurrentCard(button.getAttribute('data-moderation'));
+    });
+  });
+};
+
+const renderVerificationSection = () => {
+  const statusValue = statusFilter?.value || 'all';
+  const queryText = (searchInput?.value || '').trim().toLowerCase();
+
+  const merged = Object.entries(verificationById)
+    .map(([cardId, entry]) => ({ cardId, entry, card: cardsById[cardId] || {} }))
+    .sort((a, b) => (b.entry.updatedAt || 0) - (a.entry.updatedAt || 0));
+
+  const filtered = merged.filter(({ entry, card }) => {
+    if (statusValue !== 'all' && entry.status !== statusValue) return false;
+    if (!queryText) return true;
+    const haystack = `${entry.ownerNickname || ''} ${card.name || ''} ${card.role || ''}`.toLowerCase();
+    return haystack.includes(queryText);
   });
 
-  tinderReview.querySelector('[data-moderation="reject"]').addEventListener('click', async () => {
-    await moderateCurrentCard('rejected');
+  verificationCards.innerHTML = '';
+  if (filtered.length === 0) {
+    verificationCards.innerHTML = '<p class="hint">Aucune carte ne correspond à tes filtres.</p>';
+    return;
+  }
+
+  filtered.forEach(({ entry, card }) => {
+    const item = document.createElement('article');
+    item.className = 'pending-item';
+    item.innerHTML = `
+      <h3>${escapeHtml(card.name || entry.cardSnapshot?.name || 'Carte')} · ${escapeHtml(card.role || entry.cardSnapshot?.role || '-')}</h3>
+      <p>Par ${escapeHtml(entry.ownerNickname || card.ownerNickname || '-')} — Statut <strong>${escapeHtml(entry.status || 'pending')}</strong></p>
+      <p>ATK ${card.attack ?? entry.cardSnapshot?.attack ?? '-'} / DEF ${card.defense ?? entry.cardSnapshot?.defense ?? '-'} · Rang ${escapeHtml(card.rank || entry.cardSnapshot?.rank || '-')}</p>
+    `;
+    verificationCards.appendChild(item);
   });
 };
 
 const moderateCurrentCard = async (status) => {
   const current = pendingQueue[0];
-  if (!current) return;
+  if (!current || !currentUser) return;
 
   const now = Date.now();
 
@@ -127,68 +131,69 @@ const moderateCurrentCard = async (status) => {
       moderatedAt: now,
       updatedAt: now
     });
-
-    pendingQueue.shift();
-    renderTinderCard();
-    await updateReviewStats();
-    await renderVerificationSection();
   } catch (error) {
     console.error('Erreur de modération:', error);
-    alert('Impossible de valider/refuser cette carte pour le moment. Réessaie.');
+    alert('Impossible de modérer cette carte pour le moment. Réessaie.');
   }
 };
 
-const loadPendingCards = async () => {
-  if (!isAdmin || !currentUser) return;
+const clearRealtime = () => {
+  unsubs.forEach((fn) => fn());
+  unsubs = [];
+};
 
-  await updateReviewStats();
-  await renderVerificationSection();
+const resetAdminScreen = () => {
+  clearRealtime();
+  cardsById = {};
+  verificationById = {};
+  pendingQueue = [];
+  refreshStats();
+  tinderReview.innerHTML = '';
+  verificationCards.innerHTML = '';
+};
 
-  try {
-    const snapshot = await get(ref(db, 'cards'));
+const bindRealtime = () => {
+  if (unsubs.length > 0) return;
 
-    if (!snapshot.exists()) {
-      pendingQueue = [];
+  unsubs.push(
+    onValue(ref(db, 'cards'), (snapshot) => {
+      cardsById = snapshot.exists() ? snapshot.val() : {};
+      refreshStats();
+      buildPendingQueue();
       renderTinderCard();
-      return;
-    }
+      renderVerificationSection();
+    })
+  );
 
-    pendingQueue = Object.entries(snapshot.val())
-      .map(([cardId, card]) => ({ cardId, card }))
-      .filter(({ card }) => card.status === 'pending')
-      .sort((a, b) => (a.card.createdAt || 0) - (b.card.createdAt || 0));
-
-    renderTinderCard();
-  } catch (error) {
-    console.error('Chargement des cartes en attente impossible:', error);
-    pendingQueue = [];
-    tinderReview.innerHTML = '<p class="hint">Impossible de charger les cartes en attente.</p>';
-  }
+  unsubs.push(
+    onValue(ref(db, 'cardVerification'), (snapshot) => {
+      verificationById = snapshot.exists() ? snapshot.val() : {};
+      renderVerificationSection();
+    })
+  );
 };
+
+statusFilter?.addEventListener('change', renderVerificationSection);
+searchInput?.addEventListener('input', renderVerificationSection);
 
 await initCommon({
   onUserChanged: async (user) => {
     currentUser = user;
 
     if (!user) {
-      isAdmin = false;
       adminNotice.textContent = 'Connecte-toi avec un compte admin.';
-      tinderReview.innerHTML = '';
-      verificationCards.innerHTML = '';
-      await updateReviewStats();
+      resetAdminScreen();
       return;
     }
 
-    isAdmin = await checkAdmin(user.uid, user.email || '');
+    const isAdmin = await checkAdmin(user.uid, user.email || '');
     if (!isAdmin) {
       adminNotice.textContent = 'Accès refusé : ce compte n’est pas admin.';
-      tinderReview.innerHTML = '';
-      verificationCards.innerHTML = '';
-      await updateReviewStats();
+      resetAdminScreen();
       return;
     }
 
-    adminNotice.textContent = 'Accès admin confirmé. Passe les cartes une par une :';
-    await loadPendingCards();
+    adminNotice.textContent = 'Accès admin confirmé. Modération en temps réel activée.';
+    bindRealtime();
   }
 });
