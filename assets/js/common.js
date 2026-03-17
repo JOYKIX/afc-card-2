@@ -5,13 +5,20 @@ const googleLoginBtn = document.getElementById('googleLogin');
 const logoutBtn = document.getElementById('logout');
 
 const initCommon = async ({ onUserChanged } = {}) => {
-  await consumeRedirect();
+  try {
+    await consumeRedirect();
+  } catch (error) {
+    alert(error.message);
+  }
 
   googleLoginBtn?.addEventListener('click', async () => {
+    googleLoginBtn.disabled = true;
     try {
       await performGoogleSignIn();
     } catch (error) {
-      alert(`Connexion Google impossible: ${error.message}`);
+      alert(error.message);
+    } finally {
+      googleLoginBtn.disabled = false;
     }
   });
 

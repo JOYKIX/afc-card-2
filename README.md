@@ -17,6 +17,15 @@ La connexion utilise Firebase Auth avec :
 - tentative popup (`signInWithPopup`)
 - fallback automatique en redirect (`signInWithRedirect`) si popup bloquée
 
+
+### Domaine GitHub Pages (important)
+
+Si le site est publié sur `*.github.io`, ajoute **exactement** ton domaine (ex: `joykix.github.io`) dans:
+
+`Firebase Console > Authentication > Settings > Domaines autorisés`
+
+Sinon Firebase renvoie l'erreur `auth/unauthorized-domain` au clic sur **Connexion Google**.
+
 ## Lancer en local
 
 ```bash
