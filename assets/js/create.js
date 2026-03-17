@@ -41,6 +41,7 @@ let defense = 0;
 let portraitDataUrl = '';
 let verificationUnsubscribe = null;
 let currentUserIsVip = false;
+let html2canvasReady = null;
 
 const getAverage = () => Math.round((attack + defense) / 2);
 const getRank = (average) => {
@@ -182,6 +183,16 @@ const canSubmitCard = async (uid, isVip) => {
   return !pendingVerification;
 };
 
+const renderCardJpeg = async () => {
+  if (!window.html2canvas) {
+    throw new Error('html2canvas non chargé.');
+  }
+
+  const card = document.getElementById('afcCard');
+  const canvas = await window.html2canvas(card, { backgroundColor: null, scale: 2 });
+  return canvas.toDataURL('image/jpeg', 0.94);
+};
+
 
 form.addEventListener('input', render);
 rollStatsBtn.addEventListener('click', rollStats);
@@ -240,6 +251,7 @@ submitCardBtn.addEventListener('click', async () => {
     const rank = getRank(average);
     const cost = getCost(rank);
     const createdAt = Date.now();
+    const cardImage = await renderCardJpeg();
 
     const payload = {
       ownerUid: currentUser.uid,
@@ -256,6 +268,7 @@ submitCardBtn.addEventListener('click', async () => {
       cost,
       type: computeType(),
       rarity: rank,
+      cardImage,
       status: 'pending',
       createdAt,
       updatedAt: createdAt
@@ -272,15 +285,8 @@ submitCardBtn.addEventListener('click', async () => {
         name: payload.name,
         role: payload.role,
         rank: payload.rank,
-        average: payload.average,
-        cost: payload.cost,
-        attack: payload.attack,
-        defense: payload.defense,
-        type: payload.type,
         rarity: payload.rarity,
-        edition: payload.edition,
-        abilities: payload.abilities,
-        image: payload.image
+        cardImage: payload.cardImage
       }
     });
 
@@ -296,22 +302,25 @@ submitCardBtn.addEventListener('click', async () => {
 });
 
 downloadCardBtn.addEventListener('click', async () => {
-  if (!window.html2canvas) {
-    alert('Export indisponible: html2canvas non chargé.');
-    return;
+  try {
+    const jpegDataUrl = await renderCardJpeg();
+    const link = document.createElement('a');
+    link.download = `${fields.name.value || 'afc-card'}.jpg`;
+    link.href = jpegDataUrl;
+    link.click();
+  } catch (error) {
+    console.error('Export JPEG indisponible:', error);
+    alert('Export indisponible: rendu JPEG non chargé.');
   }
-
-  const card = document.getElementById('afcCard');
-  const canvas = await window.html2canvas(card, { backgroundColor: null, scale: 2 });
-  const link = document.createElement('a');
-  link.download = `${fields.name.value || 'afc-card'}.jpg`;
-  link.href = canvas.toDataURL('image/jpeg', 0.94);
-  link.click();
 });
 
 const script = document.createElement('script');
 script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
 script.defer = true;
+html2canvasReady = new Promise((resolve, reject) => {
+  script.onload = resolve;
+  script.onerror = reject;
+});
 document.head.appendChild(script);
 
 await initCommon({
@@ -336,5 +345,10 @@ await initCommon({
 });
 
 fields.abilities.value = `Cri du Raptor : Baisse la défense adverse de 10 points.\n\nStream Ban : Met hors combat la carte adverse. Peut être utilisé deux fois.`;
+try {
+  await html2canvasReady;
+} catch (error) {
+  console.error('Chargement html2canvas impossible:', error);
+}
 rollStats();
 render();

@@ -57,7 +57,11 @@ const pickUniqueCards = (cards, count = 5) => {
 
 const cardTemplate = (card, index) => {
   const rank = normalizeRarity(card);
-  const imageStyle = card.image ? `style="background-image:url('${card.image.replace(/'/g, "\\'")}')"` : '';
+  const cardImage = card.cardImage || card.image || '';
+  const safeName = (card.name || 'AFC').replace(/"/g, '&quot;');
+  const imageMarkup = cardImage
+    ? `<img src="${cardImage}" alt="Carte ${safeName}" loading="lazy">`
+    : '<div class="booster-placeholder">Aucune image</div>';
 
   return `
     <article class="afc-card rank-${rank}" style="animation-delay:${index * 90}ms">
@@ -79,7 +83,7 @@ const cardTemplate = (card, index) => {
       </header>
 
       <div class="portrait-shell">
-        <div class="portrait" ${imageStyle}></div>
+        <div class="portrait">${imageMarkup}</div>
       </div>
 
       <section class="skills">
