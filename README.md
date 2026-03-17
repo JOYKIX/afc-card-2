@@ -1,19 +1,30 @@
 # AFC Card Studio
 
-Structure simplifiée du projet :
+Refonte complète en **multi-pages** pour améliorer la prise en main :
 
-- `index.html` : point d’entrée de l’application avec onglets (création, profil, admin).
-- `assets/css/style.css` : styles de l’éditeur, de la carte et de l’espace admin.
-- `assets/js/script.js` : logique Firebase (Auth Google + Realtime Database), calculs automatiques et modération.
-- `assets/data/rarity.json` : données de rareté.
-- `assets/images/` : dossier réservé aux images.
+- `index.html` + `assets/js/create.js` : création de carte et preview live.
+- `profile.html` + `assets/js/profile.js` : gestion du pseudo joueur.
+- `admin.html` + `assets/js/admin.js` : modération des cartes en attente.
+- `assets/js/common.js` : logique partagée d'interface/auth.
+- `assets/js/firebase.js` : intégration Firebase centralisée (Auth + Realtime DB).
+- `assets/css/style.css` : design global, navigation et composants.
+
+## Connexion Google (Firebase Auth)
+
+La connexion utilise Firebase Auth avec :
+
+- persistance locale (`browserLocalPersistence`)
+- tentative popup (`signInWithPopup`)
+- fallback automatique en redirect (`signInWithRedirect`) si popup bloquée
 
 ## Lancer en local
-
-Comme l’app charge les modules Firebase en `type="module"`, lance-la via un serveur HTTP :
 
 ```bash
 python3 -m http.server 4173
 ```
 
-Puis ouvre `http://localhost:4173`.
+Puis ouvre :
+
+- `http://localhost:4173/index.html`
+- `http://localhost:4173/profile.html`
+- `http://localhost:4173/admin.html`

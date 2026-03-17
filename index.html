@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AFC Card Studio</title>
+  <title>AFC Card Studio · Création</title>
   <link rel="stylesheet" href="assets/css/style.css" />
 </head>
 
@@ -17,8 +17,15 @@
       <p class="kicker">AFC Universe</p>
       <h1>AFC Card Studio</h1>
     </div>
+
+    <nav class="site-nav">
+      <a class="nav-link active" href="index.html">Créer</a>
+      <a class="nav-link" href="profile.html">Profil</a>
+      <a class="nav-link" href="admin.html">Admin</a>
+    </nav>
+
     <div class="auth-actions">
-      <span id="authStatus">Non connecté</span>
+      <span id="authStatus">Vérification...</span>
       <button id="googleLogin" type="button">Connexion Google</button>
       <button id="logout" type="button" class="ghost">Déconnexion</button>
     </div>
@@ -26,63 +33,41 @@
 
   <main class="layout">
     <section class="panel glass">
-      <nav class="tabs">
-        <button type="button" class="tab active" data-tab="createTab">Créer une carte</button>
-        <button type="button" class="tab" data-tab="profileTab">Profil</button>
-        <button type="button" class="tab hidden" data-tab="adminTab" id="adminTabBtn">Admin</button>
-      </nav>
+      <h2>Créer une carte</h2>
+      <p class="subtitle">Expérience simplifiée, prévisualisation live, stats auto et soumission en 1 clic.</p>
 
-      <section id="createTab" class="tab-content active">
-        <p class="subtitle">Design premium + thème dynamique selon le rang (D → SSS).</p>
-
-        <form id="cardForm" class="editor-form">
-          <label>Nom
-            <input id="name" type="text" maxlength="24" value="Fémi-Mars" required />
-          </label>
-
-          <label>Rôle
-            <select id="title" required>
-              <option>Responsable staff</option>
-              <option>Gardien de l'AFC</option>
-              <option>Streamers</option>
-              <option>Viewers</option>
-            </select>
-          </label>
-
-          <label>Édition
-            <input id="edition" type="text" value="2e édition" readonly />
-          </label>
-
-          <label>Capacités
-            <textarea id="abilities" rows="4" required></textarea>
-          </label>
-
-          <label>Photo (JPG / JPEG / WEBP)
-            <input id="imageInput" type="file" accept=".jpg,.jpeg,.webp,image/jpeg,image/webp" />
-          </label>
-
-          <div class="actions">
-            <button type="button" id="rollStats">Générer attaque / défense</button>
-            <button type="button" id="submitCard">Envoyer en vérification</button>
-            <button type="button" id="downloadCard">Télécharger la carte</button>
-          </div>
-        </form>
-      </section>
-
-      <section id="profileTab" class="tab-content">
-        <h2>Profil</h2>
-        <p class="subtitle">Choisis ton pseudo (utilisé lors de la création de carte).</p>
-        <label>Pseudo
-          <input id="nickname" type="text" maxlength="24" placeholder="Ton pseudo" />
+      <form id="cardForm" class="editor-form">
+        <label>Nom
+          <input id="name" type="text" maxlength="24" value="Fémi-Mars" required />
         </label>
-        <button id="saveProfile" type="button">Enregistrer le pseudo</button>
-      </section>
 
-      <section id="adminTab" class="tab-content">
-        <h2>Validation des cartes</h2>
-        <p class="subtitle">Visible uniquement pour les comptes admin.</p>
-        <div id="pendingCards" class="pending-list"></div>
-      </section>
+        <label>Rôle
+          <select id="title" required>
+            <option>Responsable staff</option>
+            <option>Gardien de l'AFC</option>
+            <option>Streamers</option>
+            <option>Viewers</option>
+          </select>
+        </label>
+
+        <label>Édition
+          <input id="edition" type="text" value="2e édition" readonly />
+        </label>
+
+        <label>Capacités
+          <textarea id="abilities" rows="4" required></textarea>
+        </label>
+
+        <label>Photo (JPG / JPEG / WEBP)
+          <input id="imageInput" type="file" accept=".jpg,.jpeg,.webp,image/jpeg,image/webp" />
+        </label>
+
+        <div class="actions">
+          <button type="button" id="rollStats">Générer attaque / défense</button>
+          <button type="button" id="submitCard">Envoyer en vérification</button>
+          <button type="button" id="downloadCard">Télécharger la carte</button>
+        </div>
+      </form>
     </section>
 
     <section class="preview-wrap">
@@ -95,7 +80,7 @@
           </div>
           <div class="identity">
             <p class="kicker" id="cardTypeTop">équilibré</p>
-            <h2 id="cardName">Fémi-Mars</h2>
+            <h3 id="cardName">Fémi-Mars</h3>
             <p id="cardTitle">Responsable staff</p>
           </div>
           <div class="meta-right">
@@ -109,7 +94,7 @@
         </div>
 
         <section class="skills">
-          <h3>Capacités</h3>
+          <h4>Capacités</h4>
           <p id="cardAbilities"></p>
         </section>
 
@@ -133,7 +118,7 @@
     </section>
   </main>
 
-  <script type="module" src="assets/js/script.js"></script>
+  <script type="module" src="assets/js/create.js"></script>
 </body>
 
 </html>
