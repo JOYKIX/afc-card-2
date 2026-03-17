@@ -68,6 +68,27 @@ h1, h2, h3, p { margin: 0; }
 .auth-actions { display: flex; align-items: center; gap: .45rem; flex-wrap: wrap; }
 #authStatus { color: var(--muted); font-size: .85rem; }
 
+.role-badge {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: .2rem .55rem;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+}
+
+.role-admin {
+  background: rgba(255, 191, 88, .22);
+  border-color: rgba(255, 191, 88, .5);
+  color: #ffd58a;
+}
+
+.role-vip {
+  background: rgba(159, 121, 255, .2);
+  border-color: rgba(159, 121, 255, .5);
+  color: #d5b8ff;
+}
+
 .layout, .single-layout {
   padding: 0 1rem 1rem;
   display: grid;

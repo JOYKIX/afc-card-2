@@ -1,4 +1,4 @@
-import { checkAdmin, db, equalTo, get, onValue, orderByChild, push, query, ref, set, update } from './firebase.js';
+import { checkAdmin, checkVip, db, equalTo, get, onValue, orderByChild, push, query, ref, set, update } from './firebase.js';
 import { initCommon } from './common.js';
 
 const fields = {
@@ -40,6 +40,7 @@ let attack = 0;
 let defense = 0;
 let portraitDataUrl = '';
 let verificationUnsubscribe = null;
+let currentUserIsVip = false;
 
 const getAverage = () => Math.round((attack + defense) / 2);
 const getRank = (average) => {
@@ -133,13 +134,15 @@ const watchVerificationStatus = (uid) => {
   });
 };
 
-const canSubmitCard = async (uid) => {
+const canSubmitCard = async (uid, isVip) => {
+  if (isVip) return true;
+
   const userCardsQuery = query(ref(db, 'cards'), orderByChild('ownerUid'), equalTo(uid));
   const snapshot = await get(userCardsQuery);
   if (!snapshot.exists()) return true;
 
   const cards = Object.values(snapshot.val());
-  return !cards.some((card) => card.status !== 'rejected');
+  return cards.length === 0;
 };
 
 const computeSerial = async (createdAt, cardKey) => {
@@ -200,9 +203,9 @@ submitCardBtn.addEventListener('click', async () => {
     return;
   }
 
-  const allowedToSubmit = await canSubmitCard(currentUser.uid);
+  const allowedToSubmit = await canSubmitCard(currentUser.uid, currentUserIsVip);
   if (!allowedToSubmit) {
-    alert('Tu as déjà une carte en vérification ou validée. Tu peux en renvoyer une uniquement si la précédente est refusée.');
+    alert('Compte standard : une seule carte autorisée. Passe VIP pour créer des cartes à l'infini.');
     return;
   }
 
@@ -297,6 +300,7 @@ await initCommon({
     currentUser = user;
     if (!user) {
       currentNickname = '';
+      currentUserIsVip = false;
       verificationStatusText.textContent = 'Connecte-toi pour voir le statut de ta carte.';
       if (verificationUnsubscribe) {
         verificationUnsubscribe();
@@ -308,6 +312,7 @@ await initCommon({
     await refreshProfile(user.uid);
     watchVerificationStatus(user.uid);
     await checkAdmin(user.uid, user.email || '');
+    currentUserIsVip = await checkVip(user.uid, user.email || '');
   }
 });
 

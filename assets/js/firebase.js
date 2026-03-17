@@ -101,6 +101,13 @@ const ensureDefaultAdminRegistry = async () => {
   await set(ref(db, `adminRegistry/${emailToKey(defaultAdminEmail)}`), true);
 };
 
+const ensureDefaultVipRegistry = async () => {
+  const defaultVipEmail = 'duveaubenoit@gmail.com';
+  const emailKey = emailToKey(defaultVipEmail);
+  await set(ref(db, `vipRegistry/${emailKey}`), true);
+  await set(ref(db, `vipRegistery/${emailKey}`), true);
+};
+
 const checkAdmin = async (uid, email = '') => {
   const uidSnap = await get(ref(db, `admins/${uid}`));
   if (uidSnap.val() === true) return true;
@@ -112,6 +119,21 @@ const checkAdmin = async (uid, email = '') => {
   return emailSnap.val() === true;
 };
 
+const checkVip = async (uid, email = '') => {
+  const uidSnap = await get(ref(db, `vips/${uid}`));
+  if (uidSnap.val() === true) return true;
+
+  const normalizedEmail = normalizeEmail(email);
+  if (!normalizedEmail) return false;
+
+  const emailKey = emailToKey(normalizedEmail);
+  const emailSnap = await get(ref(db, `vipRegistry/${emailKey}`));
+  if (emailSnap.val() === true) return true;
+
+  const legacyEmailSnap = await get(ref(db, `vipRegistery/${emailKey}`));
+  return legacyEmailSnap.val() === true;
+};
+
 const syncProfileOnLogin = async (user) => {
   if (!user?.uid) return;
 
@@ -119,7 +141,9 @@ const syncProfileOnLogin = async (user) => {
   const profileSnapshot = await get(profileRef);
   const email = normalizeEmail(user.email || '');
   await ensureDefaultAdminRegistry();
+  await ensureDefaultVipRegistry();
   const isAdmin = await checkAdmin(user.uid, email);
+  const isVip = await checkVip(user.uid, email);
   const timestamp = Date.now();
 
   if (!profileSnapshot.exists()) {
@@ -127,6 +151,7 @@ const syncProfileOnLogin = async (user) => {
       nickname: '',
       email,
       admin: isAdmin,
+      vip: isVip,
       createdAt: timestamp,
       updatedAt: timestamp,
       lastLoginAt: timestamp
@@ -137,6 +162,7 @@ const syncProfileOnLogin = async (user) => {
   await update(profileRef, {
     email,
     admin: isAdmin,
+    vip: isVip,
     updatedAt: timestamp,
     lastLoginAt: timestamp
   });
@@ -145,6 +171,7 @@ const syncProfileOnLogin = async (user) => {
 export {
   auth,
   checkAdmin,
+  checkVip,
   consumeRedirect,
   db,
   equalTo,
