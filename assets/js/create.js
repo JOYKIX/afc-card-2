@@ -56,7 +56,26 @@ const getRank = (average) => {
 
 const getCost = (rank) => rankScale.indexOf(rank) + 1;
 const computeType = () => (attack > defense ? 'attaquant' : defense > attack ? 'défenseur' : 'équilibré');
-const pad2 = (n) => String(n).padStart(2, '0');
+
+
+const formatCardNumber = (count, createdAt) => {
+  const date = new Date(createdAt);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const serial = String(count).padStart(4, '0');
+  return `AFC-${year}${month}${day}-${serial}`;
+};
+
+const getNextCardNumber = async () => {
+  const cardsSnapshot = await get(ref(db, 'cards'));
+  const verificationSnapshot = await get(ref(db, 'cardVerification'));
+
+  const approvedCount = cardsSnapshot.exists() ? Object.keys(cardsSnapshot.val()).length : 0;
+  const pendingCount = verificationSnapshot.exists() ? Object.keys(verificationSnapshot.val()).length : 0;
+
+  return approvedCount + pendingCount + 1;
+};
 
 const applyRankTheme = (rank) => {
   const card = document.getElementById('afcCard');
@@ -252,6 +271,8 @@ submitCardBtn.addEventListener('click', async () => {
     const cost = getCost(rank);
     const createdAt = Date.now();
     const cardImage = await renderCardJpeg();
+    const cardNumber = await getNextCardNumber();
+    const serial = formatCardNumber(cardNumber, createdAt);
 
     const payload = {
       ownerUid: currentUser.uid,
@@ -260,7 +281,6 @@ submitCardBtn.addEventListener('click', async () => {
       role: fields.title.value,
       edition: '2e édition',
       abilities: fields.abilities.value.trim(),
-      image: portraitDataUrl,
       attack,
       defense,
       average,
@@ -269,6 +289,9 @@ submitCardBtn.addEventListener('click', async () => {
       type: computeType(),
       rarity: rank,
       cardImage,
+      createdBy: currentNickname,
+      creatorName: currentNickname,
+      serial,
       status: 'pending',
       createdAt,
       updatedAt: createdAt
@@ -282,15 +305,17 @@ submitCardBtn.addEventListener('click', async () => {
       submittedAt: createdAt,
       updatedAt: createdAt,
       cardSnapshot: {
+        serial: payload.serial,
         name: payload.name,
         role: payload.role,
         rank: payload.rank,
         rarity: payload.rarity,
-        cardImage: payload.cardImage
+        cardImage: payload.cardImage,
+        creatorName: payload.creatorName
       }
     });
 
-    output.serial.textContent = '--/--';
+    output.serial.textContent = serial;
 
     alert('Carte envoyée en attente de vérification admin.');
   } catch (error) {
