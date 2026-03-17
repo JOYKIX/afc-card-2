@@ -211,14 +211,10 @@ roleForm?.addEventListener('submit', async (event) => {
   }
 
   const rolePath = selectedRole === 'admin' ? 'adminRegistry' : 'vipRegistry';
-  const legacyVipPath = selectedRole === 'vip' ? 'vipRegistery' : null;
   const emailKey = emailToKey(email);
 
   try {
     await set(ref(db, `${rolePath}/${emailKey}`), true);
-    if (legacyVipPath) {
-      await set(ref(db, `${legacyVipPath}/${emailKey}`), true);
-    }
 
     setRoleFeedback(`Accès ${selectedRole.toUpperCase()} ajouté pour ${email}.`);
     roleForm.reset();

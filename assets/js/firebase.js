@@ -106,7 +106,6 @@ const ensureDefaultVipRegistry = async () => {
   const defaultVipEmail = 'duveaubenoit@gmail.com';
   const emailKey = emailToKey(defaultVipEmail);
   await set(ref(db, `vipRegistry/${emailKey}`), true);
-  await set(ref(db, `vipRegistery/${emailKey}`), true);
 };
 
 const checkAdmin = async (uid, email = '') => {
@@ -129,10 +128,7 @@ const checkVip = async (uid, email = '') => {
 
   const emailKey = emailToKey(normalizedEmail);
   const emailSnap = await get(ref(db, `vipRegistry/${emailKey}`));
-  if (emailSnap.val() === true) return true;
-
-  const legacyEmailSnap = await get(ref(db, `vipRegistery/${emailKey}`));
-  return legacyEmailSnap.val() === true;
+  return emailSnap.val() === true;
 };
 
 const syncProfileOnLogin = async (user) => {
