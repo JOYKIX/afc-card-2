@@ -93,7 +93,7 @@ const cardTemplate = (card, index) => {
 
       <footer class="stats">
         <div>
-          <strong><span class="material-icons" aria-hidden="true">swords</span></strong>
+          <strong><span class="material-icons" aria-hidden="true">flash_on</span></strong>
           <span>${card.attack ?? '-'}</span>
         </div>
         <div>
@@ -101,12 +101,12 @@ const cardTemplate = (card, index) => {
           <span>${card.defense ?? '-'}</span>
         </div>
         <div>
-          <strong>Type</strong>
+          <strong><span class="material-icons" aria-hidden="true">category</span></strong>
           <span>${card.type || '-'}</span>
         </div>
       </footer>
 
-      <span class="serial">${card.serial || '--/--'}</span>
+      <span class="serial">${card.serial || 'AFC-EN-ATTENTE'}</span>
     </article>
   `;
 };
