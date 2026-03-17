@@ -1,32 +1,116 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    <title>AFC Card</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AFC Card Studio</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
+  <main class="layout">
+    <section class="panel">
+      <h1>AFC Card · Éditeur</h1>
+      <p class="subtitle">Crée ta carte 5:7, génère les stats et exporte ton visuel.</p>
 
-    <header>
-        <h1>AFC Card</h1>
-    </header>
+      <form id="cardForm" class="editor-form">
+        <label>
+          Nom
+          <input id="name" type="text" maxlength="24" value="Fémi-Mars" required />
+        </label>
 
-    <button id="sellDuplicatesBtn">Vendre les doubles</button>
+        <label>
+          Titre
+          <input id="title" type="text" maxlength="40" value="Général de l'AFC" required />
+        </label>
 
-    <p id="flowerOfHibiscusDisplay">Fleur de Bissap : <span id="flowerCount">500</span></p>
+        <label>
+          Numéro de carte
+          <input id="number" type="number" min="1" max="999" value="2" required />
+        </label>
 
-    <button id="openBoosterBtn">Ouvrir un booster - 50</button>
+        <label>
+          Édition
+          <input id="edition" type="text" maxlength="20" value="1er édition" required />
+        </label>
 
-    <div class="booster-container" id="boosterContainer"></div>
+        <label>
+          Niveau
+          <input id="level" type="number" min="1" max="99" value="32" required />
+        </label>
 
-    <div id="totalCardsIndicator"></div>
+        <label>
+          Type
+          <select id="archetype">
+            <option value="auto" selected>Automatique (selon stats)</option>
+            <option value="attaquant">Attaquant</option>
+            <option value="tank">Tank</option>
+          </select>
+        </label>
 
-    <div class="album-container" id="albumContainer" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+        <label>
+          Capacités
+          <textarea id="abilities" rows="4">Cri du Raptor : Baisse la défense adverse de 10 points.
 
-    <script src="script.js"></script>
+Stream Ban : Met hors combat la carte adverse. Peut être utilisé deux fois.</textarea>
+        </label>
+
+        <label>
+          Photo (JPG / JPEG / WEBP)
+          <input id="imageInput" type="file" accept=".jpg,.jpeg,.webp,image/jpeg,image/webp" />
+        </label>
+
+        <div class="actions">
+          <button type="button" id="rollStats">Générer attaque / défense</button>
+          <button type="button" id="downloadCard">Télécharger la carte</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="preview-wrap">
+      <article class="afc-card" id="afcCard">
+        <header class="card-header">
+          <div class="meta-left">
+            <span id="cardNumber">2</span>
+            <small id="cardEdition">1er édition</small>
+          </div>
+          <div class="identity">
+            <h2 id="cardName">Fémi-Mars</h2>
+            <p id="cardTitle">Général de l'AFC</p>
+          </div>
+          <div class="meta-right">
+            <span id="cardRank">C</span>
+            <small id="cardLevel">32</small>
+          </div>
+        </header>
+
+        <div class="portrait" id="portrait"></div>
+
+        <section class="skills">
+          <h3>Capacités</h3>
+          <p id="cardAbilities"></p>
+        </section>
+
+        <footer class="stats">
+          <div>
+            <strong>⚔</strong>
+            <span id="attack">0</span>
+          </div>
+          <div>
+            <strong>🛡</strong>
+            <span id="defense">0</span>
+          </div>
+          <div>
+            <strong>Type</strong>
+            <span id="cardType">-</span>
+          </div>
+        </footer>
+      </article>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
 </body>
 
 </html>
