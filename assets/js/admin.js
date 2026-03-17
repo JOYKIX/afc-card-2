@@ -1,4 +1,4 @@
-import { checkAdmin, db, onValue, ref, update } from './firebase.js';
+import { checkAdmin, db, onValue, push, ref, remove, set, update } from './firebase.js';
 import { initCommon } from './common.js';
 
 const adminNotice = document.getElementById('adminNotice');
@@ -19,15 +19,11 @@ let unsubs = [];
 const escapeHtml = (value = '') => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[char]);
 
 const refreshStats = () => {
-  const stats = Object.values(cardsById).reduce(
-    (acc, card) => {
-      if (card.status === 'pending') acc.pending += 1;
-      if (card.status === 'approved') acc.approved += 1;
-      if (card.status === 'rejected') acc.rejected += 1;
-      return acc;
-    },
-    { pending: 0, approved: 0, rejected: 0 }
-  );
+  const stats = {
+    pending: Object.values(verificationById).filter((entry) => entry.status === 'pending').length,
+    approved: Object.values(cardsById).length,
+    rejected: Object.values(verificationById).filter((entry) => entry.status === 'rejected').length
+  };
 
   countPending.textContent = String(stats.pending);
   countApproved.textContent = String(stats.approved);
@@ -35,10 +31,10 @@ const refreshStats = () => {
 };
 
 const buildPendingQueue = () => {
-  pendingQueue = Object.entries(cardsById)
-    .map(([cardId, card]) => ({ cardId, card }))
-    .filter(({ card }) => card.status === 'pending')
-    .sort((a, b) => (a.card.createdAt || 0) - (b.card.createdAt || 0));
+  pendingQueue = Object.entries(verificationById)
+    .map(([verificationId, entry]) => ({ verificationId, entry, card: entry.cardSnapshot || {} }))
+    .filter(({ entry }) => entry.status === 'pending')
+    .sort((a, b) => (a.entry.submittedAt || 0) - (b.entry.submittedAt || 0));
 };
 
 const renderTinderCard = () => {
@@ -49,7 +45,7 @@ const renderTinderCard = () => {
     return;
   }
 
-  const { card } = pendingQueue[0];
+  const { card, entry } = pendingQueue[0];
   const imageMarkup = card.image
     ? `<img src="${escapeHtml(card.image)}" alt="Illustration de ${escapeHtml(card.name || 'la carte')}">`
     : '<div class="booster-placeholder">Aucune image fournie</div>';
@@ -59,7 +55,7 @@ const renderTinderCard = () => {
       <div class="tinder-image">${imageMarkup}</div>
       <div class="tinder-body">
         <h3>${escapeHtml(card.name || 'Carte')} · ${escapeHtml(card.role || '-')}</h3>
-        <p>Par ${escapeHtml(card.ownerNickname || '-')}</p>
+        <p>Par ${escapeHtml(entry.ownerNickname || '-')}</p>
         <p>Rang ${escapeHtml(card.rank || '-')} · Type ${escapeHtml(card.type || '-')} · Coût ${card.cost ?? '-'}</p>
         <p>ATK ${card.attack ?? '-'} / DEF ${card.defense ?? '-'} · Moyenne ${card.average ?? '-'}</p>
         <p class="modal-abilities">${escapeHtml(card.abilities || '-')}</p>
@@ -83,7 +79,7 @@ const renderVerificationSection = () => {
   const queryText = (searchInput?.value || '').trim().toLowerCase();
 
   const merged = Object.entries(verificationById)
-    .map(([cardId, entry]) => ({ cardId, entry, card: cardsById[cardId] || {} }))
+    .map(([verificationId, entry]) => ({ verificationId, entry, card: entry.cardSnapshot || {} }))
     .sort((a, b) => (b.entry.updatedAt || 0) - (a.entry.updatedAt || 0));
 
   const filtered = merged.filter(({ entry, card }) => {
@@ -118,19 +114,28 @@ const moderateCurrentCard = async (status) => {
   const now = Date.now();
 
   try {
-    await update(ref(db, `cards/${current.cardId}`), {
+    await update(ref(db, `cardVerification/${current.verificationId}`), {
       status,
       moderatedBy: currentUser.uid,
       moderatedAt: now,
       updatedAt: now
     });
 
-    await update(ref(db, `cardVerification/${current.cardId}`), {
-      status,
-      moderatedBy: currentUser.uid,
-      moderatedAt: now,
-      updatedAt: now
-    });
+    if (status === 'approved') {
+      const cardRef = push(ref(db, 'cards'));
+      await set(cardRef, {
+        ...current.card,
+        ownerUid: current.entry.ownerUid,
+        ownerNickname: current.entry.ownerNickname,
+        status: 'approved',
+        createdAt: current.entry.submittedAt || now,
+        moderatedBy: currentUser.uid,
+        moderatedAt: now,
+        updatedAt: now
+      });
+    }
+
+    await remove(ref(db, `cardVerification/${current.verificationId}`));
   } catch (error) {
     console.error('Erreur de modération:', error);
     alert('Impossible de modérer cette carte pour le moment. Réessaie.');
@@ -168,6 +173,9 @@ const bindRealtime = () => {
   unsubs.push(
     onValue(ref(db, 'cardVerification'), (snapshot) => {
       verificationById = snapshot.exists() ? snapshot.val() : {};
+      refreshStats();
+      buildPendingQueue();
+      renderTinderCard();
       renderVerificationSection();
     })
   );

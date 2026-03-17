@@ -1,4 +1,4 @@
-import { checkAdmin, checkVip, db, equalTo, get, onValue, orderByChild, push, query, ref, set, update } from './firebase.js';
+import { checkAdmin, checkVip, db, equalTo, get, onValue, orderByChild, push, query, ref, set } from './firebase.js';
 import { initCommon } from './common.js';
 
 const fields = {
@@ -122,42 +122,66 @@ const watchVerificationStatus = (uid) => {
 
   verificationStatusText.textContent = 'Chargement du suivi de vérification...';
 
-  const userCardsQuery = query(ref(db, 'cards'), orderByChild('ownerUid'), equalTo(uid));
-  verificationUnsubscribe = onValue(userCardsQuery, (snapshot) => {
-    if (!snapshot.exists()) {
-      verificationStatusText.textContent = 'Aucune carte envoyée pour le moment.';
+  let latestPending = null;
+  let latestCard = null;
+
+  const updateStatus = () => {
+    if (latestPending) {
+      verificationStatusText.textContent = `En vérification: ${latestPending.name} (${latestPending.rank}) est en attente de validation admin.`;
       return;
     }
 
-    const cards = Object.values(snapshot.val()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-    verificationStatusText.textContent = getVerificationText(cards[0]);
-  });
+    verificationStatusText.textContent = getVerificationText(latestCard);
+  };
+
+  const unsubs = [];
+
+  const userCardsQuery = query(ref(db, 'cards'), orderByChild('ownerUid'), equalTo(uid));
+  unsubs.push(onValue(userCardsQuery, (snapshot) => {
+    if (!snapshot.exists()) {
+      latestCard = null;
+      updateStatus();
+      return;
+    }
+
+    const cards = Object.values(snapshot.val()).sort((a, b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0));
+    latestCard = cards[0];
+    updateStatus();
+  }));
+
+  const verificationQuery = query(ref(db, 'cardVerification'), orderByChild('ownerUid'), equalTo(uid));
+  unsubs.push(onValue(verificationQuery, (snapshot) => {
+    if (!snapshot.exists()) {
+      latestPending = null;
+      updateStatus();
+      return;
+    }
+
+    const pendingCards = Object.values(snapshot.val())
+      .filter((entry) => entry.status === 'pending')
+      .sort((a, b) => (b.updatedAt || b.submittedAt || 0) - (a.updatedAt || a.submittedAt || 0));
+
+    const pending = pendingCards[0]?.cardSnapshot;
+    latestPending = pending ? { ...pending, status: 'pending' } : null;
+    updateStatus();
+  }));
+
+  verificationUnsubscribe = () => unsubs.forEach((fn) => fn());
+};
+
+const hasPendingVerification = async (uid) => {
+  const verificationQuery = query(ref(db, 'cardVerification'), orderByChild('ownerUid'), equalTo(uid));
+  const snapshot = await get(verificationQuery);
+  return snapshot.exists();
 };
 
 const canSubmitCard = async (uid, isVip) => {
   if (isVip) return true;
 
-  const userCardsQuery = query(ref(db, 'cards'), orderByChild('ownerUid'), equalTo(uid));
-  const snapshot = await get(userCardsQuery);
-  if (!snapshot.exists()) return true;
-
-  const cards = Object.values(snapshot.val());
-  return cards.length === 0;
+  const pendingVerification = await hasPendingVerification(uid);
+  return !pendingVerification;
 };
 
-const computeSerial = async (createdAt, cardKey) => {
-  const snapshot = await get(ref(db, 'cards'));
-  if (!snapshot.exists()) return { index: 1, total: 1 };
-
-  const entries = Object.entries(snapshot.val()).map(([key, value]) => ({
-    key,
-    createdAt: value.createdAt || 0
-  }));
-
-  entries.sort((a, b) => a.createdAt - b.createdAt || a.key.localeCompare(b.key));
-  const index = entries.findIndex((entry) => entry.key === cardKey && entry.createdAt === createdAt) + 1;
-  return { index: Math.max(index, 1), total: entries.length };
-};
 
 form.addEventListener('input', render);
 rollStatsBtn.addEventListener('click', rollStats);
@@ -205,7 +229,7 @@ submitCardBtn.addEventListener('click', async () => {
 
   const allowedToSubmit = await canSubmitCard(currentUser.uid, currentUserIsVip);
   if (!allowedToSubmit) {
-    alert('Compte standard : une seule carte autorisée. Passe VIP pour créer des cartes à l'infini.');
+    alert('Compte standard : une seule carte en attente autorisée. Attends la validation ou passe VIP pour envoyer sans limite.');
     return;
   }
 
@@ -236,10 +260,8 @@ submitCardBtn.addEventListener('click', async () => {
       updatedAt: createdAt
     };
 
-    const cardRef = push(ref(db, 'cards'));
-    await set(cardRef, payload);
-    await set(ref(db, `cardVerification/${cardRef.key}`), {
-      cardId: cardRef.key,
+    const cardRef = push(ref(db, 'cardVerification'));
+    await set(cardRef, {
       ownerUid: currentUser.uid,
       ownerNickname: currentNickname,
       status: 'pending',
@@ -254,18 +276,13 @@ submitCardBtn.addEventListener('click', async () => {
         attack: payload.attack,
         defense: payload.defense,
         type: payload.type,
-        edition: payload.edition
+        edition: payload.edition,
+        abilities: payload.abilities,
+        image: payload.image
       }
     });
 
-    try {
-      const { index, total } = await computeSerial(createdAt, cardRef.key);
-      await update(ref(db, `cards/${cardRef.key}`), { serialIndex: index, serialTotal: total });
-      output.serial.textContent = `${pad2(index)}/${pad2(total)}`;
-    } catch (serialError) {
-      console.warn('Numérotation non disponible pour cette soumission :', serialError);
-      output.serial.textContent = '--/--';
-    }
+    output.serial.textContent = '--/--';
 
     alert('Carte envoyée en attente de vérification admin.');
   } catch (error) {

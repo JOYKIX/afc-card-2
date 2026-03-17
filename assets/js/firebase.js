@@ -19,6 +19,7 @@ import {
   push,
   query,
   ref,
+  remove,
   set,
   update
 } from 'https://www.gstatic.com/firebasejs/10.12.4/firebase-database.js';
@@ -183,6 +184,7 @@ export {
   push,
   query,
   ref,
+  remove,
   set,
   syncProfileOnLogin,
   signOut,
