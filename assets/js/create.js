@@ -1,4 +1,4 @@
-import { checkAdmin, db, equalTo, get, orderByChild, push, query, ref, set, update } from './firebase.js';
+import { checkAdmin, db, equalTo, get, onValue, orderByChild, push, query, ref, set, update } from './firebase.js';
 import { initCommon } from './common.js';
 
 const fields = {
@@ -29,6 +29,7 @@ const submitCardBtn = document.getElementById('submitCard');
 const downloadCardBtn = document.getElementById('downloadCard');
 const imageInput = document.getElementById('imageInput');
 const portrait = document.getElementById('portrait');
+const verificationStatusText = document.getElementById('verificationStatusText');
 
 const rankScale = ['D', 'C', 'B', 'A', 'S', 'SS', 'SSS'];
 const titleOptions = new Set(['Responsable staff', "Gardien de l'AFC", 'Streamers', 'Viewers']);
@@ -38,6 +39,7 @@ let currentNickname = '';
 let attack = 0;
 let defense = 0;
 let portraitDataUrl = '';
+let verificationUnsubscribe = null;
 
 const getAverage = () => Math.round((attack + defense) / 2);
 const getRank = (average) => {
@@ -91,6 +93,45 @@ const refreshProfile = async (uid) => {
   currentNickname = profileSnapshot.exists() ? profileSnapshot.val().nickname || '' : '';
 };
 
+const getVerificationText = (card) => {
+  if (!card) {
+    return 'Aucune carte envoyée pour le moment.';
+  }
+
+  if (card.status === 'pending') {
+    return `En vérification: ${card.name} (${card.rank}) est en attente de validation admin.`;
+  }
+
+  if (card.status === 'approved') {
+    return `Validée ✅ ${card.name} (${card.rank}) est approuvée et visible.`;
+  }
+
+  if (card.status === 'rejected') {
+    return `Refusée ❌ ${card.name} (${card.rank}) a été refusée. Tu peux envoyer une nouvelle carte.`;
+  }
+
+  return `Statut inconnu pour ${card.name}.`;
+};
+
+const watchVerificationStatus = (uid) => {
+  if (verificationUnsubscribe) {
+    verificationUnsubscribe();
+    verificationUnsubscribe = null;
+  }
+
+  verificationStatusText.textContent = 'Chargement du suivi de vérification...';
+
+  const userCardsQuery = query(ref(db, 'cards'), orderByChild('ownerUid'), equalTo(uid));
+  verificationUnsubscribe = onValue(userCardsQuery, (snapshot) => {
+    if (!snapshot.exists()) {
+      verificationStatusText.textContent = 'Aucune carte envoyée pour le moment.';
+      return;
+    }
+
+    const cards = Object.values(snapshot.val()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    verificationStatusText.textContent = getVerificationText(cards[0]);
+  });
+};
 
 const canSubmitCard = async (uid) => {
   const userCardsQuery = query(ref(db, 'cards'), orderByChild('ownerUid'), equalTo(uid));
@@ -194,6 +235,25 @@ submitCardBtn.addEventListener('click', async () => {
 
     const cardRef = push(ref(db, 'cards'));
     await set(cardRef, payload);
+    await set(ref(db, `cardVerification/${cardRef.key}`), {
+      cardId: cardRef.key,
+      ownerUid: currentUser.uid,
+      ownerNickname: currentNickname,
+      status: 'pending',
+      submittedAt: createdAt,
+      updatedAt: createdAt,
+      cardSnapshot: {
+        name: payload.name,
+        role: payload.role,
+        rank: payload.rank,
+        average: payload.average,
+        cost: payload.cost,
+        attack: payload.attack,
+        defense: payload.defense,
+        type: payload.type,
+        edition: payload.edition
+      }
+    });
 
     try {
       const { index, total } = await computeSerial(createdAt, cardRef.key);
@@ -237,10 +297,16 @@ await initCommon({
     currentUser = user;
     if (!user) {
       currentNickname = '';
+      verificationStatusText.textContent = 'Connecte-toi pour voir le statut de ta carte.';
+      if (verificationUnsubscribe) {
+        verificationUnsubscribe();
+        verificationUnsubscribe = null;
+      }
       return;
     }
 
     await refreshProfile(user.uid);
+    watchVerificationStatus(user.uid);
     await checkAdmin(user.uid, user.email || '');
   }
 });

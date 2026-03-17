@@ -257,3 +257,39 @@ button.danger { background: linear-gradient(150deg, #8d2f4f, #3f1726); }
   .afc-card { width: min(92vw, 530px); }
   .topbar { flex-direction: column; align-items: flex-start; }
 }
+
+
+.verification-box {
+  margin-top: .35rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(10, 15, 30, 0.72);
+  padding: .75rem;
+  display: grid;
+  gap: .45rem;
+}
+
+.verification-box h3,
+.section-title {
+  font-size: 1rem;
+  color: #d8e4ff;
+}
+
+#verificationStatusText {
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.pending-item strong {
+  color: #beddff;
+}
+
+.panel {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, .24);
+}
+
+@media (max-width: 700px) {
+  .actions button {
+    width: 100%;
+  }
+}

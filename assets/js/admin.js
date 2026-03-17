@@ -3,12 +3,12 @@ import { initCommon } from './common.js';
 
 const adminNotice = document.getElementById('adminNotice');
 const pendingCards = document.getElementById('pendingCards');
+const verificationCards = document.getElementById('verificationCards');
 const countPending = document.getElementById('countPending');
 const countApproved = document.getElementById('countApproved');
 const countRejected = document.getElementById('countRejected');
 let currentUser = null;
 let isAdmin = false;
-
 
 const updateReviewStats = async () => {
   if (!isAdmin || !currentUser) {
@@ -41,10 +41,35 @@ const updateReviewStats = async () => {
   countRejected.textContent = String(stats.rejected);
 };
 
+const renderVerificationSection = async () => {
+  const snapshot = await get(ref(db, 'cardVerification'));
+  verificationCards.innerHTML = '';
+
+  if (!snapshot.exists()) {
+    verificationCards.innerHTML = '<p>Aucune entrée de vérification.</p>';
+    return;
+  }
+
+  const entries = Object.values(snapshot.val()).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+
+  entries.forEach((entry) => {
+    const item = document.createElement('article');
+    item.className = 'pending-item';
+    const info = entry.cardSnapshot || {};
+    item.innerHTML = `
+      <h3>${info.name || 'Carte'} · ${info.role || '-'}</h3>
+      <p>Par ${entry.ownerNickname || '-'} — Statut <strong>${entry.status || 'pending'}</strong></p>
+      <p>ATK ${info.attack ?? '-'} / DEF ${info.defense ?? '-'} · Rang ${info.rank || '-'} · Moyenne ${info.average ?? '-'}</p>
+    `;
+    verificationCards.appendChild(item);
+  });
+};
+
 const loadPendingCards = async () => {
   if (!isAdmin || !currentUser) return;
 
   await updateReviewStats();
+  await renderVerificationSection();
 
   const pendingQuery = query(ref(db, 'cards'), orderByChild('status'), equalTo('pending'));
   const snapshot = await get(pendingQuery);
@@ -68,19 +93,35 @@ const loadPendingCards = async () => {
     `;
 
     item.querySelector('[data-action="approve"]').addEventListener('click', async () => {
+      const now = Date.now();
       await update(ref(db, `cards/${cardId}`), {
         status: 'approved',
         moderatedBy: currentUser.uid,
-        moderatedAt: Date.now()
+        moderatedAt: now,
+        updatedAt: now
+      });
+      await update(ref(db, `cardVerification/${cardId}`), {
+        status: 'approved',
+        moderatedBy: currentUser.uid,
+        moderatedAt: now,
+        updatedAt: now
       });
       await loadPendingCards();
     });
 
     item.querySelector('[data-action="reject"]').addEventListener('click', async () => {
+      const now = Date.now();
       await update(ref(db, `cards/${cardId}`), {
         status: 'rejected',
         moderatedBy: currentUser.uid,
-        moderatedAt: Date.now()
+        moderatedAt: now,
+        updatedAt: now
+      });
+      await update(ref(db, `cardVerification/${cardId}`), {
+        status: 'rejected',
+        moderatedBy: currentUser.uid,
+        moderatedAt: now,
+        updatedAt: now
       });
       await loadPendingCards();
     });
@@ -97,6 +138,7 @@ await initCommon({
       isAdmin = false;
       adminNotice.textContent = 'Connecte-toi avec un compte admin.';
       pendingCards.innerHTML = '';
+      verificationCards.innerHTML = '';
       await updateReviewStats();
       return;
     }
@@ -105,6 +147,7 @@ await initCommon({
     if (!isAdmin) {
       adminNotice.textContent = 'Accès refusé : ce compte n’est pas admin.';
       pendingCards.innerHTML = '';
+      verificationCards.innerHTML = '';
       await updateReviewStats();
       return;
     }
