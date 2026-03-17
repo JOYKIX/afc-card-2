@@ -9,79 +9,90 @@
 </head>
 
 <body>
+  <header class="topbar">
+    <h1>AFC Card Studio</h1>
+    <div class="auth-actions">
+      <span id="authStatus">Non connecté</span>
+      <button id="googleLogin" type="button">Connexion Google</button>
+      <button id="logout" type="button" class="ghost">Déconnexion</button>
+    </div>
+  </header>
+
   <main class="layout">
     <section class="panel">
-      <h1>AFC Card · Éditeur</h1>
-      <p class="subtitle">Crée ta carte 5:7, génère les stats et exporte ton visuel.</p>
+      <nav class="tabs">
+        <button type="button" class="tab active" data-tab="createTab">Créer une carte</button>
+        <button type="button" class="tab" data-tab="profileTab">Profil</button>
+        <button type="button" class="tab hidden" data-tab="adminTab" id="adminTabBtn">Admin</button>
+      </nav>
 
-      <form id="cardForm" class="editor-form">
-        <label>
-          Nom
-          <input id="name" type="text" maxlength="24" value="Fémi-Mars" required />
+      <section id="createTab" class="tab-content active">
+        <p class="subtitle">Les champs automatiques sont calculés depuis attaque/défense.</p>
+
+        <form id="cardForm" class="editor-form">
+          <label>Nom
+            <input id="name" type="text" maxlength="24" value="Fémi-Mars" required />
+          </label>
+
+          <label>Rôle
+            <select id="title" required>
+              <option>Responsable staff</option>
+              <option>Gardien de l'AFC</option>
+              <option>Streamers</option>
+              <option>Viewers</option>
+            </select>
+          </label>
+
+          <label>Édition
+            <input id="edition" type="text" value="2e édition" readonly />
+          </label>
+
+          <label>Capacités
+            <textarea id="abilities" rows="4" required></textarea>
+          </label>
+
+          <label>Photo (JPG / JPEG / WEBP)
+            <input id="imageInput" type="file" accept=".jpg,.jpeg,.webp,image/jpeg,image/webp" />
+          </label>
+
+          <div class="actions">
+            <button type="button" id="rollStats">Générer attaque / défense</button>
+            <button type="button" id="submitCard">Envoyer en vérification</button>
+            <button type="button" id="downloadCard">Télécharger la carte</button>
+          </div>
+        </form>
+      </section>
+
+      <section id="profileTab" class="tab-content">
+        <h2>Profil</h2>
+        <p class="subtitle">Choisis ton pseudo (utilisé lors de la création de carte).</p>
+        <label>Pseudo
+          <input id="nickname" type="text" maxlength="24" placeholder="Ton pseudo" />
         </label>
+        <button id="saveProfile" type="button">Enregistrer le pseudo</button>
+      </section>
 
-        <label>
-          Titre
-          <input id="title" type="text" maxlength="40" value="Général de l'AFC" required />
-        </label>
-
-        <label>
-          Numéro de carte
-          <input id="number" type="number" min="1" max="999" value="2" required />
-        </label>
-
-        <label>
-          Édition
-          <input id="edition" type="text" maxlength="20" value="1er édition" required />
-        </label>
-
-        <label>
-          Niveau
-          <input id="level" type="number" min="1" max="99" value="32" required />
-        </label>
-
-        <label>
-          Type
-          <select id="archetype">
-            <option value="auto" selected>Automatique (selon stats)</option>
-            <option value="attaquant">Attaquant</option>
-            <option value="tank">Tank</option>
-          </select>
-        </label>
-
-        <label>
-          Capacités
-          <textarea id="abilities" rows="4">Cri du Raptor : Baisse la défense adverse de 10 points.
-
-Stream Ban : Met hors combat la carte adverse. Peut être utilisé deux fois.</textarea>
-        </label>
-
-        <label>
-          Photo (JPG / JPEG / WEBP)
-          <input id="imageInput" type="file" accept=".jpg,.jpeg,.webp,image/jpeg,image/webp" />
-        </label>
-
-        <div class="actions">
-          <button type="button" id="rollStats">Générer attaque / défense</button>
-          <button type="button" id="downloadCard">Télécharger la carte</button>
-        </div>
-      </form>
+      <section id="adminTab" class="tab-content">
+        <h2>Validation des cartes</h2>
+        <p class="subtitle">Visible uniquement pour les comptes admin.</p>
+        <div id="pendingCards" class="pending-list"></div>
+      </section>
     </section>
 
     <section class="preview-wrap">
       <article class="afc-card" id="afcCard">
         <header class="card-header">
           <div class="meta-left">
-            <span id="cardNumber">2</span>
-            <small id="cardEdition">1er édition</small>
+            <span id="cardCost">2</span>
+            <small id="cardEdition">2e édition</small>
           </div>
           <div class="identity">
             <h2 id="cardName">Fémi-Mars</h2>
-            <p id="cardTitle">Général de l'AFC</p>
+            <p id="cardTitle">Responsable staff</p>
           </div>
           <div class="meta-right">
             <span id="cardRank">C</span>
-            <small id="cardLevel">32</small>
+            <small id="cardAverage">32</small>
           </div>
         </header>
 
@@ -106,11 +117,13 @@ Stream Ban : Met hors combat la carte adverse. Peut être utilisé deux fois.</t
             <span id="cardType">-</span>
           </div>
         </footer>
+
+        <span class="serial" id="cardSerial">--/--</span>
       </article>
     </section>
   </main>
 
-  <script src="assets/js/script.js"></script>
+  <script type="module" src="assets/js/script.js"></script>
 </body>
 
 </html>
