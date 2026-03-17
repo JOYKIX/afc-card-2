@@ -18,7 +18,6 @@ const output = {
   rank: document.getElementById('cardRank'),
   attack: document.getElementById('attack'),
   defense: document.getElementById('defense'),
-  serial: document.getElementById('cardSerial'),
   topType: document.getElementById('cardTypeTop')
 };
 
@@ -84,24 +83,6 @@ const toFriendlySubmissionError = (error) => {
 };
 
 
-const formatCardNumber = (count, createdAt) => {
-  const date = new Date(createdAt);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const serial = String(count).padStart(4, '0');
-  return `AFC-${year}${month}${day}-${serial}`;
-};
-
-const getNextCardNumber = async () => {
-  const cardsSnapshot = await get(ref(db, 'cards'));
-  const verificationSnapshot = await get(ref(db, 'cardVerification'));
-
-  const approvedCount = cardsSnapshot.exists() ? Object.keys(cardsSnapshot.val()).length : 0;
-  const pendingCount = verificationSnapshot.exists() ? Object.keys(verificationSnapshot.val()).length : 0;
-
-  return approvedCount + pendingCount + 1;
-};
 
 const applyRankTheme = (rank) => {
   const card = document.getElementById('afcCard');
@@ -272,8 +253,27 @@ const renderCardJpeg = async () => {
   }
 
   const card = document.getElementById('afcCard');
-  const canvas = await window.html2canvas(card, { backgroundColor: null, scale: 2, useCORS: true });
+  const canvas = await window.html2canvas(card, {
+    backgroundColor: null,
+    scale: 2,
+    useCORS: true,
+    logging: false,
+    imageTimeout: 12000
+  });
   return canvas.toDataURL('image/jpeg', 0.94);
+};
+
+
+const exportCardAsJpeg = async () => {
+  try {
+    renderEngine = 'html2canvas';
+    return await renderCardJpeg();
+  } catch (primaryError) {
+    console.warn('Export html2canvas échoué, fallback SVG activé:', primaryError);
+    renderEngine = 'svg-foreignobject';
+    setRenderStatus('Moteur export fallback actif (qualité réduite).', true);
+    return renderCardJpeg();
+  }
 };
 
 
@@ -334,9 +334,7 @@ submitCardBtn.addEventListener('click', async () => {
     const rank = getRank(average);
     const cost = getCost(rank);
     const createdAt = Date.now();
-    const cardImage = await renderCardJpeg();
-    const cardNumber = await getNextCardNumber();
-    const serial = formatCardNumber(cardNumber, createdAt);
+    const cardImage = await exportCardAsJpeg();
 
     const payload = {
       ownerUid: currentUser.uid,
@@ -355,7 +353,6 @@ submitCardBtn.addEventListener('click', async () => {
       cardImage,
       createdBy: currentNickname,
       creatorName: currentNickname,
-      serial,
       status: 'pending',
       createdAt,
       updatedAt: createdAt
@@ -369,7 +366,6 @@ submitCardBtn.addEventListener('click', async () => {
       submittedAt: createdAt,
       updatedAt: createdAt,
       cardSnapshot: {
-        serial: payload.serial,
         name: payload.name,
         role: payload.role,
         rank: payload.rank,
@@ -378,8 +374,6 @@ submitCardBtn.addEventListener('click', async () => {
         creatorName: payload.creatorName
       }
     });
-
-    output.serial.textContent = serial;
 
     alert('Carte envoyée en attente de vérification admin.');
   } catch (error) {
@@ -392,7 +386,7 @@ submitCardBtn.addEventListener('click', async () => {
 
 downloadCardBtn.addEventListener('click', async () => {
   try {
-    const jpegDataUrl = await renderCardJpeg();
+    const jpegDataUrl = await exportCardAsJpeg();
     const link = document.createElement('a');
     link.download = `${fields.name.value || 'afc-card'}.jpg`;
     link.href = jpegDataUrl;
@@ -405,7 +399,6 @@ downloadCardBtn.addEventListener('click', async () => {
 
 const script = document.createElement('script');
 script.src = 'assets/vendor/html2canvas.min.js';
-script.defer = true;
 html2canvasReady = new Promise((resolve, reject) => {
   script.onload = resolve;
   script.onerror = reject;
