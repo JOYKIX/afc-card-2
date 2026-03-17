@@ -104,11 +104,11 @@ const getVerificationText = (card) => {
   }
 
   if (card.status === 'approved') {
-    return `Validée ✅ ${card.name} (${card.rank}) est approuvée et visible.`;
+    return `Validée ${card.name} (${card.rank}) est approuvée et visible.`;
   }
 
   if (card.status === 'rejected') {
-    return `Refusée ❌ ${card.name} (${card.rank}) a été refusée. Tu peux envoyer une nouvelle carte.`;
+    return `Refusée ${card.name} (${card.rank}) a été refusée. Tu peux envoyer une nouvelle carte.`;
   }
 
   return `Statut inconnu pour ${card.name}.`;
@@ -255,6 +255,7 @@ submitCardBtn.addEventListener('click', async () => {
       rank,
       cost,
       type: computeType(),
+      rarity: rank,
       status: 'pending',
       createdAt,
       updatedAt: createdAt
@@ -276,6 +277,7 @@ submitCardBtn.addEventListener('click', async () => {
         attack: payload.attack,
         defense: payload.defense,
         type: payload.type,
+        rarity: payload.rarity,
         edition: payload.edition,
         abilities: payload.abilities,
         image: payload.image
