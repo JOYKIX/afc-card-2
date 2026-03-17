@@ -9,8 +9,14 @@
 </head>
 
 <body>
-  <header class="topbar">
-    <h1>AFC Card Studio</h1>
+  <div class="bg-orb orb-a"></div>
+  <div class="bg-orb orb-b"></div>
+
+  <header class="topbar glass">
+    <div>
+      <p class="kicker">AFC Universe</p>
+      <h1>AFC Card Studio</h1>
+    </div>
     <div class="auth-actions">
       <span id="authStatus">Non connecté</span>
       <button id="googleLogin" type="button">Connexion Google</button>
@@ -19,7 +25,7 @@
   </header>
 
   <main class="layout">
-    <section class="panel">
+    <section class="panel glass">
       <nav class="tabs">
         <button type="button" class="tab active" data-tab="createTab">Créer une carte</button>
         <button type="button" class="tab" data-tab="profileTab">Profil</button>
@@ -27,7 +33,7 @@
       </nav>
 
       <section id="createTab" class="tab-content active">
-        <p class="subtitle">Les champs automatiques sont calculés depuis attaque/défense.</p>
+        <p class="subtitle">Design premium + thème dynamique selon le rang (D → SSS).</p>
 
         <form id="cardForm" class="editor-form">
           <label>Nom
@@ -80,13 +86,15 @@
     </section>
 
     <section class="preview-wrap">
-      <article class="afc-card" id="afcCard">
+      <article class="afc-card rank-D" id="afcCard">
+        <div class="holo"></div>
         <header class="card-header">
           <div class="meta-left">
             <span id="cardCost">2</span>
             <small id="cardEdition">2e édition</small>
           </div>
           <div class="identity">
+            <p class="kicker" id="cardTypeTop">équilibré</p>
             <h2 id="cardName">Fémi-Mars</h2>
             <p id="cardTitle">Responsable staff</p>
           </div>
@@ -96,7 +104,9 @@
           </div>
         </header>
 
-        <div class="portrait" id="portrait"></div>
+        <div class="portrait-shell">
+          <div class="portrait" id="portrait"></div>
+        </div>
 
         <section class="skills">
           <h3>Capacités</h3>
