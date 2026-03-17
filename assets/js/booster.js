@@ -5,38 +5,94 @@ const openBoosterBtn = document.getElementById('openBooster');
 const boosterHint = document.getElementById('boosterHint');
 const boosterGrid = document.getElementById('boosterGrid');
 
-const rankClass = (rank = 'D') => `rank-${rank}`;
+const rankScale = ['D', 'C', 'B', 'A', 'S', 'SS', 'SSS'];
 
-const shuffle = (items) => {
-  const arr = [...items];
-  for (let i = arr.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
+const normalizeRarity = (card) => {
+  const rarity = (card?.rarity || card?.rank || 'D').toString().toUpperCase();
+  return rankScale.includes(rarity) ? rarity : 'D';
+};
+
+const rarityWeights = {
+  D: 34,
+  C: 24,
+  B: 16,
+  A: 11,
+  S: 8,
+  SS: 5,
+  SSS: 2
+};
+
+const weightedPick = (cards) => {
+  const weightedCards = cards.map((card) => ({
+    card,
+    weight: rarityWeights[normalizeRarity(card)] || 1
+  }));
+
+  const totalWeight = weightedCards.reduce((sum, item) => sum + item.weight, 0);
+  let roll = Math.random() * totalWeight;
+
+  for (const item of weightedCards) {
+    roll -= item.weight;
+    if (roll <= 0) return item.card;
   }
-  return arr;
+
+  return weightedCards[weightedCards.length - 1]?.card || null;
+};
+
+const cardTemplate = (card) => {
+  const rank = normalizeRarity(card);
+  const imageStyle = card.image ? `style="background-image:url('${card.image.replace(/'/g, "\\'")}')"` : '';
+
+  return `
+    <article class="afc-card rank-${rank}">
+      <div class="holo"></div>
+      <header class="card-header">
+        <div class="meta-left">
+          <span>${card.cost ?? '-'}</span>
+          <small>${card.edition || '2e édition'}</small>
+        </div>
+        <div class="identity">
+          <p class="kicker">${card.type || 'équilibré'}</p>
+          <h3>${card.name || 'Carte AFC'}</h3>
+          <p>${card.role || 'Inconnue'}</p>
+        </div>
+        <div class="meta-right">
+          <span>${rank}</span>
+          <small>${card.average ?? '-'}</small>
+        </div>
+      </header>
+
+      <div class="portrait-shell">
+        <div class="portrait" ${imageStyle}></div>
+      </div>
+
+      <section class="skills">
+        <h4>Capacités</h4>
+        <p>${card.abilities || '-'}</p>
+      </section>
+
+      <footer class="stats">
+        <div>
+          <strong><span class="material-icons" aria-hidden="true">swords</span></strong>
+          <span>${card.attack ?? '-'}</span>
+        </div>
+        <div>
+          <strong><span class="material-icons" aria-hidden="true">shield</span></strong>
+          <span>${card.defense ?? '-'}</span>
+        </div>
+        <div>
+          <strong>Type</strong>
+          <span>${card.type || '-'}</span>
+        </div>
+      </footer>
+
+      <span class="serial">${card.serial || '--/--'}</span>
+    </article>
+  `;
 };
 
 const renderBooster = (cards) => {
-  boosterGrid.innerHTML = '';
-
-  cards.forEach((card) => {
-    const article = document.createElement('article');
-    article.className = `booster-card ${rankClass(card.rank)}`;
-    const imageMarkup = card.image
-      ? `<img src="${card.image}" alt="Carte ${card.name}">`
-      : '<div class="booster-placeholder">Aucune image</div>';
-
-    article.innerHTML = `
-      <div class="booster-card-image">${imageMarkup}</div>
-      <div class="booster-card-body">
-        <p class="kicker">${card.role || 'Carte AFC'}</p>
-        <h3>${card.name || 'Inconnue'}</h3>
-        <p>Rang ${card.rank || 'D'} · Moyenne ${card.average ?? '-'}</p>
-        <p>ATK ${card.attack ?? '-'} / DEF ${card.defense ?? '-'}</p>
-      </div>
-    `;
-    boosterGrid.appendChild(article);
-  });
+  boosterGrid.innerHTML = cards.map((card) => cardTemplate(card)).join('');
 };
 
 const openBooster = async () => {
@@ -54,10 +110,10 @@ const openBooster = async () => {
     }
 
     const cards = Object.values(snapshot.val());
-    const picks = shuffle(cards).slice(0, 5);
+    const picks = Array.from({ length: 5 }, () => weightedPick(cards)).filter(Boolean);
 
     renderBooster(picks);
-    boosterHint.textContent = `Booster ouvert : ${picks.length} carte(s) récupérée(s).`;
+    boosterHint.textContent = `Booster ouvert : ${picks.length} carte(s) tirée(s), doublons possibles.`;
   } catch (error) {
     console.error(error);
     boosterHint.textContent = 'Impossible d’ouvrir le booster pour le moment.';

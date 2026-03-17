@@ -53,7 +53,7 @@ const renderTinderCard = () => {
   tinderReview.innerHTML = '';
 
   if (pendingQueue.length === 0) {
-    tinderReview.innerHTML = '<p class="hint">Plus aucune carte en attente. File d\'attente vide ✅</p>';
+    tinderReview.innerHTML = '<p class="hint">Plus aucune carte en attente. File d\'attente vide.</p>';
     return;
   }
 
@@ -140,6 +140,7 @@ const moderateCurrentCard = async (status) => {
         ownerUid: current.entry.ownerUid,
         ownerNickname: current.entry.ownerNickname,
         status: 'approved',
+        rarity: current.card.rarity || current.card.rank || 'D',
         createdAt: current.entry.submittedAt || now,
         moderatedBy: currentUser.uid,
         moderatedAt: now,
