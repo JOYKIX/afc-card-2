@@ -11,6 +11,11 @@ const toggleAdminNav = (visible) => {
   });
 };
 
+const setAuthUi = (user) => {
+  if (authStatus) authStatus.textContent = user ? user.displayName || user.email : 'Non connecté';
+  if (logoutBtn) logoutBtn.disabled = !user;
+};
+
 const initCommon = async ({ onUserChanged } = {}) => {
   try {
     await consumeRedirect();
@@ -30,27 +35,18 @@ const initCommon = async ({ onUserChanged } = {}) => {
   });
 
   logoutBtn?.addEventListener('click', async () => {
+    if (!auth.currentUser) return;
     await signOut(auth);
   });
 
   onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      await syncProfileOnLogin(user);
-    }
+    if (user) await syncProfileOnLogin(user);
 
-    let canAccessAdmin = false;
-    if (user) {
-      canAccessAdmin = await checkAdmin(user.uid, user.email || '');
-    }
+    const canAccessAdmin = user ? await checkAdmin(user.uid, user.email || '') : false;
     toggleAdminNav(canAccessAdmin);
+    setAuthUi(user);
 
-    if (authStatus) {
-      authStatus.textContent = user ? user.displayName || user.email : 'Non connecté';
-    }
-
-    if (onUserChanged) {
-      await onUserChanged(user);
-    }
+    if (onUserChanged) await onUserChanged(user);
   });
 };
 

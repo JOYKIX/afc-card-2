@@ -35,8 +35,9 @@
   <main class="single-layout">
     <section class="panel glass">
       <h2>Validation des cartes</h2>
-      <p class="subtitle">Mode Tinder: une carte à la fois, valide/refuse puis suivante.</p>
+      <p class="subtitle">Refonte admin : modération en temps réel, file claire, filtres de contrôle.</p>
       <div id="adminNotice" class="hint">Contrôle des droits...</div>
+
       <div id="reviewStats" class="review-stats">
         <article><strong id="countPending">0</strong><span>En vérification</span></article>
         <article><strong id="countApproved">0</strong><span>Validées</span></article>
@@ -46,7 +47,19 @@
       <section id="tinderReview" class="tinder-review" aria-live="polite"></section>
 
       <h3 class="section-title">Historique card verification</h3>
-      <p class="subtitle">Toutes les soumissions envoyées en base sont visibles ici.</p>
+      <div class="toolbar">
+        <label>Statut
+          <select id="statusFilter">
+            <option value="all">Tous</option>
+            <option value="pending">pending</option>
+            <option value="approved">approved</option>
+            <option value="rejected">rejected</option>
+          </select>
+        </label>
+        <label>Recherche
+          <input id="searchInput" type="search" placeholder="Pseudo, nom, rôle" />
+        </label>
+      </div>
       <div id="verificationCards" class="pending-list"></div>
     </section>
   </main>
