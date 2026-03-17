@@ -208,7 +208,8 @@ button.danger { background: linear-gradient(145deg, #d53f74, #8f2550); border-co
 .meta-left, .meta-right { display: grid; text-align: center; font-size: 1.75rem; }
 .meta-left small, .meta-right small { font-size: .72rem; color: #ced8f5; }
 .portrait-shell { border: 1px solid rgba(255,255,255,.2); border-radius: 12px; padding: .35rem; background: rgba(255,255,255,.08); z-index: 1; }
-.portrait { min-height: 220px; border-radius: 10px; background: linear-gradient(130deg,#2e3f71,#141c33); background-size: cover; background-position: center; }
+.portrait { min-height: 220px; border-radius: 10px; background: linear-gradient(130deg,#2e3f71,#141c33); background-size: cover; background-position: center; display: grid; place-items: center; overflow: hidden; }
+.portrait img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .skills, .stats { z-index: 1; text-align: center; }
 #cardAbilities, .modal-abilities { white-space: pre-wrap; color: #d9e3ff; line-height: 1.34; }
 .stats { display: grid; grid-template-columns: repeat(3,1fr); padding-bottom: 1rem; }

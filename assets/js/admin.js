@@ -58,8 +58,9 @@ const renderTinderCard = () => {
   }
 
   const { card, entry } = pendingQueue[0];
-  const imageMarkup = card.image
-    ? `<img src="${escapeHtml(card.image)}" alt="Illustration de ${escapeHtml(card.name || 'la carte')}">`
+  const imageSource = card.cardImage || card.image || '';
+  const imageMarkup = imageSource
+    ? `<img src="${escapeHtml(imageSource)}" alt="Rendu JPEG de ${escapeHtml(card.name || 'la carte')}">`
     : '<div class="booster-placeholder">Aucune image fournie</div>';
 
   tinderReview.innerHTML = `
@@ -68,9 +69,7 @@ const renderTinderCard = () => {
       <div class="tinder-body">
         <h3>${escapeHtml(card.name || 'Carte')} · ${escapeHtml(card.role || '-')}</h3>
         <p>Par ${escapeHtml(entry.ownerNickname || '-')}</p>
-        <p>Rang ${escapeHtml(card.rank || '-')} · Type ${escapeHtml(card.type || '-')} · Coût ${card.cost ?? '-'}</p>
-        <p>ATK ${card.attack ?? '-'} / DEF ${card.defense ?? '-'} · Moyenne ${card.average ?? '-'}</p>
-        <p class="modal-abilities">${escapeHtml(card.abilities || '-')}</p>
+        <p>Rang ${escapeHtml(card.rank || '-')} · Format JPEG vérification</p>
       </div>
       <div class="actions tinder-actions">
         <button type="button" data-moderation="approved">Valider</button>
@@ -113,7 +112,7 @@ const renderVerificationSection = () => {
     item.innerHTML = `
       <h3>${escapeHtml(card.name || entry.cardSnapshot?.name || 'Carte')} · ${escapeHtml(card.role || entry.cardSnapshot?.role || '-')}</h3>
       <p>Par ${escapeHtml(entry.ownerNickname || card.ownerNickname || '-')} — Statut <strong>${escapeHtml(entry.status || 'pending')}</strong></p>
-      <p>ATK ${card.attack ?? entry.cardSnapshot?.attack ?? '-'} / DEF ${card.defense ?? entry.cardSnapshot?.defense ?? '-'} · Rang ${escapeHtml(card.rank || entry.cardSnapshot?.rank || '-')}</p>
+      <p>Rang ${escapeHtml(card.rank || entry.cardSnapshot?.rank || '-')} · Snapshot JPEG</p>
     `;
     verificationCards.appendChild(item);
   });
@@ -141,6 +140,7 @@ const moderateCurrentCard = async (status) => {
         ownerNickname: current.entry.ownerNickname,
         status: 'approved',
         rarity: current.card.rarity || current.card.rank || 'D',
+        cardImage: current.card.cardImage || '',
         createdAt: current.entry.submittedAt || now,
         moderatedBy: currentUser.uid,
         moderatedAt: now,
