@@ -41,6 +41,34 @@ provider.setCustomParameters({ prompt: 'select_account' });
 
 await setPersistence(auth, browserLocalPersistence);
 
+const getCurrentDomain = () => {
+  if (typeof window === 'undefined' || !window.location?.hostname) return 'inconnu';
+  return window.location.hostname;
+};
+
+const toFriendlyAuthError = (error) => {
+  if (!error?.code) {
+    return new Error('Connexion Google impossible. Réessaie dans quelques secondes.');
+  }
+
+  if (error.code === 'auth/unauthorized-domain') {
+    const domain = getCurrentDomain();
+    return new Error(
+      `Domaine non autorisé (${domain}). Ajoute ce domaine dans Firebase Console > Authentication > Settings > Domaines autorisés, puis réessaie.`
+    );
+  }
+
+  if (error.code === 'auth/popup-closed-by-user') {
+    return new Error('La fenêtre Google a été fermée avant la fin de la connexion.');
+  }
+
+  if (error.code === 'auth/network-request-failed') {
+    return new Error('Erreur réseau pendant la connexion Google. Vérifie internet/VPN puis réessaie.');
+  }
+
+  return new Error(`Connexion Google impossible: ${error.message}`);
+};
+
 const performGoogleSignIn = async () => {
   try {
     await signInWithPopup(auth, provider);
@@ -50,7 +78,8 @@ const performGoogleSignIn = async () => {
       await signInWithRedirect(auth, provider);
       return;
     }
-    throw error;
+
+    throw toFriendlyAuthError(error);
   }
 };
 
@@ -59,6 +88,7 @@ const consumeRedirect = async () => {
     await getRedirectResult(auth);
   } catch (error) {
     console.error('Erreur auth redirect:', error);
+    throw toFriendlyAuthError(error);
   }
 };
 
