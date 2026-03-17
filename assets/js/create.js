@@ -15,7 +15,6 @@ const output = {
   title: document.getElementById('cardTitle'),
   average: document.getElementById('cardAverage'),
   abilities: document.getElementById('cardAbilities'),
-  type: document.getElementById('cardType'),
   rank: document.getElementById('cardRank'),
   attack: document.getElementById('attack'),
   defense: document.getElementById('defense'),
@@ -97,7 +96,6 @@ const render = () => {
   output.average.textContent = average;
   output.abilities.textContent = fields.abilities.value;
   output.rank.textContent = rank;
-  output.type.textContent = cardType;
   output.topType.textContent = cardType;
   output.attack.textContent = attack;
   output.defense.textContent = defense;

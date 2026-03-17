@@ -234,7 +234,7 @@ button.danger { background: linear-gradient(145deg, #d53f74, #8f2550); border-co
   box-shadow: inset 0 0 24px rgba(255,255,255,.12);
 }
 .portrait {
-  min-height: 230px;
+  min-height: 260px;
   border-radius: 12px;
   background: linear-gradient(135deg,#2e3f71,#141c33);
   background-size: cover;
@@ -249,7 +249,7 @@ button.danger { background: linear-gradient(145deg, #d53f74, #8f2550); border-co
 #cardAbilities, .modal-abilities { white-space: pre-wrap; color: #e7eeff; line-height: 1.42; font-size: 1.05rem; }
 .stats {
   display: grid;
-  grid-template-columns: repeat(3,1fr);
+  grid-template-columns: repeat(2,1fr);
   gap: .45rem;
   padding-bottom: 1.1rem;
 }
