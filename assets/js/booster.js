@@ -39,12 +39,28 @@ const weightedPick = (cards) => {
   return weightedCards[weightedCards.length - 1]?.card || null;
 };
 
-const cardTemplate = (card) => {
+const pickUniqueCards = (cards, count = 5) => {
+  const pool = [...cards];
+  const picks = [];
+
+  while (pool.length > 0 && picks.length < count) {
+    const selected = weightedPick(pool);
+    if (!selected) break;
+
+    picks.push(selected);
+    const idx = pool.indexOf(selected);
+    if (idx >= 0) pool.splice(idx, 1);
+  }
+
+  return picks;
+};
+
+const cardTemplate = (card, index) => {
   const rank = normalizeRarity(card);
   const imageStyle = card.image ? `style="background-image:url('${card.image.replace(/'/g, "\\'")}')"` : '';
 
   return `
-    <article class="afc-card rank-${rank}">
+    <article class="afc-card rank-${rank}" style="animation-delay:${index * 90}ms">
       <div class="holo"></div>
       <header class="card-header">
         <div class="meta-left">
@@ -92,7 +108,24 @@ const cardTemplate = (card) => {
 };
 
 const renderBooster = (cards) => {
-  boosterGrid.innerHTML = cards.map((card) => cardTemplate(card)).join('');
+  boosterGrid.innerHTML = cards.map((card, index) => cardTemplate(card, index)).join('');
+};
+
+const fetchApprovedCards = async () => {
+  const approvedQuery = query(ref(db, 'cards'), orderByChild('status'), equalTo('approved'));
+  const snapshot = await get(approvedQuery);
+
+  if (snapshot.exists()) {
+    return Object.values(snapshot.val());
+  }
+
+  const allCardsSnapshot = await get(ref(db, 'cards'));
+  if (!allCardsSnapshot.exists()) return [];
+
+  return Object.values(allCardsSnapshot.val()).filter((card) => {
+    const status = (card?.status || '').toLowerCase();
+    return status === 'approved' || status === '';
+  });
 };
 
 const openBooster = async () => {
@@ -100,23 +133,21 @@ const openBooster = async () => {
   boosterHint.textContent = 'Ouverture en cours...';
 
   try {
-    const approvedQuery = query(ref(db, 'cards'), orderByChild('status'), equalTo('approved'));
-    const snapshot = await get(approvedQuery);
+    const cards = await fetchApprovedCards();
 
-    if (!snapshot.exists()) {
+    if (cards.length === 0) {
       boosterHint.textContent = 'Aucune carte validée en base pour le moment.';
       boosterGrid.innerHTML = '';
       return;
     }
 
-    const cards = Object.values(snapshot.val());
-    const picks = Array.from({ length: 5 }, () => weightedPick(cards)).filter(Boolean);
+    const picks = pickUniqueCards(cards, 5);
 
     renderBooster(picks);
-    boosterHint.textContent = `Booster ouvert : ${picks.length} carte(s) tirée(s), doublons possibles.`;
+    boosterHint.textContent = `Booster ouvert : ${picks.length} carte(s) tirée(s).`;
   } catch (error) {
     console.error(error);
-    boosterHint.textContent = 'Impossible d’ouvrir le booster pour le moment.';
+    boosterHint.textContent = 'Impossible d’ouvrir le booster pour le moment. Vérifie les droits Firebase.';
   } finally {
     openBoosterBtn.disabled = false;
   }
