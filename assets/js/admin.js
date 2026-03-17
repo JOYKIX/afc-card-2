@@ -1,4 +1,4 @@
-import { checkAdmin, db, equalTo, get, orderByChild, query, ref, update } from './firebase.js';
+import { checkAdmin, db, get, ref, update } from './firebase.js';
 import { initCommon } from './common.js';
 
 const adminNotice = document.getElementById('adminNotice');
@@ -112,24 +112,30 @@ const moderateCurrentCard = async (status) => {
   if (!current) return;
 
   const now = Date.now();
-  await update(ref(db, `cards/${current.cardId}`), {
-    status,
-    moderatedBy: currentUser.uid,
-    moderatedAt: now,
-    updatedAt: now
-  });
 
-  await update(ref(db, `cardVerification/${current.cardId}`), {
-    status,
-    moderatedBy: currentUser.uid,
-    moderatedAt: now,
-    updatedAt: now
-  });
+  try {
+    await update(ref(db, `cards/${current.cardId}`), {
+      status,
+      moderatedBy: currentUser.uid,
+      moderatedAt: now,
+      updatedAt: now
+    });
 
-  pendingQueue.shift();
-  renderTinderCard();
-  await updateReviewStats();
-  await renderVerificationSection();
+    await update(ref(db, `cardVerification/${current.cardId}`), {
+      status,
+      moderatedBy: currentUser.uid,
+      moderatedAt: now,
+      updatedAt: now
+    });
+
+    pendingQueue.shift();
+    renderTinderCard();
+    await updateReviewStats();
+    await renderVerificationSection();
+  } catch (error) {
+    console.error('Erreur de modération:', error);
+    alert('Impossible de valider/refuser cette carte pour le moment. Réessaie.');
+  }
 };
 
 const loadPendingCards = async () => {
@@ -138,20 +144,26 @@ const loadPendingCards = async () => {
   await updateReviewStats();
   await renderVerificationSection();
 
-  const pendingQuery = query(ref(db, 'cards'), orderByChild('status'), equalTo('pending'));
-  const snapshot = await get(pendingQuery);
+  try {
+    const snapshot = await get(ref(db, 'cards'));
 
-  if (!snapshot.exists()) {
-    pendingQueue = [];
+    if (!snapshot.exists()) {
+      pendingQueue = [];
+      renderTinderCard();
+      return;
+    }
+
+    pendingQueue = Object.entries(snapshot.val())
+      .map(([cardId, card]) => ({ cardId, card }))
+      .filter(({ card }) => card.status === 'pending')
+      .sort((a, b) => (a.card.createdAt || 0) - (b.card.createdAt || 0));
+
     renderTinderCard();
-    return;
+  } catch (error) {
+    console.error('Chargement des cartes en attente impossible:', error);
+    pendingQueue = [];
+    tinderReview.innerHTML = '<p class="hint">Impossible de charger les cartes en attente.</p>';
   }
-
-  pendingQueue = Object.entries(snapshot.val())
-    .map(([cardId, card]) => ({ cardId, card }))
-    .sort((a, b) => (a.card.createdAt || 0) - (b.card.createdAt || 0));
-
-  renderTinderCard();
 };
 
 await initCommon({

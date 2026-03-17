@@ -163,9 +163,9 @@ imageInput.addEventListener('change', (event) => {
   const file = event.target.files?.[0];
   if (!file) return;
 
-  const valid = ['image/jpeg', 'image/webp'].includes(file.type);
+  const valid = ['image/jpeg', 'image/png', 'image/webp'].includes(file.type);
   if (!valid) {
-    alert('Format refusé. Utilise JPG/JPEG ou WEBP (pas de PNG).');
+    alert('Format refusé. Utilise JPG/JPEG, PNG ou WEBP.');
     event.target.value = '';
     return;
   }
