@@ -138,6 +138,11 @@ imageInput.addEventListener('change', (event) => {
 });
 
 submitCardBtn.addEventListener('click', async () => {
+  if (!form.checkValidity()) {
+    form.reportValidity();
+    return;
+  }
+
   if (!currentUser) {
     alert('Connexion Google obligatoire pour créer une carte.');
     return;
@@ -160,38 +165,52 @@ submitCardBtn.addEventListener('click', async () => {
     return;
   }
 
-  const average = getAverage();
-  const rank = getRank(average);
-  const cost = getCost(rank);
-  const createdAt = Date.now();
+  submitCardBtn.disabled = true;
 
-  const payload = {
-    ownerUid: currentUser.uid,
-    ownerNickname: currentNickname,
-    name: fields.name.value.trim(),
-    role: fields.title.value,
-    edition: '2e édition',
-    abilities: fields.abilities.value.trim(),
-    image: portraitDataUrl,
-    attack,
-    defense,
-    average,
-    rank,
-    cost,
-    type: computeType(),
-    status: 'pending',
-    createdAt,
-    updatedAt: createdAt
-  };
+  try {
+    const average = getAverage();
+    const rank = getRank(average);
+    const cost = getCost(rank);
+    const createdAt = Date.now();
 
-  const cardRef = push(ref(db, 'cards'));
-  await set(cardRef, payload);
+    const payload = {
+      ownerUid: currentUser.uid,
+      ownerNickname: currentNickname,
+      name: fields.name.value.trim(),
+      role: fields.title.value,
+      edition: '2e édition',
+      abilities: fields.abilities.value.trim(),
+      image: portraitDataUrl,
+      attack,
+      defense,
+      average,
+      rank,
+      cost,
+      type: computeType(),
+      status: 'pending',
+      createdAt,
+      updatedAt: createdAt
+    };
 
-  const { index, total } = await computeSerial(createdAt, cardRef.key);
-  await update(ref(db, `cards/${cardRef.key}`), { serialIndex: index, serialTotal: total });
+    const cardRef = push(ref(db, 'cards'));
+    await set(cardRef, payload);
 
-  output.serial.textContent = `${pad2(index)}/${pad2(total)}`;
-  alert('Carte envoyée en attente de vérification admin.');
+    try {
+      const { index, total } = await computeSerial(createdAt, cardRef.key);
+      await update(ref(db, `cards/${cardRef.key}`), { serialIndex: index, serialTotal: total });
+      output.serial.textContent = `${pad2(index)}/${pad2(total)}`;
+    } catch (serialError) {
+      console.warn('Numérotation non disponible pour cette soumission :', serialError);
+      output.serial.textContent = '--/--';
+    }
+
+    alert('Carte envoyée en attente de vérification admin.');
+  } catch (error) {
+    console.error('Erreur lors de la soumission :', error);
+    alert('Échec de l’envoi en vérification. Réessaie dans quelques secondes.');
+  } finally {
+    submitCardBtn.disabled = false;
+  }
 });
 
 downloadCardBtn.addEventListener('click', async () => {
