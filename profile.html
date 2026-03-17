@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AFC Card Studio · Profil</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+
+<body>
+  <div class="bg-orb orb-a"></div>
+  <div class="bg-orb orb-b"></div>
+
+  <header class="topbar glass">
+    <div>
+      <p class="kicker">AFC Universe</p>
+      <h1>Profil joueur</h1>
+    </div>
+
+    <nav class="site-nav">
+      <a class="nav-link" href="index.html">Créer</a>
+      <a class="nav-link active" href="profile.html">Profil</a>
+      <a class="nav-link" href="admin.html">Admin</a>
+    </nav>
+
+    <div class="auth-actions">
+      <span id="authStatus">Vérification...</span>
+      <button id="googleLogin" type="button">Connexion Google</button>
+      <button id="logout" type="button" class="ghost">Déconnexion</button>
+    </div>
+  </header>
+
+  <main class="single-layout">
+    <section class="panel glass">
+      <h2>Personnalise ton profil</h2>
+      <p class="subtitle">Ton pseudo est obligatoire pour envoyer des cartes en modération.</p>
+
+      <label>Pseudo
+        <input id="nickname" type="text" maxlength="24" placeholder="Ton pseudo AFC" />
+      </label>
+      <button id="saveProfile" type="button">Enregistrer le pseudo</button>
+
+      <p id="profileHint" class="hint">Connecte-toi avec Google pour démarrer.</p>
+    </section>
+  </main>
+
+  <script type="module" src="assets/js/profile.js"></script>
+</body>
+
+</html>
