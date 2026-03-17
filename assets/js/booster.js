@@ -93,16 +93,12 @@ const cardTemplate = (card, index) => {
 
       <footer class="stats">
         <div>
-          <strong><span class="material-icons" aria-hidden="true">flash_on</span></strong>
+          <strong><span aria-hidden="true">⚔️</span></strong>
           <span>${card.attack ?? '-'}</span>
         </div>
         <div>
           <strong><span class="material-icons" aria-hidden="true">shield</span></strong>
           <span>${card.defense ?? '-'}</span>
-        </div>
-        <div>
-          <strong><span class="material-icons" aria-hidden="true">category</span></strong>
-          <span>${card.type || '-'}</span>
         </div>
       </footer>
 
