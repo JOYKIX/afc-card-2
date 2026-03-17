@@ -38,6 +38,24 @@
       <p class="subtitle">Refonte admin : modération en temps réel, file claire, filtres de contrôle.</p>
       <div id="adminNotice" class="hint">Contrôle des droits...</div>
 
+      <section class="role-manager" aria-labelledby="roleManagerTitle">
+        <h3 id="roleManagerTitle" class="section-title">Gestion des accès</h3>
+        <p class="subtitle">Ajoute un compte admin ou VIP via son email.</p>
+        <form id="roleForm" class="role-form">
+          <label>Email
+            <input id="roleEmail" type="email" placeholder="joueur@email.com" required />
+          </label>
+          <label>Rôle
+            <select id="roleType" required>
+              <option value="admin">Admin</option>
+              <option value="vip">VIP</option>
+            </select>
+          </label>
+          <button id="roleSubmit" type="submit">Ajouter l'accès</button>
+        </form>
+        <p id="roleFeedback" class="hint" aria-live="polite"></p>
+      </section>
+
       <div id="reviewStats" class="review-stats">
         <article><strong id="countPending">0</strong><span>En vérification</span></article>
         <article><strong id="countApproved">0</strong><span>Validées</span></article>
