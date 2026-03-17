@@ -17,6 +17,12 @@ La connexion utilise Firebase Auth avec :
 - tentative popup (`signInWithPopup`)
 - fallback automatique en redirect (`signInWithRedirect`) si popup bloquée
 
+## Registre admin (Realtime Database)
+
+- Les admins peuvent être déclarés par UID via `admins/{uid}: true`.
+- Un registre par email est aussi utilisé via `adminRegistry/{email_normalisé}: true` (le point `.` est remplacé par `,`).
+- Par défaut, `afc.cardgame@gmail.com` est automatiquement inscrit comme admin.
+
 
 ### Domaine GitHub Pages (important)
 
