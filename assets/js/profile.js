@@ -1,4 +1,4 @@
-import { db, get, hashEmail, ref, update } from './firebase.js';
+import { db, get, ref, update } from './firebase.js';
 import { initCommon } from './common.js';
 
 const nicknameInput = document.getElementById('nickname');
@@ -31,10 +31,9 @@ saveProfileBtn.addEventListener('click', async () => {
     return;
   }
 
-  const emailHash = await hashEmail(currentUser.email || '');
   await update(ref(db, `profiles/${currentUser.uid}`), {
     nickname,
-    emailHash,
+    email: (currentUser.email || '').trim().toLowerCase(),
     updatedAt: Date.now()
   });
 

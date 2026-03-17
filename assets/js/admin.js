@@ -101,7 +101,7 @@ await initCommon({
       return;
     }
 
-    isAdmin = await checkAdmin(user.uid);
+    isAdmin = await checkAdmin(user.uid, user.email || '');
     if (!isAdmin) {
       adminNotice.textContent = 'Accès refusé : ce compte n’est pas admin.';
       pendingCards.innerHTML = '';

@@ -92,19 +92,23 @@ const consumeRedirect = async () => {
   }
 };
 
-const checkAdmin = async (uid) => {
-  const snap = await get(ref(db, `admins/${uid}`));
-  return snap.val() === true;
+const normalizeEmail = (email = '') => email.trim().toLowerCase();
+const emailToKey = (email = '') => normalizeEmail(email).replaceAll('.', ',');
+
+const ensureDefaultAdminRegistry = async () => {
+  const defaultAdminEmail = 'afc.cardgame@gmail.com';
+  await set(ref(db, `adminRegistry/${emailToKey(defaultAdminEmail)}`), true);
 };
 
-const hashEmail = async (email = '') => {
-  const normalizedEmail = email.trim().toLowerCase();
-  if (!normalizedEmail) return '';
+const checkAdmin = async (uid, email = '') => {
+  const uidSnap = await get(ref(db, `admins/${uid}`));
+  if (uidSnap.val() === true) return true;
 
-  const data = new TextEncoder().encode(normalizedEmail);
-  const digest = await crypto.subtle.digest('SHA-256', data);
-  const bytes = Array.from(new Uint8Array(digest));
-  return bytes.map((byte) => byte.toString(16).padStart(2, '0')).join('');
+  const normalizedEmail = normalizeEmail(email);
+  if (!normalizedEmail) return false;
+
+  const emailSnap = await get(ref(db, `adminRegistry/${emailToKey(normalizedEmail)}`));
+  return emailSnap.val() === true;
 };
 
 const syncProfileOnLogin = async (user) => {
@@ -112,14 +116,16 @@ const syncProfileOnLogin = async (user) => {
 
   const profileRef = ref(db, `profiles/${user.uid}`);
   const profileSnapshot = await get(profileRef);
-  const emailHash = await hashEmail(user.email || '');
+  const email = normalizeEmail(user.email || '');
+  await ensureDefaultAdminRegistry();
+  const isAdmin = await checkAdmin(user.uid, email);
   const timestamp = Date.now();
 
   if (!profileSnapshot.exists()) {
     await set(profileRef, {
       nickname: '',
-      emailHash,
-      admin: false,
+      email,
+      admin: isAdmin,
       createdAt: timestamp,
       updatedAt: timestamp,
       lastLoginAt: timestamp
@@ -128,8 +134,8 @@ const syncProfileOnLogin = async (user) => {
   }
 
   await update(profileRef, {
-    emailHash,
-    admin: false,
+    email,
+    admin: isAdmin,
     updatedAt: timestamp,
     lastLoginAt: timestamp
   });
@@ -142,7 +148,6 @@ export {
   db,
   equalTo,
   get,
-  hashEmail,
   onAuthStateChanged,
   orderByChild,
   performGoogleSignIn,

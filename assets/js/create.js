@@ -222,7 +222,7 @@ await initCommon({
     }
 
     await refreshProfile(user.uid);
-    await checkAdmin(user.uid);
+    await checkAdmin(user.uid, user.email || '');
   }
 });
 
