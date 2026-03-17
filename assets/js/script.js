@@ -69,7 +69,8 @@ const output = {
   rank: document.getElementById('cardRank'),
   attack: document.getElementById('attack'),
   defense: document.getElementById('defense'),
-  serial: document.getElementById('cardSerial')
+  serial: document.getElementById('cardSerial'),
+  topType: document.getElementById('cardTypeTop')
 };
 
 const titleOptions = new Set([
@@ -110,11 +111,19 @@ const computeType = () => {
 
 const pad2 = (n) => String(n).padStart(2, '0');
 
+const applyRankTheme = (rank) => {
+  const card = document.getElementById('afcCard');
+  card.classList.remove(...rankScale.map((value) => `rank-${value}`));
+  card.classList.add(`rank-${rank}`);
+};
+
 const render = () => {
   const average = getAverage();
   const rank = getRank(average);
   const cost = getCost(rank);
+  const cardType = computeType();
 
+  applyRankTheme(rank);
   output.cost.textContent = cost;
   output.edition.textContent = fields.edition.value;
   output.name.textContent = fields.name.value;
@@ -122,7 +131,8 @@ const render = () => {
   output.average.textContent = average;
   output.abilities.textContent = fields.abilities.value;
   output.rank.textContent = rank;
-  output.type.textContent = computeType();
+  output.type.textContent = cardType;
+  output.topType.textContent = cardType;
   output.attack.textContent = attack;
   output.defense.textContent = defense;
 };
