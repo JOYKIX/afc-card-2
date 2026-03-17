@@ -3,11 +3,48 @@ import { initCommon } from './common.js';
 
 const adminNotice = document.getElementById('adminNotice');
 const pendingCards = document.getElementById('pendingCards');
+const countPending = document.getElementById('countPending');
+const countApproved = document.getElementById('countApproved');
+const countRejected = document.getElementById('countRejected');
 let currentUser = null;
 let isAdmin = false;
 
+
+const updateReviewStats = async () => {
+  if (!isAdmin || !currentUser) {
+    countPending.textContent = '0';
+    countApproved.textContent = '0';
+    countRejected.textContent = '0';
+    return;
+  }
+
+  const cardsSnapshot = await get(ref(db, 'cards'));
+  if (!cardsSnapshot.exists()) {
+    countPending.textContent = '0';
+    countApproved.textContent = '0';
+    countRejected.textContent = '0';
+    return;
+  }
+
+  const stats = Object.values(cardsSnapshot.val()).reduce(
+    (acc, card) => {
+      if (card.status === 'pending') acc.pending += 1;
+      if (card.status === 'approved') acc.approved += 1;
+      if (card.status === 'rejected') acc.rejected += 1;
+      return acc;
+    },
+    { pending: 0, approved: 0, rejected: 0 }
+  );
+
+  countPending.textContent = String(stats.pending);
+  countApproved.textContent = String(stats.approved);
+  countRejected.textContent = String(stats.rejected);
+};
+
 const loadPendingCards = async () => {
   if (!isAdmin || !currentUser) return;
+
+  await updateReviewStats();
 
   const pendingQuery = query(ref(db, 'cards'), orderByChild('status'), equalTo('pending'));
   const snapshot = await get(pendingQuery);
@@ -60,6 +97,7 @@ await initCommon({
       isAdmin = false;
       adminNotice.textContent = 'Connecte-toi avec un compte admin.';
       pendingCards.innerHTML = '';
+      await updateReviewStats();
       return;
     }
 
@@ -67,6 +105,7 @@ await initCommon({
     if (!isAdmin) {
       adminNotice.textContent = 'Accès refusé : ce compte n’est pas admin.';
       pendingCards.innerHTML = '';
+      await updateReviewStats();
       return;
     }
 

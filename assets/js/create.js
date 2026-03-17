@@ -1,4 +1,4 @@
-import { checkAdmin, db, get, push, ref, set, update } from './firebase.js';
+import { checkAdmin, db, equalTo, get, orderByChild, push, query, ref, set, update } from './firebase.js';
 import { initCommon } from './common.js';
 
 const fields = {
@@ -91,6 +91,16 @@ const refreshProfile = async (uid) => {
   currentNickname = profileSnapshot.exists() ? profileSnapshot.val().nickname || '' : '';
 };
 
+
+const canSubmitCard = async (uid) => {
+  const userCardsQuery = query(ref(db, 'cards'), orderByChild('ownerUid'), equalTo(uid));
+  const snapshot = await get(userCardsQuery);
+  if (!snapshot.exists()) return true;
+
+  const cards = Object.values(snapshot.val());
+  return !cards.some((card) => card.status !== 'rejected');
+};
+
 const computeSerial = async (createdAt, cardKey) => {
   const snapshot = await get(ref(db, 'cards'));
   if (!snapshot.exists()) return { index: 1, total: 1 };
@@ -141,6 +151,12 @@ submitCardBtn.addEventListener('click', async () => {
 
   if (!titleOptions.has(fields.title.value)) {
     alert('Rôle invalide.');
+    return;
+  }
+
+  const allowedToSubmit = await canSubmitCard(currentUser.uid);
+  if (!allowedToSubmit) {
+    alert('Tu as déjà une carte en vérification ou validée. Tu peux en renvoyer une uniquement si la précédente est refusée.');
     return;
   }
 

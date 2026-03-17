@@ -215,6 +215,33 @@ button.danger { background: linear-gradient(150deg, #8d2f4f, #3f1726); }
 .rank-SS { --card-grad-1: #224e80; --card-grad-2: #101f3e; --edge: #7ec5ff; --glow: rgba(126, 197, 255, .5); }
 .rank-SSS { --card-grad-1: #5e2b76; --card-grad-2: #281036; --edge: #ffa2ff; --glow: rgba(255, 163, 255, .6); }
 
+
+.review-stats {
+  margin-top: .9rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .65rem;
+}
+
+.review-stats article {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #101527;
+  padding: .7rem;
+  text-align: center;
+  display: grid;
+  gap: .2rem;
+}
+
+.review-stats strong {
+  font-size: 1.4rem;
+}
+
+.review-stats span {
+  color: var(--muted);
+  font-size: .85rem;
+}
+
 .pending-list { margin-top: 1rem; display: grid; gap: .75rem; }
 .pending-item {
   border: 1px solid var(--line);
