@@ -288,6 +288,16 @@ button.danger { background: linear-gradient(145deg, #d53f74, #8f2550); border-co
   padding: .85rem;
 }
 .hint { color: var(--muted); margin-top: .6rem; }
+
+.render-engine-status {
+  margin: .45rem 0 0;
+  font-size: .84rem;
+  color: #a3b9e8;
+}
+
+.render-engine-status[data-state="error"] {
+  color: #ffb0bf;
+}
 .review-stats { margin-top: .8rem; display: grid; grid-template-columns: repeat(3,1fr); gap: .6rem; }
 .review-stats article { padding: .75rem; border: 1px solid var(--line); border-radius: 12px; text-align: center; background: rgba(10,18,37,.8); }
 .review-stats strong { font-size: 1.4rem; }

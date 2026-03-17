@@ -29,6 +29,7 @@ const downloadCardBtn = document.getElementById('downloadCard');
 const imageInput = document.getElementById('imageInput');
 const portrait = document.getElementById('portrait');
 const verificationStatusText = document.getElementById('verificationStatusText');
+const renderEngineStatus = document.getElementById('renderEngineStatus');
 
 const rankScale = ['D', 'C', 'B', 'A', 'S', 'SS', 'SSS'];
 const titleOptions = new Set(['Responsable staff', "Gardien de l'AFC", 'Streamers', 'Viewers']);
@@ -40,6 +41,7 @@ let defense = 0;
 let portraitDataUrl = '';
 let verificationUnsubscribe = null;
 let currentUserIsVip = false;
+let renderEngine = 'unavailable';
 let html2canvasReady = null;
 
 const getAverage = () => Math.round((attack + defense) / 2);
@@ -55,6 +57,31 @@ const getRank = (average) => {
 
 const getCost = (rank) => rankScale.indexOf(rank) + 1;
 const computeType = () => (attack > defense ? 'attaquant' : defense > attack ? 'défenseur' : 'équilibré');
+
+const setRenderStatus = (message, isError = false) => {
+  if (!renderEngineStatus) return;
+  renderEngineStatus.textContent = message;
+  renderEngineStatus.dataset.state = isError ? 'error' : 'ready';
+};
+
+const toFriendlySubmissionError = (error) => {
+  const code = String(error?.code || '');
+  const message = String(error?.message || '');
+
+  if (code.includes('PERMISSION_DENIED') || message.includes('permission_denied')) {
+    return 'Échec de l’envoi: la base refuse cette écriture (règles Firebase). Contacte un admin.';
+  }
+
+  if (code.includes('NETWORK_ERROR') || message.toLowerCase().includes('network')) {
+    return 'Échec de l’envoi: connexion réseau instable. Réessaie dans quelques secondes.';
+  }
+
+  if (message.toLowerCase().includes('quota') || message.toLowerCase().includes('too large')) {
+    return 'Échec de l’envoi: image trop lourde pour la base. Choisis une photo plus légère.';
+  }
+
+  return 'Échec de l’envoi en vérification. Réessaie dans quelques secondes.';
+};
 
 
 const formatCardNumber = (count, createdAt) => {
@@ -201,12 +228,51 @@ const canSubmitCard = async (uid, isVip) => {
 };
 
 const renderCardJpeg = async () => {
+  if (renderEngine === 'svg-foreignobject') {
+    const card = document.getElementById('afcCard');
+    const bounds = card.getBoundingClientRect();
+    const width = Math.max(1, Math.round(bounds.width));
+    const height = Math.max(1, Math.round(bounds.height));
+    const clone = card.cloneNode(true);
+
+    clone.style.margin = '0';
+    clone.style.transform = 'none';
+
+    const xhtml = new XMLSerializer().serializeToString(clone);
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+        <foreignObject width="100%" height="100%">
+          <div xmlns="http://www.w3.org/1999/xhtml">${xhtml}</div>
+        </foreignObject>
+      </svg>`;
+
+    const dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+
+    const img = await new Promise((resolve, reject) => {
+      const picture = new Image();
+      picture.onload = () => resolve(picture);
+      picture.onerror = () => reject(new Error('fallback-serializer-failed'));
+      picture.src = dataUrl;
+    });
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width * 2;
+    canvas.height = height * 2;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      throw new Error('canvas-context-unavailable');
+    }
+    ctx.scale(2, 2);
+    ctx.drawImage(img, 0, 0, width, height);
+    return canvas.toDataURL('image/jpeg', 0.94);
+  }
+
   if (!window.html2canvas) {
     throw new Error('html2canvas non chargé.');
   }
 
   const card = document.getElementById('afcCard');
-  const canvas = await window.html2canvas(card, { backgroundColor: null, scale: 2 });
+  const canvas = await window.html2canvas(card, { backgroundColor: null, scale: 2, useCORS: true });
   return canvas.toDataURL('image/jpeg', 0.94);
 };
 
@@ -318,7 +384,7 @@ submitCardBtn.addEventListener('click', async () => {
     alert('Carte envoyée en attente de vérification admin.');
   } catch (error) {
     console.error('Erreur lors de la soumission :', error);
-    alert('Échec de l’envoi en vérification. Réessaie dans quelques secondes.');
+    alert(toFriendlySubmissionError(error));
   } finally {
     submitCardBtn.disabled = false;
   }
@@ -333,12 +399,12 @@ downloadCardBtn.addEventListener('click', async () => {
     link.click();
   } catch (error) {
     console.error('Export JPEG indisponible:', error);
-    alert('Export indisponible: rendu JPEG non chargé.');
+    alert('Export indisponible pour le moment. Recharge la page puis réessaie.');
   }
 });
 
 const script = document.createElement('script');
-script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+script.src = 'assets/vendor/html2canvas.min.js';
 script.defer = true;
 html2canvasReady = new Promise((resolve, reject) => {
   script.onload = resolve;
@@ -370,8 +436,17 @@ await initCommon({
 fields.abilities.value = `Cri du Raptor : Baisse la défense adverse de 10 points.\n\nStream Ban : Met hors combat la carte adverse. Peut être utilisé deux fois.`;
 try {
   await html2canvasReady;
+  if (typeof window.html2canvas === 'function') {
+    renderEngine = 'html2canvas';
+    setRenderStatus('Moteur export: html2canvas chargé (offline).');
+  } else {
+    renderEngine = 'svg-foreignobject';
+    setRenderStatus('Moteur export fallback actif (qualité réduite).', true);
+  }
 } catch (error) {
-  console.error('Chargement html2canvas impossible:', error);
+  renderEngine = 'svg-foreignobject';
+  console.error('Chargement html2canvas impossible, fallback activé:', error);
+  setRenderStatus('Moteur export fallback actif (qualité réduite).', true);
 }
 rollStats();
 render();
