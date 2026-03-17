@@ -172,6 +172,22 @@ button.danger { background: linear-gradient(145deg, #973760, #5a2139); }
 .section-title { margin-top: 1rem; }
 .toolbar { margin-top: .8rem; display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: .6rem; }
 
+.role-manager {
+  margin-top: 1rem;
+  padding: .8rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(8, 13, 27, 0.55);
+}
+
+.role-form {
+  margin-top: .6rem;
+  display: grid;
+  gap: .6rem;
+  grid-template-columns: minmax(0, 1fr) 180px auto;
+  align-items: end;
+}
+
 .booster-grid { margin-top: .9rem; display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: .8rem; }
 .booster-card { border-radius: 12px; border: 1px solid var(--line); overflow: hidden; background: rgba(8,13,27,.8); }
 .booster-card-image { min-height: 150px; display: grid; place-items: center; border-bottom: 1px solid var(--line); }
@@ -187,4 +203,5 @@ button.danger { background: linear-gradient(145deg, #973760, #5a2139); }
 @media (max-width: 700px) {
   .actions button { width: 100%; }
   .toolbar { grid-template-columns: 1fr; }
+  .role-form { grid-template-columns: 1fr; }
 }

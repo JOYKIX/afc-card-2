@@ -9,6 +9,10 @@ const countApproved = document.getElementById('countApproved');
 const countRejected = document.getElementById('countRejected');
 const statusFilter = document.getElementById('statusFilter');
 const searchInput = document.getElementById('searchInput');
+const roleForm = document.getElementById('roleForm');
+const roleEmail = document.getElementById('roleEmail');
+const roleType = document.getElementById('roleType');
+const roleFeedback = document.getElementById('roleFeedback');
 
 let currentUser = null;
 let cardsById = {};
@@ -17,6 +21,14 @@ let pendingQueue = [];
 let unsubs = [];
 
 const escapeHtml = (value = '') => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[char]);
+const normalizeEmail = (email = '') => email.trim().toLowerCase();
+const emailToKey = (email = '') => normalizeEmail(email).replaceAll('.', ',');
+
+const setRoleFeedback = (message, isError = false) => {
+  if (!roleFeedback) return;
+  roleFeedback.textContent = message;
+  roleFeedback.style.color = isError ? '#ff9eb7' : '';
+};
 
 const refreshStats = () => {
   const stats = {
@@ -180,6 +192,40 @@ const bindRealtime = () => {
     })
   );
 };
+
+roleForm?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+
+  if (!currentUser) {
+    setRoleFeedback('Connecte-toi avec un compte admin.', true);
+    return;
+  }
+
+  const email = normalizeEmail(roleEmail?.value || '');
+  const selectedRole = roleType?.value === 'vip' ? 'vip' : 'admin';
+
+  if (!email || !email.includes('@')) {
+    setRoleFeedback('Merci de renseigner un email valide.', true);
+    return;
+  }
+
+  const rolePath = selectedRole === 'admin' ? 'adminRegistry' : 'vipRegistry';
+  const legacyVipPath = selectedRole === 'vip' ? 'vipRegistery' : null;
+  const emailKey = emailToKey(email);
+
+  try {
+    await set(ref(db, `${rolePath}/${emailKey}`), true);
+    if (legacyVipPath) {
+      await set(ref(db, `${legacyVipPath}/${emailKey}`), true);
+    }
+
+    setRoleFeedback(`Accès ${selectedRole.toUpperCase()} ajouté pour ${email}.`);
+    roleForm.reset();
+  } catch (error) {
+    console.error('Erreur ajout rôle:', error);
+    setRoleFeedback('Impossible d’ajouter cet accès pour le moment.', true);
+  }
+});
 
 statusFilter?.addEventListener('change', renderVerificationSection);
 searchInput?.addEventListener('input', renderVerificationSection);
