@@ -97,6 +97,44 @@ const checkAdmin = async (uid) => {
   return snap.val() === true;
 };
 
+const hashEmail = async (email = '') => {
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!normalizedEmail) return '';
+
+  const data = new TextEncoder().encode(normalizedEmail);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  const bytes = Array.from(new Uint8Array(digest));
+  return bytes.map((byte) => byte.toString(16).padStart(2, '0')).join('');
+};
+
+const syncProfileOnLogin = async (user) => {
+  if (!user?.uid) return;
+
+  const profileRef = ref(db, `profiles/${user.uid}`);
+  const profileSnapshot = await get(profileRef);
+  const emailHash = await hashEmail(user.email || '');
+  const timestamp = Date.now();
+
+  if (!profileSnapshot.exists()) {
+    await set(profileRef, {
+      nickname: '',
+      emailHash,
+      admin: false,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      lastLoginAt: timestamp
+    });
+    return;
+  }
+
+  await update(profileRef, {
+    emailHash,
+    admin: false,
+    updatedAt: timestamp,
+    lastLoginAt: timestamp
+  });
+};
+
 export {
   auth,
   checkAdmin,
@@ -104,6 +142,7 @@ export {
   db,
   equalTo,
   get,
+  hashEmail,
   onAuthStateChanged,
   orderByChild,
   performGoogleSignIn,
@@ -111,6 +150,7 @@ export {
   query,
   ref,
   set,
+  syncProfileOnLogin,
   signOut,
   update
 };
