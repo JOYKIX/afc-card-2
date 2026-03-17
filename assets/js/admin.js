@@ -2,16 +2,15 @@ import { checkAdmin, db, equalTo, get, orderByChild, query, ref, update } from '
 import { initCommon } from './common.js';
 
 const adminNotice = document.getElementById('adminNotice');
-const pendingCards = document.getElementById('pendingCards');
+const tinderReview = document.getElementById('tinderReview');
 const verificationCards = document.getElementById('verificationCards');
 const countPending = document.getElementById('countPending');
 const countApproved = document.getElementById('countApproved');
 const countRejected = document.getElementById('countRejected');
-const cardModal = document.getElementById('cardModal');
-const closeModalBtn = document.getElementById('closeCardModal');
-const modalBody = document.getElementById('cardModalBody');
+
 let currentUser = null;
 let isAdmin = false;
+let pendingQueue = [];
 
 const updateReviewStats = async () => {
   if (!isAdmin || !currentUser) {
@@ -68,45 +67,69 @@ const renderVerificationSection = async () => {
   });
 };
 
-const setModalOpen = (isOpen) => {
-  cardModal.hidden = !isOpen;
-  document.body.classList.toggle('modal-open', isOpen);
-};
+const renderTinderCard = () => {
+  tinderReview.innerHTML = '';
 
-const openCardModal = (card) => {
+  if (pendingQueue.length === 0) {
+    tinderReview.innerHTML = '<p class="hint">Plus aucune carte en attente. Tu peux souffler 😌</p>';
+    return;
+  }
+
+  const current = pendingQueue[0];
+  const card = current.card;
   const imageMarkup = card.image
     ? `<img src="${card.image}" alt="Illustration de la carte ${card.name}">`
-    : '<p class="hint">Aucune image fournie pour cette carte.</p>';
+    : '<div class="booster-placeholder">Aucune image fournie</div>';
 
-  modalBody.innerHTML = `
-    <h3>${card.name || 'Carte'} · ${card.role || '-'}</h3>
-    <p><strong>Propriétaire :</strong> ${card.ownerNickname || '-'}</p>
-    <p><strong>Statut :</strong> ${card.status || 'pending'}</p>
-    <p><strong>Rang :</strong> ${card.rank || '-'} · <strong>Type :</strong> ${card.type || '-'} · <strong>Coût :</strong> ${card.cost ?? '-'}</p>
-    <p><strong>ATK:</strong> ${card.attack ?? '-'} · <strong>DEF:</strong> ${card.defense ?? '-'} · <strong>Moyenne:</strong> ${card.average ?? '-'}</p>
-    <p><strong>Compétences :</strong></p>
-    <p class="modal-abilities">${card.abilities || '-'}</p>
-    <div class="modal-image">${imageMarkup}</div>
+  tinderReview.innerHTML = `
+    <article class="tinder-card rank-${card.rank || 'D'}">
+      <div class="tinder-image">${imageMarkup}</div>
+      <div class="tinder-body">
+        <h3>${card.name || 'Carte'} · ${card.role || '-'}</h3>
+        <p>Par ${card.ownerNickname || '-'}</p>
+        <p>Rang ${card.rank || '-'} · Type ${card.type || '-'} · Coût ${card.cost ?? '-'}</p>
+        <p>ATK ${card.attack ?? '-'} / DEF ${card.defense ?? '-'} · Moyenne ${card.average ?? '-'}</p>
+        <p class="modal-abilities">${card.abilities || '-'}</p>
+      </div>
+      <div class="actions tinder-actions">
+        <button type="button" data-moderation="approve">Validé</button>
+        <button type="button" class="danger" data-moderation="reject">Refusé</button>
+      </div>
+    </article>
   `;
 
-  setModalOpen(true);
+  tinderReview.querySelector('[data-moderation="approve"]').addEventListener('click', async () => {
+    await moderateCurrentCard('approved');
+  });
+
+  tinderReview.querySelector('[data-moderation="reject"]').addEventListener('click', async () => {
+    await moderateCurrentCard('rejected');
+  });
 };
 
-const moderateCard = async (cardId, status) => {
+const moderateCurrentCard = async (status) => {
+  const current = pendingQueue[0];
+  if (!current) return;
+
   const now = Date.now();
-  await update(ref(db, `cards/${cardId}`), {
+  await update(ref(db, `cards/${current.cardId}`), {
     status,
     moderatedBy: currentUser.uid,
     moderatedAt: now,
     updatedAt: now
   });
-  await update(ref(db, `cardVerification/${cardId}`), {
+
+  await update(ref(db, `cardVerification/${current.cardId}`), {
     status,
     moderatedBy: currentUser.uid,
     moderatedAt: now,
     updatedAt: now
   });
-  await loadPendingCards();
+
+  pendingQueue.shift();
+  renderTinderCard();
+  await updateReviewStats();
+  await renderVerificationSection();
 };
 
 const loadPendingCards = async () => {
@@ -118,51 +141,18 @@ const loadPendingCards = async () => {
   const pendingQuery = query(ref(db, 'cards'), orderByChild('status'), equalTo('pending'));
   const snapshot = await get(pendingQuery);
 
-  pendingCards.innerHTML = '';
   if (!snapshot.exists()) {
-    pendingCards.innerHTML = '<p>Aucune carte en attente.</p>';
+    pendingQueue = [];
+    renderTinderCard();
     return;
   }
 
-  Object.entries(snapshot.val()).forEach(([cardId, card]) => {
-    const item = document.createElement('article');
-    item.className = 'pending-item';
-    item.innerHTML = `
-      <h3>${card.name} · ${card.role}</h3>
-      <p>Par ${card.ownerNickname} — Rang ${card.rank}, coût ${card.cost}, moyenne ${card.average}</p>
-      <div class="actions">
-        <button type="button" class="ghost" data-action="view">Voir</button>
-        <button type="button" data-action="approve">Valider</button>
-        <button type="button" class="danger" data-action="reject">Refuser</button>
-      </div>
-    `;
+  pendingQueue = Object.entries(snapshot.val())
+    .map(([cardId, card]) => ({ cardId, card }))
+    .sort((a, b) => (a.card.createdAt || 0) - (b.card.createdAt || 0));
 
-    item.querySelector('[data-action="view"]').addEventListener('click', () => openCardModal(card));
-
-    item.querySelector('[data-action="approve"]').addEventListener('click', async () => {
-      await moderateCard(cardId, 'approved');
-    });
-
-    item.querySelector('[data-action="reject"]').addEventListener('click', async () => {
-      await moderateCard(cardId, 'rejected');
-    });
-
-    pendingCards.appendChild(item);
-  });
+  renderTinderCard();
 };
-
-closeModalBtn.addEventListener('click', () => setModalOpen(false));
-cardModal.addEventListener('click', (event) => {
-  if (event.target === cardModal) {
-    setModalOpen(false);
-  }
-});
-
-document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape' && !cardModal.hidden) {
-    setModalOpen(false);
-  }
-});
 
 await initCommon({
   onUserChanged: async (user) => {
@@ -171,7 +161,7 @@ await initCommon({
     if (!user) {
       isAdmin = false;
       adminNotice.textContent = 'Connecte-toi avec un compte admin.';
-      pendingCards.innerHTML = '';
+      tinderReview.innerHTML = '';
       verificationCards.innerHTML = '';
       await updateReviewStats();
       return;
@@ -180,13 +170,13 @@ await initCommon({
     isAdmin = await checkAdmin(user.uid, user.email || '');
     if (!isAdmin) {
       adminNotice.textContent = 'Accès refusé : ce compte n’est pas admin.';
-      pendingCards.innerHTML = '';
+      tinderReview.innerHTML = '';
       verificationCards.innerHTML = '';
       await updateReviewStats();
       return;
     }
 
-    adminNotice.textContent = 'Accès admin confirmé. Cartes en attente :';
+    adminNotice.textContent = 'Accès admin confirmé. Passe les cartes une par une :';
     await loadPendingCards();
   }
 });
