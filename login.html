@@ -16,24 +16,11 @@
     <aside class="app-sidebar glass app-sidebar--login">
       <div class="sidebar-stack">
         <div class="brand-wrap brand-wrap--sidebar">
-          <div class="brand-badge" aria-hidden="true">FM</div>
           <div>
             <p class="kicker">AFC Universe</p>
             <h1>Connexion</h1>
-            <p class="sidebar-copy">Bienvenue dans la nouvelle expérience AFC : plus propre, plus moderne et prête à te reconnecter au bon endroit.</p>
           </div>
         </div>
-
-        <section class="sidebar-block glass-soft sidebar-highlight">
-          <p class="eyebrow">Accès rapide</p>
-          <h2>Connecte-toi puis reprends ton flow</h2>
-          <p>Une fois connecté avec Google, tu définis ton nickname AFC puis tu retournes automatiquement sur ta page.</p>
-          <div class="sidebar-chips">
-            <span>Google sécurisé</span>
-            <span>Nickname AFC</span>
-            <span>Retour automatique</span>
-          </div>
-        </section>
 
         <section class="auth-actions auth-actions--sidebar glass-soft">
           <p class="eyebrow">Session</p>
@@ -47,26 +34,6 @@
     </aside>
 
     <div class="app-workspace app-workspace--login">
-      <header class="workspace-header glass">
-        <div>
-          <p class="kicker">Bienvenue</p>
-          <h2>Connecte-toi avant d’utiliser le studio.</h2>
-        </div>
-        <div class="workspace-metrics" aria-label="Avantages de connexion">
-          <article>
-            <strong>1</strong>
-            <span>connexion Google</span>
-          </article>
-          <article>
-            <strong>AFC</strong>
-            <span>nickname centralisé</span>
-          </article>
-          <article>
-            <strong>Auto</strong>
-            <span>retour vers la page cible</span>
-          </article>
-        </div>
-      </header>
 
       <main class="login-layout">
         <section class="panel glass login-panel">
@@ -75,7 +42,7 @@
               <p class="eyebrow">Bienvenue</p>
               <h2>Connecte-toi avant d’utiliser le studio</h2>
             </div>
-            <p class="subtitle">Connecte-toi avec Google puis choisis ton nickname AFC pour accéder rapidement au studio.</p>
+            <p class="subtitle">Connecte-toi avec Google puis choisis ton pseudo pour accéder rapidement au studio.</p>
           </div>
 
           <div class="login-grid">
@@ -84,20 +51,20 @@
               <h3>Une connexion, puis tu reviens direct sur le site</h3>
               <ul class="feature-list">
                 <li>Connexion Google sécurisée.</li>
-                <li>Nickname AFC affiché partout dans l’interface.</li>
-                <li>Ton nickname AFC visible partout dans le studio.</li>
+                <li>Pseudo affiché partout dans l’interface.</li>
+                <li>Ton pseudo visible partout dans le studio.</li>
               </ul>
             </article>
 
             <article class="glass-soft login-card">
               <p id="loginState" class="login-state">Connecte-toi avec Google pour accéder au site.</p>
-              <p id="loginHint" class="hint">Ton nickname sera demandé juste après la connexion.</p>
+              <p id="loginHint" class="hint">Ton pseudo sera demandé juste après la connexion.</p>
 
               <div id="nicknameStep" class="nickname-step" hidden>
-                <label>Nickname
-                  <input id="nickname" type="text" maxlength="24" placeholder="Ton nickname AFC" />
+                <label>Pseudo
+                  <input id="nickname" type="text" maxlength="24" placeholder="Pseudo" />
                 </label>
-                <button id="saveNickname" type="button">Continuer avec ce nickname</button>
+                <button id="saveNickname" type="button">Continuer avec ce pseudo</button>
               </div>
             </article>
           </div>
