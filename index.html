@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="assets/css/card.css" />
 </head>
 
-<body class="page-create">
+<body data-route="create">
   <div class="bg-orb orb-a"></div>
   <div class="bg-orb orb-b"></div>
 
@@ -23,19 +23,19 @@
       </div>
 
       <nav class="site-nav" aria-label="Navigation principale">
-        <a class="nav-link active" href="index.html">
+        <a class="nav-link active" href="index.html" data-route="create">
           <span class="nav-link__eyebrow">Studio</span>
           <strong>Créer</strong>
         </a>
-        <a class="nav-link" href="booster.html">
+        <a class="nav-link" href="booster.html" data-route="booster">
           <span class="nav-link__eyebrow">Collection</span>
           <strong>Booster</strong>
         </a>
-        <a class="nav-link" href="album.html">
+        <a class="nav-link" href="album.html" data-route="album">
           <span class="nav-link__eyebrow">Collection</span>
           <strong>Album</strong>
         </a>
-        <a class="nav-link" href="admin.html" data-admin-link="true" hidden>
+        <a class="nav-link" href="admin.html" data-admin-link="true" data-route="admin" hidden>
           <span class="nav-link__eyebrow">Backoffice</span>
           <strong>Admin</strong>
         </a>
@@ -45,202 +45,19 @@
         <p class="eyebrow">Session</p>
         <span id="authStatus">Vérification...</span>
         <div class="auth-actions__buttons auth-actions__buttons--inline">
-          <a id="profileLink" class="button-link ghost" href="profile.html">Profil</a>
+          <a id="profileLink" class="button-link ghost" href="profile.html" data-route="profile">Profil</a>
           <button id="googleLogin" type="button">Connexion Google</button>
           <button id="logout" type="button" class="ghost">Déconnexion</button>
         </div>
       </section>
     </header>
 
-    <div class="app-workspace">
-
-      <main class="layout layout--create">
-        <section class="panel glass editor-panel">
-          <div class="panel-heading">
-            <div>
-              <p class="eyebrow">Atelier</p>
-              <h2>Composer une nouvelle carte</h2>
-            </div>
-          </div>
-
-          <form id="cardForm" class="editor-form">
-            <div class="form-grid form-grid--two">
-              <label>Nom
-                <input id="name" type="text" maxlength="24" value="Fémi-Mars" required />
-              </label>
-
-              <label>Rôle
-                <select id="title" required>
-                  <option value="viewer">Viewer</option>
-                  <option value="streamer">Streamer</option>
-                  <option value="responsable staff">Responsable staff</option>
-                  <option value="gardien de l’AFC">Gardien de l’AFC</option>
-                </select>
-              </label>
-            </div>
-
-            <div class="form-grid form-grid--two">
-              <label>Édition
-                <input id="edition" type="text" value="2e édition" readonly />
-              </label>
-
-              <label>Photo (JPG / JPEG / PNG / WEBP)
-                <input id="imageInput" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
-              </label>
-            </div>
-
-            <section class="portrait-position-tools glass-soft" aria-labelledby="portraitPositionTitle">
-              <div class="section-head-inline section-head-inline--stack-mobile">
-                <div>
-                  <p class="eyebrow">Illustration</p>
-                  <h3 id="portraitPositionTitle">Cadre libre</h3>
-                </div>
-                <button type="button" id="resetPortraitPosition" class="ghost">Recentrer l'image</button>
-              </div>
-              <p class="hint">Glisse directement l'illustration dans l'aperçu de droite pour la recadrer comme tu veux avant l'export.</p>
-            </section>
-
-            <label>Capacités
-              <textarea id="abilities" rows="5" required></textarea>
-            </label>
-
-            <section class="stat-controls glass-soft" id="statControls">
-              <div class="section-head-inline">
-                <div>
-                  <p class="eyebrow">Stats</p>
-                  <h3>Attaque & défense</h3>
-                </div>
-                <span class="section-pill" id="rerollBadge">3 rerolls</span>
-              </div>
-              <p class="subtitle" id="rerollStatusText">Connecte-toi pour voir ton nombre de rerolls restants.</p>
-              <div class="form-grid form-grid--two" id="manualStatsBox" hidden>
-                <label>Attaque manuelle
-                  <input id="manualAttack" type="number" min="1" max="100" step="1" value="1" />
-                </label>
-                <label>Défense manuelle
-                  <input id="manualDefense" type="number" min="1" max="100" step="1" value="1" />
-                </label>
-              </div>
-            </section>
-
-            <div class="actions actions--spread">
-              <button type="button" id="rollStats">Générer attaque / défense</button>
-              <button type="button" id="submitCard">Envoyer en vérification</button>
-              <button type="button" id="downloadCard" class="ghost">Télécharger la carte</button>
-            </div>
-
-            <section class="verification-box" id="verificationBox">
-              <div class="section-head-inline">
-                <div>
-                  <p class="eyebrow">Validation</p>
-                  <h3>Suivi de vérification</h3>
-                </div>
-                <span class="section-pill">Temps réel</span>
-              </div>
-              <p id="verificationStatusText">Connecte-toi pour suivre ta capture en validation.</p>
-              <p id="renderEngineStatus" class="render-engine-status">Moteur export: initialisation...</p>
-            </section>
-          </form>
-        </section>
-
-        <section class="preview-column">
-          <article class="panel glass preview-panel">
-            <div class="panel-heading panel-heading--compact">
-              <div>
-                <p class="eyebrow">Preview</p>
-                <h2>Carte générée en direct</h2>
-              </div>
-            </div>
-
-            <div class="preview-wrap">
-              <article class="afc-card rank-D" id="afcCard">
-                <div class="card-spectrum" aria-hidden="true"></div>
-                <div class="card-frame-lines" aria-hidden="true"></div>
-                <div class="holo"></div>
-                <div class="rank-aura" aria-hidden="true"></div>
-                <div class="card-noise" aria-hidden="true"></div>
-
-                <div class="card-corner card-corner--tl" aria-hidden="true"></div>
-                <div class="card-corner card-corner--tr" aria-hidden="true"></div>
-                <div class="card-corner card-corner--bl" aria-hidden="true"></div>
-                <div class="card-corner card-corner--br" aria-hidden="true"></div>
-
-                <header class="card-header">
-                  <div class="meta-left">
-                    <span id="cardCost">2</span>
-                    <small>Coût</small>
-                  </div>
-
-                  <div class="identity identity--hero">
-                    <div class="identity-ribbon">
-                      <span class="type-chip" id="cardTypeTop">équilibré</span>
-                    </div>
-                    <h3 id="cardName">Fémi-Mars</h3>
-                    <p id="cardTitle">Responsable staff</p>
-                  </div>
-
-                  <div class="meta-right">
-                    <span id="cardRank">C</span>
-                    <small><strong id="cardAverage">32</strong></small>
-                  </div>
-                </header>
-
-                <section class="portrait-shell">
-                  <span class="edition-chip" id="cardEdition">2e édition</span>
-
-                  <div class="portrait" id="portrait">
-                    <img class="portrait-image" id="portraitImage" alt="" hidden />
-                    <div class="portrait-overlay" aria-hidden="true"></div>
-                  </div>
-                </section>
-
-                <section class="card-body">
-                  <section class="skills">
-                    <div class="skills-head">
-                      <div class="section-label">Capacités</div>
-                    </div>
-                    <p id="cardAbilities"></p>
-                  </section>
-
-                  <footer class="stats">
-                    <div class="stat-card stat-card--attack">
-                      <div class="stat-card__glow" aria-hidden="true"></div>
-                      <div class="stat-card__row">
-                        <strong aria-label="Attaque">
-                          <span class="stat-icon stat-icon--attack" aria-hidden="true">
-                            <svg viewBox="0 -960 960 960" xmlns="http://www.w3.org/2000/svg" focusable="false">
-                              <path d="M762-96 645-212l-88 88-28-28q-23-23-23-57t23-57l169-169q23-23 57-23t57 23l28 28-88 88 116 117q12 12 12 28t-12 28l-50 50q-12 12-28 12t-28-12Zm118-628L426-270l5 4q23 23 23 57t-23 57l-28 28-88-88L198-96q-12 12-28 12t-28-12l-50-50q-12-12-12-28t12-28l116-117-88-88 28-28q23-23 57-23t57 23l4 5 454-454h160v160ZM278-526 80-724v-160h160l198 198-160 160Z" />
-                            </svg>
-                          </span>
-                        </strong>
-                        <span class="stat-value" id="attack">0</span>
-                      </div>
-                    </div>
-                    <div class="stat-card stat-card--defense">
-                      <div class="stat-card__glow" aria-hidden="true"></div>
-                      <div class="stat-card__row">
-                        <span class="stat-value" id="defense">0</span>
-                        <strong aria-label="Défense">
-                          <span class="stat-icon stat-icon--defense" aria-hidden="true">
-                            <svg viewBox="0 -960 960 960" xmlns="http://www.w3.org/2000/svg" focusable="false">
-                              <path d="M480-80q-139-35-229.5-159.5T160-516v-244l320-120 320 120v244q0 152-90.5 276.5T480-80Z" />
-                            </svg>
-                          </span>
-                        </strong>
-                      </div>
-                    </div>
-                  </footer>
-                </section>
-              </article>
-            </div>
-          </article>
-		  
-        </section>
-      </main>
+    <div id="appWorkspace" class="app-workspace">
+      <div id="app" class="app-view" aria-live="polite"></div>
     </div>
   </div>
 
-  <script type="module" src="assets/js/create.js"></script>
+  <script type="module" src="assets/js/router.js"></script>
 </body>
 
 </html>

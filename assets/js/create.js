@@ -29,42 +29,26 @@ import { initCommon } from './common.js';
 
 const CARD_DRAFT_STORAGE_KEY = 'afc-card-draft-v2';
 
-const fields = {
-  name: document.getElementById('name'),
-  title: document.getElementById('title'),
-  edition: document.getElementById('edition'),
-  abilities: document.getElementById('abilities')
-};
+let fields = {};
 
-const output = {
-  cost: document.getElementById('cardCost'),
-  edition: document.getElementById('cardEdition'),
-  name: document.getElementById('cardName'),
-  title: document.getElementById('cardTitle'),
-  average: document.getElementById('cardAverage'),
-  abilities: document.getElementById('cardAbilities'),
-  rank: document.getElementById('cardRank'),
-  attack: document.getElementById('attack'),
-  defense: document.getElementById('defense'),
-  topType: document.getElementById('cardTypeTop')
-};
+let output = {};
 
-const form = document.getElementById('cardForm');
-const rollStatsBtn = document.getElementById('rollStats');
-const submitCardBtn = document.getElementById('submitCard');
-const downloadCardBtn = document.getElementById('downloadCard');
-const imageInput = document.getElementById('imageInput');
-const portrait = document.getElementById('portrait');
-const portraitImage = document.getElementById('portraitImage');
-const resetPortraitPositionBtn = document.getElementById('resetPortraitPosition');
-const verificationStatusText = document.getElementById('verificationStatusText');
-const renderEngineStatus = document.getElementById('renderEngineStatus');
-const cardElement = document.getElementById('afcCard');
-const rerollBadge = document.getElementById('rerollBadge');
-const rerollStatusText = document.getElementById('rerollStatusText');
-const manualStatsBox = document.getElementById('manualStatsBox');
-const manualAttackInput = document.getElementById('manualAttack');
-const manualDefenseInput = document.getElementById('manualDefense');
+let form;
+let rollStatsBtn;
+let submitCardBtn;
+let downloadCardBtn;
+let imageInput;
+let portrait;
+let portraitImage;
+let resetPortraitPositionBtn;
+let verificationStatusText;
+let renderEngineStatus;
+let cardElement;
+let rerollBadge;
+let rerollStatusText;
+let manualStatsBox;
+let manualAttackInput;
+let manualDefenseInput;
 
 const titleOptions = new Set(CARD_TITLES);
 const supportedImageTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
@@ -677,192 +661,249 @@ const buildCardPayload = async () => {
   };
 };
 
-form.addEventListener('input', () => {
-  render();
-  saveDraft();
-});
-rollStatsBtn.addEventListener('click', async () => {
-  await rollStats();
-});
 
-manualAttackInput?.addEventListener('input', () => {
-  if (!hasUnlimitedStatAccess()) return;
-  setStats({
-    attackValue: manualAttackInput.value,
-    defenseValue: manualDefenseInput?.value ?? defense,
-    syncInputs: false
-  });
-});
-
-manualDefenseInput?.addEventListener('input', () => {
-  if (!hasUnlimitedStatAccess()) return;
-  setStats({
-    attackValue: manualAttackInput?.value ?? attack,
-    defenseValue: manualDefenseInput.value,
-    syncInputs: false
-  });
-});
-
-imageInput.addEventListener('change', (event) => {
-  const file = event.target.files?.[0];
-  if (!file) return;
-
-  if (!fileLooksSupported(file)) {
-    alert('Format refusé. Utilise JPG/JPEG, PNG ou WEBP.');
-    event.target.value = '';
-    portraitDataUrl = '';
-    portraitNaturalSize = { width: 0, height: 0 };
-    resetPortraitPosition();
-    saveDraft();
-    return;
-  }
-
-  const reader = new FileReader();
-  reader.onload = (readerEvent) => {
-    portraitDataUrl = readerEvent.target?.result || '';
-    portraitNaturalSize = { width: 0, height: 0 };
-    portraitPosition = { x: 50, y: 50 };
-    applyPortraitImage();
-    saveDraft();
+const bindDomReferences = () => {
+  fields = {
+    name: document.getElementById('name'),
+    title: document.getElementById('title'),
+    edition: document.getElementById('edition'),
+    abilities: document.getElementById('abilities')
   };
-  reader.readAsDataURL(file);
-});
 
-submitCardBtn.addEventListener('click', async () => {
-  if (!form.checkValidity()) {
-    form.reportValidity();
-    return;
-  }
+  output = {
+    cost: document.getElementById('cardCost'),
+    edition: document.getElementById('cardEdition'),
+    name: document.getElementById('cardName'),
+    title: document.getElementById('cardTitle'),
+    average: document.getElementById('cardAverage'),
+    abilities: document.getElementById('cardAbilities'),
+    rank: document.getElementById('cardRank'),
+    attack: document.getElementById('attack'),
+    defense: document.getElementById('defense'),
+    topType: document.getElementById('cardTypeTop')
+  };
 
-  if (!currentUser) {
-    alert('Connexion Google obligatoire pour créer une carte.');
-    return;
-  }
+  form = document.getElementById('cardForm');
+  rollStatsBtn = document.getElementById('rollStats');
+  submitCardBtn = document.getElementById('submitCard');
+  downloadCardBtn = document.getElementById('downloadCard');
+  imageInput = document.getElementById('imageInput');
+  portrait = document.getElementById('portrait');
+  portraitImage = document.getElementById('portraitImage');
+  resetPortraitPositionBtn = document.getElementById('resetPortraitPosition');
+  verificationStatusText = document.getElementById('verificationStatusText');
+  renderEngineStatus = document.getElementById('renderEngineStatus');
+  cardElement = document.getElementById('afcCard');
+  rerollBadge = document.getElementById('rerollBadge');
+  rerollStatusText = document.getElementById('rerollStatusText');
+  manualStatsBox = document.getElementById('manualStatsBox');
+  manualAttackInput = document.getElementById('manualAttack');
+  manualDefenseInput = document.getElementById('manualDefense');
+};
 
-  if (!currentNickname) {
-    alert('Configure ton pseudo sur la page Profil avant de soumettre une carte.');
-    window.location.href = 'profile.html';
-    return;
-  }
+export const initCreatePage = async () => {
+  bindDomReferences();
+  const abortController = new AbortController();
+  const { signal } = abortController;
 
-  const selectedTitle = normalizeCardTitle(fields.title.value);
-  const allowedTitles = getAllowedCardTitlesForRoles(currentUserRoles);
+  form.addEventListener('input', () => {
+    render();
+    saveDraft();
+  }, { signal });
 
-  if (!titleOptions.has(selectedTitle)) {
-    alert('Rôle invalide.');
-    return;
-  }
+  rollStatsBtn.addEventListener('click', async () => {
+    await rollStats();
+  }, { signal });
 
-  if (!allowedTitles.includes(selectedTitle)) {
-    alert(`Ton rôle actuel ne permet pas de créer une carte "${TITLE_LABELS[selectedTitle] || selectedTitle}".`);
-    return;
-  }
-
-  if (!(await canSubmitCard(currentUser.uid, currentUserRoles))) {
-    alert('Compte African Army : une seule carte en attente autorisée. Attends la validation ou obtiens un rôle supérieur pour envoyer sans limite.');
-    return;
-  }
-
-  submitCardBtn.disabled = true;
-
-  try {
-    const payload = await buildCardPayload();
-    const verificationRef = push(ref(db, 'cardVerification'));
-
-    await set(verificationRef, {
-      ownerUid: currentUser.uid,
-      ownerNickname: currentNickname,
-      creatorName: currentNickname,
-      rank: payload.rank,
-      status: 'pending',
-      submittedAt: payload.createdAt,
-      updatedAt: payload.updatedAt,
-      cardSnapshot: payload
+  manualAttackInput?.addEventListener('input', () => {
+    if (!hasUnlimitedStatAccess()) return;
+    setStats({
+      attackValue: manualAttackInput.value,
+      defenseValue: manualDefenseInput?.value ?? defense,
+      syncInputs: false
     });
+  }, { signal });
 
-    alert('Capture de carte envoyée en attente de vérification.');
-  } catch (error) {
-    console.error('Erreur lors de la soumission :', error);
-    alert(toFriendlySubmissionError(error));
-  } finally {
-    submitCardBtn.disabled = false;
-  }
-});
+  manualDefenseInput?.addEventListener('input', () => {
+    if (!hasUnlimitedStatAccess()) return;
+    setStats({
+      attackValue: manualAttackInput?.value ?? attack,
+      defenseValue: manualDefenseInput.value,
+      syncInputs: false
+    });
+  }, { signal });
 
-downloadCardBtn.addEventListener('click', async () => {
-  try {
-    const jpegDataUrl = await exportCardAsJpeg();
-    const link = document.createElement('a');
-    link.download = `${sanitizeFilename(fields.name.value)}.jpg`;
-    link.href = jpegDataUrl;
-    link.click();
-  } catch (error) {
-    console.error('Export JPEG indisponible :', error);
-    alert('Export indisponible pour le moment. Recharge la page puis réessaie.');
-  }
-});
+  imageInput.addEventListener('change', (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-resetPortraitPositionBtn?.addEventListener('click', resetPortraitPosition);
-
-portraitImage?.addEventListener('load', () => {
-  portraitNaturalSize = {
-    width: portraitImage.naturalWidth || 0,
-    height: portraitImage.naturalHeight || 0
-  };
-  applyPortraitImage();
-});
-
-portrait.addEventListener('pointerdown', (event) => {
-  if (event.pointerType === 'mouse' && event.button !== 0) return;
-  startPortraitDrag(event);
-});
-window.addEventListener('pointermove', movePortrait, { passive: false });
-window.addEventListener('pointerup', stopPortraitDrag);
-window.addEventListener('pointercancel', stopPortraitDrag);
-
-
-await initCommon({
-  requireAuth: true,
-  onUserChanged: async (user) => {
-    currentUser = user;
-
-    if (!user) {
-      currentNickname = '';
-      currentUserRoles = ['african army'];
-      remainingStatRerolls = DEFAULT_STAT_REROLLS;
-      verificationStatusText.textContent = 'Connecte-toi pour voir le statut de ta carte.';
-      if (verificationUnsubscribe) {
-        verificationUnsubscribe();
-        verificationUnsubscribe = null;
-      }
-      syncAvailableTitles();
-      updateRerollUi();
+    if (!fileLooksSupported(file)) {
+      alert('Format refusé. Utilise JPG/JPEG, PNG ou WEBP.');
+      event.target.value = '';
+      portraitDataUrl = '';
+      portraitNaturalSize = { width: 0, height: 0 };
+      resetPortraitPosition();
+      saveDraft();
       return;
     }
 
-    currentUserRoles = await getProfileRoles(user.uid);
-    syncAvailableTitles();
-    await refreshProfile(user.uid);
-    watchVerificationStatus(user.uid);
-    await ensureProfileRerollCount(user.uid);
-    syncManualStatInputs();
-    updateRerollUi();
-  }
-});
+    const reader = new FileReader();
+    reader.onload = (readerEvent) => {
+      portraitDataUrl = readerEvent.target?.result || '';
+      portraitNaturalSize = { width: 0, height: 0 };
+      portraitPosition = { x: 50, y: 50 };
+      applyPortraitImage();
+      saveDraft();
+    };
+    reader.readAsDataURL(file);
+  }, { signal });
 
-const restoredDraft = restoreDraft();
-applyPortraitImage();
+  submitCardBtn.addEventListener('click', async () => {
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
 
-if (!restoredDraft && !fields.abilities.value.trim()) {
-  fields.abilities.value = `Cri du Raptor : Baisse la défense adverse de 10 points.
+    if (!currentUser) {
+      alert('Connexion Google obligatoire pour créer une carte.');
+      return;
+    }
+
+    if (!currentNickname) {
+      alert('Configure ton pseudo sur la page Profil avant de soumettre une carte.');
+      window.__appRouter?.navigate?.('profile.html');
+      return;
+    }
+
+    const selectedTitle = normalizeCardTitle(fields.title.value);
+    const allowedTitles = getAllowedCardTitlesForRoles(currentUserRoles);
+
+    if (!titleOptions.has(selectedTitle)) {
+      alert('Rôle invalide.');
+      return;
+    }
+
+    if (!allowedTitles.includes(selectedTitle)) {
+      alert(`Ton rôle actuel ne permet pas de créer une carte "${TITLE_LABELS[selectedTitle] || selectedTitle}".`);
+      return;
+    }
+
+    if (!(await canSubmitCard(currentUser.uid, currentUserRoles))) {
+      alert('Compte African Army : une seule carte en attente autorisée. Attends la validation ou obtiens un rôle supérieur pour envoyer sans limite.');
+      return;
+    }
+
+    submitCardBtn.disabled = true;
+
+    try {
+      const payload = await buildCardPayload();
+      const verificationRef = push(ref(db, 'cardVerification'));
+
+      await set(verificationRef, {
+        ownerUid: currentUser.uid,
+        ownerNickname: currentNickname,
+        creatorName: currentNickname,
+        rank: payload.rank,
+        status: 'pending',
+        submittedAt: payload.createdAt,
+        updatedAt: payload.updatedAt,
+        cardSnapshot: payload
+      });
+
+      alert('Capture de carte envoyée en attente de vérification.');
+    } catch (error) {
+      console.error('Erreur lors de la soumission :', error);
+      alert(toFriendlySubmissionError(error));
+    } finally {
+      submitCardBtn.disabled = false;
+    }
+  }, { signal });
+
+  downloadCardBtn.addEventListener('click', async () => {
+    try {
+      const jpegDataUrl = await exportCardAsJpeg();
+      const link = document.createElement('a');
+      link.download = `${sanitizeFilename(fields.name.value)}.jpg`;
+      link.href = jpegDataUrl;
+      link.click();
+    } catch (error) {
+      console.error('Export JPEG indisponible :', error);
+      alert('Export indisponible pour le moment. Recharge la page puis réessaie.');
+    }
+  }, { signal });
+
+  resetPortraitPositionBtn?.addEventListener('click', resetPortraitPosition, { signal });
+
+  portraitImage?.addEventListener('load', () => {
+    portraitNaturalSize = {
+      width: portraitImage.naturalWidth || 0,
+      height: portraitImage.naturalHeight || 0
+    };
+    applyPortraitImage();
+  }, { signal });
+
+  portrait.addEventListener('pointerdown', (event) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    startPortraitDrag(event);
+  }, { signal });
+
+  window.addEventListener('pointermove', movePortrait, { passive: false, signal });
+  window.addEventListener('pointerup', stopPortraitDrag, { signal });
+  window.addEventListener('pointercancel', stopPortraitDrag, { signal });
+
+  const cleanupCommon = await initCommon({
+    requireAuth: true,
+    onUserChanged: async (user) => {
+      currentUser = user;
+
+      if (!user) {
+        currentNickname = '';
+        currentUserRoles = ['african army'];
+        remainingStatRerolls = DEFAULT_STAT_REROLLS;
+        verificationStatusText.textContent = 'Connecte-toi pour voir le statut de ta carte.';
+        if (verificationUnsubscribe) {
+          verificationUnsubscribe();
+          verificationUnsubscribe = null;
+        }
+        syncAvailableTitles();
+        updateRerollUi();
+        return;
+      }
+
+      currentUserRoles = await getProfileRoles(user.uid);
+      syncAvailableTitles();
+      await refreshProfile(user.uid);
+      watchVerificationStatus(user.uid);
+      await ensureProfileRerollCount(user.uid);
+      syncManualStatInputs();
+      updateRerollUi();
+    }
+  });
+
+  const restoredDraft = restoreDraft();
+  applyPortraitImage();
+
+  if (!restoredDraft && !fields.abilities.value.trim()) {
+    fields.abilities.value = `Cri du Raptor : Baisse la défense adverse de 10 points.
 
 Stream Ban : Met hors combat la carte adverse. Peut être utilisé deux fois.`;
-}
+  }
 
-setRenderStatus('Moteur export : SVG natif prêt.', false);
-if (!restoredDraft) {
-  await rollStats({ consumeReroll: false });
-}
-syncAvailableTitles();
-render();
-saveDraft();
+  setRenderStatus('Moteur export : SVG natif prêt.', false);
+  if (!restoredDraft) {
+    await rollStats({ consumeReroll: false });
+  }
+  syncAvailableTitles();
+  render();
+  saveDraft();
+
+  return () => {
+    cleanupCommon?.();
+    abortController.abort();
+    stopPortraitDrag();
+    if (verificationUnsubscribe) {
+      verificationUnsubscribe();
+      verificationUnsubscribe = null;
+    }
+  };
+};

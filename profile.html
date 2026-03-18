@@ -1,93 +1,22 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AFC Card Studio · Profil</title>
-  <link rel="stylesheet" href="assets/css/styles.css" />
+  <title>AFC Card Studio · Profile</title>
+  <script>
+    (function () {
+      var current = new URL(window.location.href);
+      var params = current.searchParams;
+      params.set('page', 'profile.html');
+      var nextUrl = 'index.html?' + params.toString() + (current.hash || '');
+      window.location.replace(nextUrl);
+    }());
+  </script>
 </head>
-
-<body class="page-profile">
-  <div class="bg-orb orb-a"></div>
-  <div class="bg-orb orb-b"></div>
-
-  <div class="app-shell app-shell--dashboard">
-    <header class="topbar topbar--dashboard glass">
-      <div class="brand-wrap topbar__brand">
-        <div>
-          <p class="kicker">AFC Universe</p>
-          <h1>Player Profile</h1>
-        </div>
-      </div>
-
-      <nav class="site-nav" aria-label="Navigation principale">
-        <a class="nav-link" href="index.html">
-          <span class="nav-link__eyebrow">Studio</span>
-          <strong>Créer</strong>
-        </a>
-        <a class="nav-link" href="booster.html">
-          <span class="nav-link__eyebrow">Collection</span>
-          <strong>Booster</strong>
-        </a>
-        <a class="nav-link" href="album.html">
-          <span class="nav-link__eyebrow">Collection</span>
-          <strong>Album</strong>
-        </a>
-        <a class="nav-link" href="admin.html" data-admin-link="true" hidden>
-          <span class="nav-link__eyebrow">Backoffice</span>
-          <strong>Admin</strong>
-        </a>
-      </nav>
-
-      <section class="auth-actions auth-actions--topbar glass-soft">
-        <p class="eyebrow">Session</p>
-        <span id="authStatus">Vérification...</span>
-        <div class="auth-actions__buttons auth-actions__buttons--inline">
-          <a id="profileLink" class="button-link ghost" href="profile.html">Profil</a>
-          <button id="googleLogin" type="button">Connexion Google</button>
-          <button id="logout" type="button" class="ghost">Déconnexion</button>
-        </div>
-      </section>
-    </header>
-
-    <div class="app-workspace">
-
-      <main class="single-layout single-layout--narrow">
-        <section class="panel glass profile-panel">
-          <div class="panel-heading">
-            <div>
-              <p class="eyebrow">Compte</p>
-              <h2>Personnalise ton profil</h2>
-            </div>
-            <p class="subtitle">Renseigne ton pseudo AFC pour associer automatiquement tes cartes, validations et ouvertures à ton compte.</p>
-          </div>
-
-          <div class="profile-layout">
-            <div class="profile-card glass-soft">
-              <p class="eyebrow">Astuce</p>
-              <h3>Un pseudo clair = un profil propre</h3>
-              <ul class="feature-list">
-                <li>Ton pseudo s’actualise directement sur ton profil.</li>
-                <li>Les cartes gardent le bon nom joueur plus facilement.</li>
-                <li>Tu évites les changements à refaire ailleurs.</li>
-              </ul>
-            </div>
-
-            <div class="profile-form-wrap">
-              <label>Pseudo
-                <input id="nickname" type="text" maxlength="24" placeholder="Ton pseudo AFC" />
-              </label>
-              <button id="saveProfile" type="button">Enregistrer le pseudo</button>
-              <p id="profileHint" class="hint">Connecte-toi avec Google pour démarrer.</p>
-            </div>
-          </div>
-        </section>
-      </main>
-    </div>
-  </div>
-
-  <script type="module" src="assets/js/profile.js"></script>
+<body>
+  <noscript>
+    Cette page nécessite JavaScript. Ouvre <a href="index.html?page=profile.html">le shell principal</a>.
+  </noscript>
 </body>
-
 </html>

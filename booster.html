@@ -1,76 +1,22 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AFC Card Studio · Booster</title>
-  <link rel="stylesheet" href="assets/css/styles.css" />
+  <script>
+    (function () {
+      var current = new URL(window.location.href);
+      var params = current.searchParams;
+      params.set('page', 'booster.html');
+      var nextUrl = 'index.html?' + params.toString() + (current.hash || '');
+      window.location.replace(nextUrl);
+    }());
+  </script>
 </head>
-
-<body class="page-booster">
-  <div class="bg-orb orb-a"></div>
-  <div class="bg-orb orb-b"></div>
-
-  <div class="app-shell app-shell--dashboard">
-    <header class="topbar topbar--dashboard glass">
-      <div class="brand-wrap topbar__brand">
-        <div>
-          <p class="kicker">AFC Universe</p>
-          <h1>Booster Room</h1>
-        </div>
-      </div>
-
-      <nav class="site-nav" aria-label="Navigation principale">
-        <a class="nav-link" href="index.html">
-          <span class="nav-link__eyebrow">Studio</span>
-          <strong>Créer</strong>
-        </a>
-        <a class="nav-link active" href="booster.html">
-          <span class="nav-link__eyebrow">Collection</span>
-          <strong>Booster</strong>
-        </a>
-        <a class="nav-link" href="album.html">
-          <span class="nav-link__eyebrow">Collection</span>
-          <strong>Album</strong>
-        </a>
-        <a class="nav-link" href="admin.html" data-admin-link="true" hidden>
-          <span class="nav-link__eyebrow">Backoffice</span>
-          <strong>Admin</strong>
-        </a>
-      </nav>
-
-      <section class="auth-actions auth-actions--topbar glass-soft">
-        <p class="eyebrow">Session</p>
-        <span id="authStatus">Vérification...</span>
-        <div class="auth-actions__buttons auth-actions__buttons--inline">
-          <a id="profileLink" class="button-link ghost" href="profile.html">Profil</a>
-          <button id="googleLogin" type="button">Connexion Google</button>
-          <button id="logout" type="button" class="ghost">Déconnexion</button>
-        </div>
-      </section>
-    </header>
-
-    <div class="app-workspace">
-
-      <main class="single-layout">
-        <section class="panel glass panel--booster">
-          <div class="panel-heading panel-heading--spread">
-            <div>
-              <p class="eyebrow">Ouverture</p>
-              <h2>Booster de 5 captures</h2>
-            </div>
-            <button id="openBooster" type="button">Ouvrir un booster</button>
-          </div>
-          <p class="subtitle">Lance l’ouverture et découvre 5 captures validées, avec un taux de drop plus faible pour les cartes les plus rares.</p>
-          <p id="boosterHint" class="hint">Prêt à découvrir ton tirage.</p>
-          <section id="boosterGrid" class="booster-grid"></section>
-        </section>
-      </main>
-    </div>
-  </div>
-
-  <script type="module" src="assets/js/booster.js"></script>
+<body>
+  <noscript>
+    Cette page nécessite JavaScript. Ouvre <a href="index.html?page=booster.html">le shell principal</a>.
+  </noscript>
 </body>
-
 </html>

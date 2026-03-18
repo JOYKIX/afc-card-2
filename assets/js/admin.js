@@ -24,18 +24,18 @@ import {
 } from './firebase.js';
 import { initCommon } from './common.js';
 
-const adminNotice = document.getElementById('adminNotice');
-const tinderReview = document.getElementById('tinderReview');
-const verificationCards = document.getElementById('verificationCards');
-const countPending = document.getElementById('countPending');
-const countApproved = document.getElementById('countApproved');
-const countRejected = document.getElementById('countRejected');
-const statusFilter = document.getElementById('statusFilter');
-const searchInput = document.getElementById('searchInput');
-const roleForm = document.getElementById('roleForm');
-const roleNickname = document.getElementById('roleNickname');
-const roleFeedback = document.getElementById('roleFeedback');
-const roleCheckboxes = Array.from(document.querySelectorAll('input[name="roleOption"]'));
+let adminNotice;
+let tinderReview;
+let verificationCards;
+let countPending;
+let countApproved;
+let countRejected;
+let statusFilter;
+let searchInput;
+let roleForm;
+let roleNickname;
+let roleFeedback;
+let roleCheckboxes = [];
 
 const assignableRoles = ['vip', 'streamers', 'staff afc', 'creator', 'admin', 'african king'];
 const sortByRecency = (entries = []) => [...entries].sort((a, b) => (b.entry?.updatedAt || b.entry?.submittedAt || b.entry?.createdAt || 0) - (a.entry?.updatedAt || a.entry?.submittedAt || a.entry?.createdAt || 0));
@@ -316,74 +316,103 @@ const findProfileByNickname = async (nickname) => {
   return uid ? { uid, profile: profile || {} } : null;
 };
 
-roleForm?.addEventListener('submit', async (event) => {
-  event.preventDefault();
 
-  if (!currentUser) {
-    setRoleFeedback('Connecte-toi avec un compte autorisé à valider les cartes.', true);
-    return;
-  }
+const bindDomReferences = () => {
+  adminNotice = document.getElementById('adminNotice');
+  tinderReview = document.getElementById('tinderReview');
+  verificationCards = document.getElementById('verificationCards');
+  countPending = document.getElementById('countPending');
+  countApproved = document.getElementById('countApproved');
+  countRejected = document.getElementById('countRejected');
+  statusFilter = document.getElementById('statusFilter');
+  searchInput = document.getElementById('searchInput');
+  roleForm = document.getElementById('roleForm');
+  roleNickname = document.getElementById('roleNickname');
+  roleFeedback = document.getElementById('roleFeedback');
+  roleCheckboxes = Array.from(document.querySelectorAll('input[name="roleOption"]'));
+};
 
-  const nickname = normalizeNickname(roleNickname?.value || '');
-  const selectedRoles = getSelectedRoles().filter((role) => assignableRoles.includes(role));
-  const nextRoles = normalizeRoles(selectedRoles);
+export const initAdminPage = async () => {
+  bindDomReferences();
 
-  if (!nickname) {
-    setRoleFeedback('Merci de renseigner un nickname valide.', true);
-    return;
-  }
+  const handleRoleSubmit = async (event) => {
+    event.preventDefault();
 
-  try {
-    const profileEntry = await findProfileByNickname(nickname);
-    if (!profileEntry) {
-      setRoleFeedback('Aucun profil trouvé avec ce nickname.', true);
+    if (!currentUser) {
+      setRoleFeedback('Connecte-toi avec un compte autorisé à valider les cartes.', true);
       return;
     }
 
-    await update(ref(db, `profiles/${profileEntry.uid}`), {
-      roles: nextRoles,
-      admin: null,
-      vip: null,
-      remainingStatRerolls: normalizeRemainingStatRerolls(profileEntry.profile.remainingStatRerolls, nextRoles),
-      updatedAt: Date.now()
-    });
+    const nickname = normalizeNickname(roleNickname?.value || '');
+    const selectedRoles = getSelectedRoles().filter((role) => assignableRoles.includes(role));
+    const nextRoles = normalizeRoles(selectedRoles);
 
-    if (profileEntry.uid === currentUser.uid) {
-      updateCachedRoles(nextRoles);
-    }
-
-    roleForm.reset();
-    setRoleFeedback(`${nickname} a maintenant les rôles : ${nextRoles.join(', ')}.`);
-  } catch (error) {
-    console.error('Erreur attribution rôle :', error);
-    setRoleFeedback('Impossible de mettre à jour ces rôles pour le moment.', true);
-  }
-});
-
-await initCommon({
-  requireAuth: true,
-  onUserChanged: async (user, context) => {
-    currentUser = user;
-
-    if (!user) {
-      resetAdminScreen();
-      adminNotice.textContent = 'Connecte-toi avec un compte autorisé à modérer.';
+    if (!nickname) {
+      setRoleFeedback('Merci de renseigner un nickname valide.', true);
       return;
     }
 
-    const roles = context?.session?.roles || [];
-    const canModerate = canValidateCards(roles);
+    try {
+      const profileEntry = await findProfileByNickname(nickname);
+      if (!profileEntry) {
+        setRoleFeedback('Aucun profil trouvé avec ce nickname.', true);
+        return;
+      }
 
-    if (!canModerate) {
-      resetAdminScreen();
-      adminNotice.textContent = 'Accès refusé : ce compte n’a pas le droit de validation.';
-      return;
+      await update(ref(db, `profiles/${profileEntry.uid}`), {
+        roles: nextRoles,
+        admin: null,
+        vip: null,
+        remainingStatRerolls: normalizeRemainingStatRerolls(profileEntry.profile.remainingStatRerolls, nextRoles),
+        updatedAt: Date.now()
+      });
+
+      if (profileEntry.uid === currentUser.uid) {
+        updateCachedRoles(nextRoles);
+      }
+
+      roleForm.reset();
+      setRoleFeedback(`${nickname} a maintenant les rôles : ${nextRoles.join(', ')}.`);
+    } catch (error) {
+      console.error('Erreur attribution rôle :', error);
+      setRoleFeedback('Impossible de mettre à jour ces rôles pour le moment.', true);
     }
+  };
 
-    bindRealtime();
-    adminNotice.textContent = 'Accès modération confirmé. Gère les validations et mets à jour les rôles depuis les profils.';
-  }
-});
+  roleForm?.addEventListener('submit', handleRoleSubmit);
+  statusFilter?.addEventListener('change', renderVerificationSection);
+  searchInput?.addEventListener('input', renderVerificationSection);
 
-statusFilter?.addEventListener('change', renderVerificationSection);
-searchInput?.addEventListener('input', renderVerificationSection);
+  const cleanupCommon = await initCommon({
+    requireAuth: true,
+    onUserChanged: async (user, context) => {
+      currentUser = user;
+
+      if (!user) {
+        resetAdminScreen();
+        adminNotice.textContent = 'Connecte-toi avec un compte autorisé à modérer.';
+        return;
+      }
+
+      const roles = context?.session?.roles || [];
+      const canModerate = canValidateCards(roles);
+
+      if (!canModerate) {
+        resetAdminScreen();
+        adminNotice.textContent = 'Accès refusé : ce compte n’a pas le droit de validation.';
+        return;
+      }
+
+      bindRealtime();
+      adminNotice.textContent = 'Accès modération confirmé. Gère les validations et mets à jour les rôles depuis les profils.';
+    }
+  });
+
+  return () => {
+    cleanupCommon?.();
+    clearRealtime();
+    roleForm?.removeEventListener('submit', handleRoleSubmit);
+    statusFilter?.removeEventListener('change', renderVerificationSection);
+    searchInput?.removeEventListener('input', renderVerificationSection);
+  };
+};

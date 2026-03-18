@@ -1,0 +1,35 @@
+<main class="login-layout">
+        <section class="panel glass login-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Bienvenue</p>
+              <h2>Connecte-toi avant d’utiliser le studio</h2>
+            </div>
+            <p class="subtitle">Connecte-toi avec Google puis choisis ton pseudo pour accéder rapidement au studio.</p>
+          </div>
+
+          <div class="login-grid">
+            <article class="glass-soft login-copy">
+              <p class="eyebrow">Accès</p>
+              <h3>Une connexion, puis tu reviens direct sur le site</h3>
+              <ul class="feature-list">
+                <li>Connexion Google sécurisée.</li>
+                <li>Pseudo affiché partout dans l’interface.</li>
+                <li>Ton pseudo visible partout dans le studio.</li>
+              </ul>
+            </article>
+
+            <article class="glass-soft login-card">
+              <p id="loginState" class="login-state">Connecte-toi avec Google pour accéder au site.</p>
+              <p id="loginHint" class="hint">Ton pseudo sera demandé juste après la connexion.</p>
+
+              <div id="nicknameStep" class="nickname-step" hidden>
+                <label>Pseudo
+                  <input id="nickname" type="text" maxlength="24" placeholder="Pseudo" />
+                </label>
+                <button id="saveNickname" type="button">Continuer avec ce pseudo</button>
+              </div>
+            </article>
+          </div>
+        </section>
+      </main>
