@@ -1,9 +1,11 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js';
 import {
   browserLocalPersistence,
+  browserSessionPersistence,
   getAuth,
   getRedirectResult,
   GoogleAuthProvider,
+  inMemoryPersistence,
   onAuthStateChanged,
   setPersistence,
   signInWithPopup,
@@ -142,7 +144,56 @@ const db = getDatabase(app);
 const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ prompt: 'select_account' });
 
-await setPersistence(auth, browserLocalPersistence);
+const authRuntimeState = {
+  persistence: 'local',
+  level: 'info',
+  notice: ''
+};
+
+const getCurrentOrigin = () => {
+  if (typeof window === 'undefined' || !window.location?.origin) return 'origine inconnue';
+  return window.location.origin;
+};
+
+const configureAuthPersistence = async () => {
+  const persistenceOptions = [
+    {
+      mode: 'local',
+      label: 'session persistante sur cet appareil',
+      persistence: browserLocalPersistence
+    },
+    {
+      mode: 'session',
+      label: 'session limitée à cet onglet',
+      persistence: browserSessionPersistence
+    },
+    {
+      mode: 'memory',
+      label: 'session temporaire jusqu’au rechargement',
+      persistence: inMemoryPersistence
+    }
+  ];
+
+  for (const option of persistenceOptions) {
+    try {
+      await setPersistence(auth, option.persistence);
+      authRuntimeState.persistence = option.mode;
+      authRuntimeState.level = option.mode === 'local' ? 'info' : 'warning';
+      authRuntimeState.notice = option.mode === 'local'
+        ? ''
+        : `Le navigateur limite le stockage local : ${option.label}.`;
+      return;
+    } catch (error) {
+      console.warn(`Persistence auth indisponible (${option.mode}) :`, error);
+    }
+  }
+
+  authRuntimeState.persistence = 'unknown';
+  authRuntimeState.level = 'error';
+  authRuntimeState.notice = 'Impossible d’initialiser une session Firebase fiable dans ce navigateur.';
+};
+
+await configureAuthPersistence();
 
 const getCurrentDomain = () => {
   if (typeof window === 'undefined' || !window.location?.hostname) return 'inconnu';
@@ -268,15 +319,26 @@ const saveAuthCache = (payload) => {
 
 const clearAuthCache = () => saveAuthCache(null);
 
+const getAuthRuntimeState = () => ({ ...authRuntimeState });
+
 const toFriendlyAuthError = (error) => {
   if (!error?.code) {
     return new Error('Connexion Google impossible. Réessaie dans quelques secondes.');
   }
 
+  if (error.code === 'auth/operation-not-supported-in-this-environment') {
+    return new Error('Connexion Google impossible dans ce navigateur/contexte. Active les cookies, désactive le mode navigation privée strict ou change de navigateur.');
+  }
+
+  if (error.code === 'auth/web-storage-unsupported') {
+    return new Error('Le navigateur bloque le stockage requis par Firebase. Autorise les cookies/localStorage puis recharge la page.');
+  }
+
   if (error.code === 'auth/unauthorized-domain') {
     const domain = getCurrentDomain();
+    const origin = getCurrentOrigin();
     return new Error(
-      `Domaine non autorisé (${domain}). Ajoute ce domaine dans Firebase Console > Authentication > Settings > Domaines autorisés, puis réessaie.`
+      `Domaine non autorisé (${domain}) pour l’origine ${origin}. Ajoute ce domaine dans Firebase Console > Authentication > Settings > Domaines autorisés, puis réessaie.`
     );
   }
 
@@ -288,17 +350,29 @@ const toFriendlyAuthError = (error) => {
     return new Error('Erreur réseau pendant la connexion Google. Vérifie internet/VPN puis réessaie.');
   }
 
+  if (error.code === 'auth/too-many-requests') {
+    return new Error('Trop de tentatives de connexion ont été détectées. Patiente quelques minutes puis réessaie.');
+  }
+
   return new Error(`Connexion Google impossible: ${error.message}`);
 };
 
 const performGoogleSignIn = async () => {
+  if (typeof window !== 'undefined' && window.location?.protocol === 'file:') {
+    throw new Error('La connexion Google ne fonctionne pas en ouvrant les fichiers directement. Lance un serveur HTTP local (ex: python3 -m http.server 4173) puis ouvre le site via http://localhost:4173.');
+  }
+
   try {
     await signInWithPopup(auth, provider);
   } catch (error) {
     const popupBlocked = error?.code === 'auth/popup-blocked' || error?.code === 'auth/cancelled-popup-request';
     if (popupBlocked) {
-      await signInWithRedirect(auth, provider);
-      return;
+      try {
+        await signInWithRedirect(auth, provider);
+        return;
+      } catch (redirectError) {
+        throw toFriendlyAuthError(redirectError);
+      }
     }
 
     throw toFriendlyAuthError(error);
@@ -452,6 +526,7 @@ export {
   equalTo,
   get,
   getAllowedCardTitlesForRoles,
+  getAuthRuntimeState,
   getMaxPendingSubmissionsForRoles,
   getProfile,
   getProfileRoles,
