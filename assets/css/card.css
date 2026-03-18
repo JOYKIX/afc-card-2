@@ -10,11 +10,6 @@
   display: grid;
   grid-template-rows: auto minmax(300px, 1.36fr) minmax(176px, 1.36fr);
   gap: 0.64rem;
-  box-shadow:
-    0 42px 84px rgba(0, 0, 0, 0.62),
-    0 0 0 1px rgba(255, 255, 255, 0.16),
-    0 0 72px var(--glow),
-    inset 0 0 42px rgba(255, 255, 255, 0.07);
   background:
     radial-gradient(120% 90% at 18% 0%, rgba(255, 255, 255, 0.14), transparent 42%),
     radial-gradient(100% 75% at 100% 100%, rgba(255, 255, 255, 0.14), transparent 54%),
@@ -24,21 +19,18 @@
 
 .afc-card::before,
 .afc-card::after {
-  content: '';
   position: absolute;
   pointer-events: none;
 }
 
 .afc-card::before {
-  inset: 10px;
   border-radius: 30px;
-  border: 1px solid rgba(255, 255, 255, 0.26);
+  border: 0px solid rgba(255, 255, 255, 0.26);
 }
 
 .afc-card::after {
-  inset: 22px;
   border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 0px solid rgba(255, 255, 255, 0.08);
 }
 
 .card-spectrum,
@@ -59,8 +51,8 @@
 }
 
 .card-frame-lines {
-  inset: 14px;
-  border-radius: 28px;
+  inset: 0px;
+  border-radius: 0px;
   background:
     linear-gradient(90deg, rgba(255, 255, 255, 0.16), transparent 12%, transparent 88%, rgba(255, 255, 255, 0.1)),
     linear-gradient(rgba(255, 255, 255, 0.12), transparent 12%, transparent 88%, rgba(255, 255, 255, 0.08));
@@ -108,46 +100,46 @@
 
 .card-corner--tl,
 .card-corner--tr {
-  top: 18px;
+  top: 0px;
 }
 
 .card-corner--bl,
 .card-corner--br {
-  bottom: 18px;
+  bottom: 0px;
 }
 
 .card-corner--tl,
 .card-corner--bl {
-  left: 18px;
+  left: 0px;
 }
 
 .card-corner--tr,
 .card-corner--br {
-  right: 18px;
+  right: 0px;
 }
 
 .card-corner--tl {
   border-right: 0;
   border-bottom: 0;
-  border-top-left-radius: 20px;
+  border-top-left-radius: 0px;
 }
 
 .card-corner--tr {
   border-left: 0;
   border-bottom: 0;
-  border-top-right-radius: 20px;
+  border-top-right-radius: 0px;
 }
 
 .card-corner--bl {
   border-right: 0;
   border-top: 0;
-  border-bottom-left-radius: 20px;
+  border-bottom-left-radius: 0px;
 }
 
 .card-corner--br {
   border-left: 0;
   border-top: 0;
-  border-bottom-right-radius: 20px;
+  border-bottom-right-radius: 0px;
 }
 
 .card-header {
@@ -321,7 +313,7 @@
 .edition-chip {
   position: absolute;
   top: 0.82rem;
-  right: 0.82rem;
+  right: 0.90rem;
   z-index: 2;
   display: inline-flex;
   align-items: center;
