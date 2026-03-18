@@ -140,6 +140,7 @@
             <article class="afc-card rank-D" id="afcCard">
               <div class="holo"></div>
               <div class="rank-aura" aria-hidden="true"></div>
+              <div class="card-noise" aria-hidden="true"></div>
               <header class="card-header">
                 <div class="meta-left">
                   <span id="cardCost">2</span>
@@ -156,33 +157,32 @@
               </header>
 
               <div class="portrait-shell">
-                <div class="portrait" id="portrait"></div>
+                <div class="portrait" id="portrait">
+                  <img class="portrait-image" id="portraitImage" alt="" hidden />
+                </div>
               </div>
 
-              <section class="skills">
-                <h4>Capacités</h4>
-                <p id="cardAbilities"></p>
-              </section>
+              <section class="card-body">
+                <section class="skills">
+                  <div class="section-label">Capacités</div>
+                  <p id="cardAbilities"></p>
+                </section>
 
-              <footer class="stats">
-                <div>
-                  <strong aria-label="Attaque">
-                    <svg class="stat-icon stat-icon--attack" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                      <path d="M13.91 2.91a1 1 0 0 1 1.41 0l5.77 5.77a1 1 0 0 1 0 1.41l-1.83 1.83a1 1 0 0 1-1.41 0l-.76-.76-2.12 2.12 2.12 2.12.76-.76a1 1 0 0 1 1.41 0l1.83 1.83a1 1 0 0 1 0 1.41l-1.41 1.41a1 1 0 0 1-1.41 0l-1.83-1.83a1 1 0 0 1 0-1.41l.76-.76-2.12-2.12-2.12 2.12.76.76a1 1 0 0 1 0 1.41l-1.83 1.83a1 1 0 0 1-1.41 0L7.5 18.09a1 1 0 0 1 0-1.41l1.83-1.83a1 1 0 0 1 1.41 0l.76.76 2.12-2.12-2.12-2.12-.76.76a1 1 0 0 1-1.41 0L7.5 10.09a1 1 0 0 1 0-1.41l1.41-1.41a1 1 0 0 1 1.41 0l1.83 1.83a1 1 0 0 1 0 1.41l-.76.76 2.12 2.12 2.12-2.12-.76-.76a1 1 0 0 1 0-1.41l1.83-1.83z"/>
-                      <path d="M4.21 3.79a1 1 0 0 1 1.41 0l3.17 3.17-1.41 1.41L5.62 6.62l-1.41 1.41 1.76 1.75-1.41 1.41L2.79 9.44a1 1 0 0 1 0-1.41l1.42-1.42L2.79 5.2a1 1 0 0 1 0-1.41l1.42-1.42z"/>
-                    </svg>
-                  </strong>
-                  <span id="attack">0</span>
-                </div>
-                <div>
-                  <strong aria-label="Défense">
-                    <svg class="stat-icon stat-icon--defense" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                      <path d="M12 2.2 5 5.3v6.03c0 4.43 2.99 8.57 7 9.67 4.01-1.1 7-5.24 7-9.67V5.3L12 2.2zm0 2.19 5 2.22v4.72c0 3.31-2.11 6.53-5 7.58-2.89-1.05-5-4.27-5-7.58V6.61l5-2.22z"/>
-                    </svg>
-                  </strong>
-                  <span id="defense">0</span>
-                </div>
-              </footer>
+                <footer class="stats">
+                  <div class="stat-card stat-card--attack">
+                    <strong aria-label="Attaque">
+                      <img class="stat-icon stat-icon--attack" src="assets/images/swords.svg" alt="" />
+                    </strong>
+                    <span id="attack">0</span>
+                  </div>
+                  <div class="stat-card stat-card--defense">
+                    <strong aria-label="Défense">
+                      <img class="stat-icon stat-icon--defense" src="assets/images/shield.svg" alt="" />
+                    </strong>
+                    <span id="defense">0</span>
+                  </div>
+                </footer>
+              </section>
 
               <span class="edition-chip" id="cardEdition">2e édition</span>
             </article>
