@@ -13,44 +13,42 @@
   <div class="bg-orb orb-b"></div>
 
   <div class="app-shell app-shell--dashboard">
-    <aside class="app-sidebar glass">
-      <div class="sidebar-stack">
-        <div class="brand-wrap brand-wrap--sidebar">
-          <div>
-            <p class="kicker">AFC Universe</p>
-            <h1>Player Profile</h1>
-          </div>
+    <header class="topbar topbar--dashboard glass">
+      <div class="brand-wrap topbar__brand">
+        <div>
+          <p class="kicker">AFC Universe</p>
+          <h1>Player Profile</h1>
         </div>
-
-        <nav class="site-nav site-nav--sidebar" aria-label="Navigation principale">
-          <a class="nav-link" href="index.html">
-            <span class="nav-link__eyebrow">Studio</span>
-            <strong>Créer</strong>
-          </a>
-          <a class="nav-link" href="booster.html">
-            <span class="nav-link__eyebrow">Collection</span>
-            <strong>Booster</strong>
-          </a>
-          <a class="nav-link active" href="profile.html">
-            <span class="nav-link__eyebrow">Compte</span>
-            <strong>Profil</strong>
-          </a>
-          <a class="nav-link" href="admin.html" data-admin-link="true" hidden>
-            <span class="nav-link__eyebrow">Backoffice</span>
-            <strong>Admin</strong>
-          </a>
-        </nav>
-
-        <section class="auth-actions auth-actions--sidebar glass-soft">
-          <p class="eyebrow">Session</p>
-          <span id="authStatus">Vérification...</span>
-          <div class="auth-actions__buttons">
-            <button id="googleLogin" type="button">Connexion Google</button>
-            <button id="logout" type="button" class="ghost">Déconnexion</button>
-          </div>
-        </section>
       </div>
-    </aside>
+
+      <nav class="site-nav" aria-label="Navigation principale">
+        <a class="nav-link" href="index.html">
+          <span class="nav-link__eyebrow">Studio</span>
+          <strong>Créer</strong>
+        </a>
+        <a class="nav-link" href="booster.html">
+          <span class="nav-link__eyebrow">Collection</span>
+          <strong>Booster</strong>
+        </a>
+        <a class="nav-link active" href="profile.html">
+          <span class="nav-link__eyebrow">Compte</span>
+          <strong>Profil</strong>
+        </a>
+        <a class="nav-link" href="admin.html" data-admin-link="true" hidden>
+          <span class="nav-link__eyebrow">Backoffice</span>
+          <strong>Admin</strong>
+        </a>
+      </nav>
+
+      <section class="auth-actions auth-actions--topbar glass-soft">
+        <p class="eyebrow">Session</p>
+        <span id="authStatus">Vérification...</span>
+        <div class="auth-actions__buttons auth-actions__buttons--inline">
+          <button id="googleLogin" type="button">Connexion Google</button>
+          <button id="logout" type="button" class="ghost">Déconnexion</button>
+        </div>
+      </section>
+    </header>
 
     <div class="app-workspace">
 
