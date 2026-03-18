@@ -1,16 +1,27 @@
+import { checkAuthFast } from './lib/auth-cache.js';
+
 const routes = {
   '': {
     key: 'create',
     path: 'creator.html',
-    partial: 'pages/create.html',
+    partial: 'pages/creator.html',
     title: 'AFC Card Studio · Création',
+    requireAuth: true,
     init: () => import('./create.js').then((module) => module.initCreatePage())
+  },
+  'index.html': {
+    key: 'index',
+    path: 'index.html',
+    partial: 'pages/login.html',
+    title: 'AFC Card Studio',
+    init: async () => null
   },
   'creator.html': {
     key: 'create',
     path: 'creator.html',
-    partial: 'pages/create.html',
+    partial: 'pages/creator.html',
     title: 'AFC Card Studio · Création',
+    requireAuth: true,
     init: () => import('./create.js').then((module) => module.initCreatePage())
   },
   'profile.html': {
@@ -18,6 +29,7 @@ const routes = {
     path: 'profile.html',
     partial: 'pages/profile.html',
     title: 'AFC Card Studio · Profil',
+    requireAuth: true,
     init: () => import('./profile.js').then((module) => module.initProfilePage())
   },
   'booster.html': {
@@ -25,6 +37,7 @@ const routes = {
     path: 'booster.html',
     partial: 'pages/booster.html',
     title: 'AFC Card Studio · Booster',
+    requireAuth: true,
     init: () => import('./booster.js').then((module) => module.initBoosterPage())
   },
   'album.html': {
@@ -32,6 +45,7 @@ const routes = {
     path: 'album.html',
     partial: 'pages/album.html',
     title: 'AFC Card Studio · Album',
+    requireAuth: true,
     init: () => import('./album.js').then((module) => module.initAlbumPage())
   },
   'admin.html': {
@@ -39,6 +53,7 @@ const routes = {
     path: 'admin.html',
     partial: 'pages/admin.html',
     title: 'AFC Card Studio · Admin',
+    requireAuth: true,
     init: () => import('./admin.js').then((module) => module.initAdminPage())
   },
   'login.html': {
@@ -55,10 +70,17 @@ const app = document.getElementById('app');
 const workspace = document.getElementById('appWorkspace');
 let currentCleanup = null;
 let activeNavigationId = 0;
+let initialViewRevealed = false;
+
+const revealApp = () => {
+  if (initialViewRevealed) return;
+  initialViewRevealed = true;
+  document.body.classList.add('app-ready');
+};
 
 const getRouteFromTarget = (target) => {
   const url = new URL(target, window.location.href);
-  const basename = url.pathname.split('/').pop() || 'creator.html';
+  const basename = url.pathname.split('/').pop() || 'index.html';
   const route = routes[basename] || routes['creator.html'];
   return {
     route,
@@ -73,9 +95,11 @@ const setActiveNavLink = (path) => {
   });
 };
 
-const swapContent = async (html) => {
-  app.classList.add('is-leaving');
-  await new Promise((resolve) => window.setTimeout(resolve, 120));
+const swapContent = async (html, { immediate = false } = {}) => {
+  if (!immediate) {
+    app.classList.add('is-leaving');
+    await new Promise((resolve) => window.setTimeout(resolve, 120));
+  }
   app.innerHTML = html;
   app.classList.remove('is-leaving');
   app.classList.add('is-entering');
@@ -86,9 +110,33 @@ const swapContent = async (html) => {
   });
 };
 
-const navigate = async (target, { replace = false } = {}) => {
+const toLoginHref = (targetHref) => {
+  const loginUrl = new URL('login.html', window.location.href);
+  loginUrl.searchParams.set('next', targetHref || 'creator.html');
+  return `${loginUrl.pathname.split('/').pop()}${loginUrl.search}${loginUrl.hash}`;
+};
+
+const resolveProtectedHref = (href, route) => {
+  const fastUser = checkAuthFast();
+  if (route.requireAuth && !fastUser) {
+    return toLoginHref(href);
+  }
+
+  if (route.key === 'login' && fastUser) {
+    return 'creator.html';
+  }
+
+  return href;
+};
+
+const navigate = async (target, { replace = false, immediate = false } = {}) => {
   const navigationId = ++activeNavigationId;
-  const { route, href } = getRouteFromTarget(target);
+  let { route, href } = getRouteFromTarget(target);
+  const resolvedHref = resolveProtectedHref(href, route);
+
+  if (resolvedHref !== href) {
+    ({ route, href } = getRouteFromTarget(resolvedHref));
+  }
 
   if (!app) return;
 
@@ -104,16 +152,17 @@ const navigate = async (target, { replace = false } = {}) => {
     currentCleanup?.();
     currentCleanup = null;
 
-    await swapContent(html);
+    await swapContent(html, { immediate });
 
     workspace?.classList.toggle('app-workspace--login', Boolean(route.workspaceClass));
     document.body.dataset.route = route.key;
     document.title = route.title;
     setActiveNavLink(route.path);
+    revealApp();
 
     if (replace) {
       history.replaceState({ path: href }, '', href);
-    } else if (`${window.location.pathname.split('/').pop() || 'creator.html'}${window.location.search}${window.location.hash}` !== href) {
+    } else if (`${window.location.pathname.split('/').pop() || 'index.html'}${window.location.search}${window.location.hash}` !== href) {
       history.pushState({ path: href }, '', href);
     }
 
@@ -133,6 +182,7 @@ const navigate = async (target, { replace = false } = {}) => {
         </section>
       </main>
     `;
+    revealApp();
   }
 };
 
@@ -144,7 +194,7 @@ const shouldHandleLink = (link) => {
   const url = new URL(link.href, window.location.href);
   if (url.origin !== window.location.origin) return false;
 
-  const basename = url.pathname.split('/').pop() || 'creator.html';
+  const basename = url.pathname.split('/').pop() || 'index.html';
   return Boolean(routes[basename]);
 };
 
@@ -156,15 +206,19 @@ const resolveInitialTarget = () => {
   if (page && routes[page]) {
     params.delete('page');
     const suffix = `${params.toString() ? `?${params.toString()}` : ''}${current.hash || ''}`;
-    return `${page}${suffix}`;
+    return resolveProtectedHref(`${page}${suffix}`, routes[page]);
   }
 
-  const basename = current.pathname.split('/').pop() || 'creator.html';
+  const basename = current.pathname.split('/').pop() || 'index.html';
+  if (basename === 'index.html' || basename === '') {
+    return checkAuthFast() ? 'creator.html' : 'login.html';
+  }
+
   if (routes[basename]) {
-    return `${basename}${current.search}${current.hash}`;
+    return resolveProtectedHref(`${basename}${current.search}${current.hash}`, routes[basename]);
   }
 
-  return `creator.html${current.search}${current.hash}`;
+  return checkAuthFast() ? `creator.html${current.search}${current.hash}` : toLoginHref(`creator.html${current.search}${current.hash}`);
 };
 
 document.addEventListener('click', (event) => {
@@ -176,9 +230,9 @@ document.addEventListener('click', (event) => {
 });
 
 window.addEventListener('popstate', () => {
-  navigate(window.location.href, { replace: true });
+  navigate(window.location.href, { replace: true, immediate: true });
 });
 
 window.__appRouter = { navigate };
 
-navigate(resolveInitialTarget(), { replace: true });
+navigate(resolveInitialTarget(), { replace: true, immediate: true });

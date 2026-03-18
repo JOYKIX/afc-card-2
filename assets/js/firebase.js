@@ -3,6 +3,7 @@ export {
   checkAdmin,
   checkVip,
   claimNickname,
+  checkAuthFast,
   clearAuthCache,
   consumeRedirect,
   getAuthRuntimeState,
@@ -16,6 +17,7 @@ export {
 } from './lib/auth-service.js';
 export {
   AUTH_CACHE_KEY,
+  AUTH_CACHE_MAX_AGE_MS,
   updateCachedNickname,
   updateCachedRoles
 } from './lib/auth-cache.js';

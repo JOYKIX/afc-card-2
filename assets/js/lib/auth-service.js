@@ -1,4 +1,4 @@
-import { clearAuthCache, loadAuthCache, saveAuthCache } from './auth-cache.js';
+import { checkAuthFast, clearAuthCache, loadAuthCache, saveAuthCache } from './auth-cache.js';
 import { DEPLOYED_HOSTS } from './firebase-config.js';
 import { auth, authRuntimeState, db, provider } from './firebase-core.js';
 import { nicknameToKey, normalizeEmail, normalizeNickname } from './format.js';
@@ -187,6 +187,24 @@ const claimNickname = async ({ uid, nickname, previousNicknameKey = '' }) => {
   return { nickname: normalizedNickname, nicknameKey };
 };
 
+const getFirebaseTokenSnapshot = async (user) => {
+  if (!user?.getIdTokenResult) {
+    return { token: '', tokenExpiresAt: 0 };
+  }
+
+  try {
+    const tokenResult = await user.getIdTokenResult();
+    const tokenExpiresAt = Date.parse(tokenResult?.expirationTime || '');
+    return {
+      token: tokenResult?.token || '',
+      tokenExpiresAt: Number.isFinite(tokenExpiresAt) ? tokenExpiresAt : 0
+    };
+  } catch (error) {
+    console.warn('Impossible de récupérer le token Firebase en cache :', error);
+    return { token: '', tokenExpiresAt: 0 };
+  }
+};
+
 const syncProfileOnLogin = async (user) => {
   if (!user?.uid) return null;
 
@@ -222,12 +240,17 @@ const syncProfileOnLogin = async (user) => {
 
   await update(profileRef, nextProfile);
 
+  const tokenSnapshot = await getFirebaseTokenSnapshot(user);
+
   saveAuthCache({
     uid: user.uid,
     email,
     googleName: user.displayName || '',
     nickname,
-    roles
+    photoURL: user.photoURL || '',
+    roles,
+    token: tokenSnapshot.token,
+    tokenExpiresAt: tokenSnapshot.tokenExpiresAt
   });
 
   return nextProfile;
@@ -247,6 +270,7 @@ export {
   getAuthRuntimeState,
   getProfile,
   getProfileRoles,
+  checkAuthFast,
   loadAuthCache,
   onAuthStateChanged,
   performGoogleSignIn,

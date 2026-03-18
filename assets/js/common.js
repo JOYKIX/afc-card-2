@@ -1,11 +1,11 @@
 import {
   auth,
   canAccessAdmin,
+  checkAuthFast,
   clearAuthCache,
   consumeRedirect,
   getAuthRuntimeState,
   getRoleBadge,
-  loadAuthCache,
   normalizeNickname,
   normalizeRoles,
   onAuthStateChanged,
@@ -20,7 +20,7 @@ const state = {
   shellController: null,
   redirectPromise: null,
   authUnsubscribe: null,
-  authReady: false,
+  bootstrapPromise: null,
   currentUser: null,
   currentContext: null,
   currentHandler: null,
@@ -147,7 +147,7 @@ const setAuthUi = (session = null) => {
 
 const getCurrentPage = () => {
   if (typeof window === 'undefined') return 'creator.html';
-  return window.location.pathname.split('/').pop() || 'creator.html';
+  return window.location.pathname.split('/').pop() || 'index.html';
 };
 
 const redirectToLogin = () => {
@@ -172,6 +172,37 @@ const redirectAfterLogin = () => {
   navigateTo(getRedirectTarget(), { replace: true });
 };
 
+const buildCachedUser = (session) => {
+  if (!session?.uid) return null;
+  return {
+    uid: session.uid,
+    email: session.email || '',
+    displayName: session.googleName || session.nickname || '',
+    photoURL: session.photoURL || '',
+    isLocalCache: true
+  };
+};
+
+const applySessionState = ({ user = null, session = null, profile = null, notice = '' } = {}) => {
+  const runtimeState = getAuthRuntimeState();
+  const normalizedSession = session ? { ...session, roles: normalizeRoles(session.roles, session) } : null;
+
+  state.currentUser = user;
+  state.currentContext = normalizedSession
+    ? {
+        profile: profile || normalizedSession,
+        redirectAfterLogin,
+        redirectToLogin,
+        session: normalizedSession,
+        isFastAuth: Boolean(user?.isLocalCache)
+      }
+    : null;
+
+  toggleAdminNav(canAccessAdmin(normalizedSession?.roles || []));
+  setAuthUi(normalizedSession);
+  setAuthNotice(notice || runtimeState.notice || '', runtimeState.level);
+};
+
 const notifyCurrentHandler = async () => {
   if (!state.currentHandler) {
     if (!state.currentUser && state.currentRequireAuth) redirectToLogin();
@@ -190,11 +221,7 @@ const syncUserSession = async (user) => {
 
   if (!user) {
     clearAuthCache();
-    toggleAdminNav(false);
-    setAuthUi(null);
-    setAuthNotice(runtimeState.notice || '', runtimeState.level);
-    state.currentUser = null;
-    state.currentContext = null;
+    applySessionState({ user: null, session: null, profile: null, notice: runtimeState.notice || '' });
     await notifyCurrentHandler();
     return;
   }
@@ -203,76 +230,64 @@ const syncUserSession = async (user) => {
     const profile = await syncProfileOnLogin(user);
     const nickname = normalizeNickname(profile?.nickname || '');
     const roles = normalizeRoles(profile?.roles || []);
+    const cachedSession = checkAuthFast();
     const session = {
       uid: user.uid,
       email: (user.email || '').trim().toLowerCase(),
       googleName: user.displayName || '',
       nickname,
-      roles
+      photoURL: user.photoURL || '',
+      roles,
+      token: cachedSession?.token || '',
+      tokenExpiresAt: cachedSession?.tokenExpiresAt || 0
     };
 
     saveAuthCache(session);
-    toggleAdminNav(canAccessAdmin(roles));
-    setAuthUi(session);
-    setAuthNotice(runtimeState.notice || '', runtimeState.level);
-
-    state.currentUser = user;
-    state.currentContext = {
-      profile: { ...profile, roles },
-      redirectAfterLogin,
-      redirectToLogin,
-      session
-    };
+    applySessionState({ user, session, profile: { ...profile, roles }, notice: runtimeState.notice || '' });
     await notifyCurrentHandler();
   } catch (error) {
     console.error('Erreur de synchronisation de session :', error);
     clearAuthCache();
-    toggleAdminNav(false);
-    setAuthUi(null);
-    setAuthNotice('Connexion Google établie, mais la synchronisation Firebase a échoué. Vérifie la connexion réseau puis recharge la page.', 'error');
-
-    state.currentUser = user;
-    state.currentContext = {
+    applySessionState({
+      user,
+      session: null,
       profile: null,
-      redirectAfterLogin,
-      redirectToLogin,
-      session: null
-    };
+      notice: 'Connexion Google établie, mais la synchronisation Firebase a échoué. Vérifie la connexion réseau puis recharge la page.'
+    });
     await notifyCurrentHandler();
   }
 };
 
-const ensureAuthBootstrap = async () => {
+const bootstrapAuth = () => {
+  if (state.bootstrapPromise) return state.bootstrapPromise;
+
   const runtimeState = getAuthRuntimeState();
-  if (runtimeState.notice) {
-    setAuthNotice(runtimeState.notice, runtimeState.level);
-  }
+  const cachedSession = checkAuthFast();
+  applySessionState({
+    user: buildCachedUser(cachedSession),
+    session: cachedSession,
+    profile: cachedSession,
+    notice: runtimeState.notice || ''
+  });
 
-  const cachedSession = loadAuthCache();
-  if (cachedSession) {
-    const cachedRoles = normalizeRoles(cachedSession.roles, cachedSession);
-    toggleAdminNav(canAccessAdmin(cachedRoles));
-    setAuthUi({ ...cachedSession, roles: cachedRoles });
-  } else {
-    toggleAdminNav(false);
-    setAuthUi(null);
-  }
+  state.bootstrapPromise = (async () => {
+    if (!state.redirectPromise) {
+      state.redirectPromise = consumeRedirect().catch((error) => {
+        setAuthNotice(error.message, 'error');
+        alert(error.message);
+      });
+    }
 
-  if (!state.redirectPromise) {
-    state.redirectPromise = consumeRedirect().catch((error) => {
-      setAuthNotice(error.message, 'error');
-      alert(error.message);
-    });
-  }
+    await state.redirectPromise;
 
-  await state.redirectPromise;
+    if (!state.authUnsubscribe) {
+      state.authUnsubscribe = onAuthStateChanged(auth, async (user) => {
+        await syncUserSession(user);
+      });
+    }
+  })();
 
-  if (!state.authUnsubscribe) {
-    state.authUnsubscribe = onAuthStateChanged(auth, async (user) => {
-      state.authReady = true;
-      await syncUserSession(user);
-    });
-  }
+  return state.bootstrapPromise;
 };
 
 const bindShellActions = () => {
@@ -318,14 +333,19 @@ const initCommon = async ({ onUserChanged, requireAuth = false } = {}) => {
   bindShellActions();
   state.currentHandler = onUserChanged || null;
   state.currentRequireAuth = requireAuth;
+
   const handlerToken = Symbol('page-handler');
   state.currentHandlerToken = handlerToken;
 
-  await ensureAuthBootstrap();
+  bootstrapAuth().catch((error) => {
+    console.error('Erreur pendant le bootstrap auth :', error);
+  });
 
-  if (state.authReady) {
-    await notifyCurrentHandler();
-  }
+  queueMicrotask(() => {
+    notifyCurrentHandler().catch((error) => {
+      console.error('Erreur dans le handler auth :', error);
+    });
+  });
 
   return () => {
     if (state.currentHandlerToken !== handlerToken) return;
