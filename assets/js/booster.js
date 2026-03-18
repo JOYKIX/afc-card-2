@@ -93,11 +93,20 @@ const cardTemplate = (card, index) => {
 
       <footer class="stats">
         <div>
-          <strong><span class="material-symbols-outlined" aria-hidden="true">swords</span></strong>
+          <strong aria-label="Attaque">
+            <svg class="stat-icon stat-icon--attack" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M13.91 2.91a1 1 0 0 1 1.41 0l5.77 5.77a1 1 0 0 1 0 1.41l-1.83 1.83a1 1 0 0 1-1.41 0l-.76-.76-2.12 2.12 2.12 2.12.76-.76a1 1 0 0 1 1.41 0l1.83 1.83a1 1 0 0 1 0 1.41l-1.41 1.41a1 1 0 0 1-1.41 0l-1.83-1.83a1 1 0 0 1 0-1.41l.76-.76-2.12-2.12-2.12 2.12.76.76a1 1 0 0 1 0 1.41l-1.83 1.83a1 1 0 0 1-1.41 0L7.5 18.09a1 1 0 0 1 0-1.41l1.83-1.83a1 1 0 0 1 1.41 0l.76.76 2.12-2.12-2.12-2.12-.76.76a1 1 0 0 1-1.41 0L7.5 10.09a1 1 0 0 1 0-1.41l1.41-1.41a1 1 0 0 1 1.41 0l1.83 1.83a1 1 0 0 1 0 1.41l-.76.76 2.12 2.12 2.12-2.12-.76-.76a1 1 0 0 1 0-1.41l1.83-1.83z"/>
+              <path d="M4.21 3.79a1 1 0 0 1 1.41 0l3.17 3.17-1.41 1.41L5.62 6.62l-1.41 1.41 1.76 1.75-1.41 1.41L2.79 9.44a1 1 0 0 1 0-1.41l1.42-1.42L2.79 5.2a1 1 0 0 1 0-1.41l1.42-1.42z"/>
+            </svg>
+          </strong>
           <span>${escapeHtml(card.attack ?? '-')}</span>
         </div>
         <div>
-          <strong><span class="material-symbols-outlined" aria-hidden="true">shield</span></strong>
+          <strong aria-label="Défense">
+            <svg class="stat-icon stat-icon--defense" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M12 2.2 5 5.3v6.03c0 4.43 2.99 8.57 7 9.67 4.01-1.1 7-5.24 7-9.67V5.3L12 2.2zm0 2.19 5 2.22v4.72c0 3.31-2.11 6.53-5 7.58-2.89-1.05-5-4.27-5-7.58V6.61l5-2.22z"/>
+            </svg>
+          </strong>
           <span>${escapeHtml(card.defense ?? '-')}</span>
         </div>
       </footer>
