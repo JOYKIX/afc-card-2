@@ -1,4 +1,4 @@
-import { checkAdmin, db, onValue, push, ref, remove, set } from './firebase.js';
+import { checkAdmin, db, onValue, push, ref, remove, runTransaction, set } from './firebase.js';
 import { initCommon } from './common.js';
 
 const adminNotice = document.getElementById('adminNotice');
@@ -15,6 +15,7 @@ const roleType = document.getElementById('roleType');
 const roleFeedback = document.getElementById('roleFeedback');
 
 const rankScale = ['D', 'C', 'B', 'A', 'S', 'SS', 'SSS'];
+const cardNumberCounterRef = ref(db, 'metadata/cardNumberCounter');
 
 let currentUser = null;
 let cardsById = {};
@@ -31,6 +32,18 @@ const normalizeRank = (value = '') => {
   const upper = String(value || '').trim().toUpperCase();
   return rankScale.includes(upper) ? upper : 'D';
 };
+const normalizeCardNumber = (value) => {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+};
+const formatCardNumber = (value) => {
+  const cardNumber = normalizeCardNumber(value);
+  return cardNumber ? `#${cardNumber}` : 'Non attribué';
+};
+const getHighestAssignedCardNumber = (records = {}) => Object.values(records).reduce((max, record) => {
+  const cardNumber = normalizeCardNumber(record?.cardNumber ?? record?.cardId);
+  return cardNumber ? Math.max(max, cardNumber) : max;
+}, 0);
 const sortByRecency = (entries = []) => [...entries].sort((a, b) => (b.entry.updatedAt || b.entry.submittedAt || b.entry.createdAt || 0) - (a.entry.updatedAt || a.entry.submittedAt || a.entry.createdAt || 0));
 
 const normalizeCardRecord = (record = {}) => ({
@@ -38,6 +51,7 @@ const normalizeCardRecord = (record = {}) => ({
   rank: normalizeRank(record.rank || record.rarity),
   creatorName: record.creatorName || record.createdBy || record.ownerNickname || 'Créateur inconnu',
   cardCapture: record.cardCapture || record.cardImage || record.image || '',
+  cardNumber: normalizeCardNumber(record.cardNumber ?? record.cardId),
   createdAt: record.createdAt || record.submittedAt || 0,
   updatedAt: record.updatedAt || record.submittedAt || record.createdAt || 0
 });
@@ -94,14 +108,16 @@ const renderTinderCard = () => {
   }
 
   const { card, entry } = pendingQueue[0];
+  const nextCardNumber = getHighestAssignedCardNumber(cardsById) + 1;
 
   tinderReview.innerHTML = `
     <article class="tinder-card rank-${escapeHtml(card.rank)}">
       <div class="tinder-image">${renderPreviewImage(card, `Capture ${card.rank} de ${card.creatorName}`)}</div>
       <div class="tinder-body">
-        <h3>Capture ${escapeHtml(card.rank)}</h3>
+        <h3>Carte ${escapeHtml(formatCardNumber(card.cardNumber))} · Capture ${escapeHtml(card.rank)}</h3>
         <p>Créateur : ${escapeHtml(card.creatorName)}</p>
         <p>Soumise le ${new Date(entry.submittedAt || card.createdAt || Date.now()).toLocaleString('fr-FR')}</p>
+        <p>Numéro prévu à la validation : <strong>${escapeHtml(formatCardNumber(nextCardNumber))}</strong></p>
       </div>
       <div class="actions tinder-actions">
         <button type="button" data-moderation="approved" ${moderationInFlight ? 'disabled' : ''}>Valider et déplacer vers cards</button>
@@ -127,7 +143,7 @@ const renderVerificationSection = () => {
     if (statusValue !== 'all' && entry.status !== statusValue) return false;
     if (!queryText) return true;
 
-    const haystack = `${entry.ownerNickname || ''} ${card.creatorName || ''} ${card.rank || ''}`.toLowerCase();
+    const haystack = `${entry.ownerNickname || ''} ${card.creatorName || ''} ${card.rank || ''} ${card.cardNumber || ''}`.toLowerCase();
     return haystack.includes(queryText);
   });
 
@@ -143,7 +159,7 @@ const renderVerificationSection = () => {
     item.innerHTML = `
       <div class="pending-thumb">${renderPreviewImage(card, `Capture ${card.rank} de ${card.creatorName}`)}</div>
       <div>
-        <h3>Capture ${escapeHtml(card.rank)}</h3>
+        <h3>Carte ${escapeHtml(formatCardNumber(card.cardNumber))} · Capture ${escapeHtml(card.rank)}</h3>
         <p>Créateur : ${escapeHtml(card.creatorName)}</p>
         <p>Statut <strong>${escapeHtml(entry.status || 'pending')}</strong></p>
       </div>
@@ -152,13 +168,30 @@ const renderVerificationSection = () => {
   });
 };
 
+const reserveNextCardNumber = async () => {
+  const floor = getHighestAssignedCardNumber(cardsById);
+  const result = await runTransaction(cardNumberCounterRef, (currentValue) => {
+    const currentCounter = normalizeCardNumber(currentValue) || 0;
+    return Math.max(currentCounter, floor) + 1;
+  });
+
+  if (!result.committed) {
+    throw new Error('card-number-reservation-failed');
+  }
+
+  return normalizeCardNumber(result.snapshot.val());
+};
+
 const moveApprovedCardToCollection = async (current, now) => {
   const approvedCardRef = push(ref(db, 'cards'));
+  const cardNumber = await reserveNextCardNumber();
   const approvedPayload = normalizeCardRecord({
     ownerUid: current.entry.ownerUid || current.card.ownerUid,
     ownerNickname: current.entry.ownerNickname || current.card.ownerNickname,
     creatorName: current.card.creatorName,
     createdBy: current.card.creatorName,
+    cardNumber,
+    cardId: cardNumber,
     rank: current.card.rank,
     rarity: current.card.rank,
     cardCapture: current.card.cardCapture,
@@ -224,6 +257,7 @@ const bindRealtime = () => {
     onValue(ref(db, 'cards'), (snapshot) => {
       cardsById = snapshot.exists() ? snapshot.val() : {};
       refreshStats();
+      renderTinderCard();
       renderVerificationSection();
     })
   );
@@ -259,35 +293,36 @@ roleForm?.addEventListener('submit', async (event) => {
 
   try {
     await set(ref(db, `${rolePath}/${emailToKey(email)}`), true);
-    setRoleFeedback(`Accès ${selectedRole.toUpperCase()} ajouté pour ${email}.`);
     roleForm.reset();
+    setRoleFeedback(`${selectedRole.toUpperCase()} ajouté pour ${email}.`);
   } catch (error) {
-    console.error('Erreur ajout rôle :', error);
-    setRoleFeedback('Impossible d’ajouter cet accès pour le moment.', true);
+    console.error('Erreur attribution rôle :', error);
+    setRoleFeedback('Impossible d’ajouter ce rôle pour le moment.', true);
   }
 });
-
-statusFilter?.addEventListener('change', renderVerificationSection);
-searchInput?.addEventListener('input', renderVerificationSection);
 
 await initCommon({
   onUserChanged: async (user) => {
     currentUser = user;
 
     if (!user) {
-      adminNotice.textContent = 'Connecte-toi avec un compte admin.';
       resetAdminScreen();
+      adminNotice.textContent = 'Connecte-toi avec un compte admin.';
       return;
     }
 
     const isAdmin = await checkAdmin(user.uid, user.email || '');
+
     if (!isAdmin) {
-      adminNotice.textContent = 'Accès refusé : ce compte n’est pas admin.';
       resetAdminScreen();
+      adminNotice.textContent = 'Accès refusé : ce compte n’est pas admin.';
       return;
     }
 
-    adminNotice.textContent = 'Accès admin confirmé. Les cartes validées vont dans cards et les refus sont supprimés de cardVerification.';
     bindRealtime();
+    adminNotice.textContent = 'Accès admin confirmé. Les cartes validées reçoivent désormais un numéro unique puis vont dans cards.';
   }
 });
+
+statusFilter?.addEventListener('change', renderVerificationSection);
+searchInput?.addEventListener('input', renderVerificationSection);

@@ -21,9 +21,19 @@ const normalizeRank = (value = '') => {
   const upper = String(value || '').trim().toUpperCase();
   return rankScale.includes(upper) ? upper : 'D';
 };
+const normalizeCardNumber = (value) => {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+};
+const formatCardNumber = (value) => {
+  const cardNumber = normalizeCardNumber(value);
+  return cardNumber ? `#${cardNumber}` : 'Sans numéro';
+};
 
 const normalizeCardRecord = ([id, record]) => ({
   id,
+  cardNumber: normalizeCardNumber(record?.cardNumber ?? record?.cardId),
+  uniqueId: normalizeCardNumber(record?.cardNumber ?? record?.cardId) || id,
   rank: normalizeRank(record?.rank || record?.rarity),
   creatorName: record?.creatorName || record?.createdBy || record?.ownerNickname || 'Créateur inconnu',
   cardCapture: record?.cardCapture || record?.cardImage || record?.image || '',
@@ -54,7 +64,7 @@ const renderBooster = (cards) => {
       </div>
       <div class="booster-capture__meta">
         <strong>#${index + 1} · ${escapeHtml(card.creatorName)}</strong>
-        <small>Capture récupérée depuis la base Firebase</small>
+        <small>Carte ${escapeHtml(formatCardNumber(card.cardNumber))} · capture récupérée depuis la base Firebase</small>
       </div>
       <div class="booster-capture__rank">${escapeHtml(card.rank)}</div>
     `;
@@ -87,7 +97,13 @@ const loadApprovedCards = async () => {
 
   return Object.entries(snapshot.val())
     .map(normalizeCardRecord)
-    .filter((card) => Boolean(card.cardCapture));
+    .filter((card) => Boolean(card.cardCapture))
+    .sort((a, b) => {
+      if (a.cardNumber && b.cardNumber) return a.cardNumber - b.cardNumber;
+      if (a.cardNumber) return -1;
+      if (b.cardNumber) return 1;
+      return (a.createdAt || 0) - (b.createdAt || 0);
+    });
 };
 
 const openBooster = async () => {
@@ -106,13 +122,13 @@ const openBooster = async () => {
     const pulls = buildBooster(cards, 5);
     renderBooster(pulls);
 
-    const uniqueCards = new Set(pulls.map((card) => card.id)).size;
+    const uniqueCards = new Set(pulls.map((card) => card.uniqueId)).size;
     if (cards.length === 1) {
       setHint('Une seule carte existe dans la base : le booster affiche donc 5 fois la même capture.');
       return;
     }
 
-    setHint(`${pulls.length} cartes tirées aléatoirement depuis la base, avec un drop pondéré par la rareté (${uniqueCards} carte(s) distincte(s)).`);
+    setHint(`${pulls.length} cartes tirées aléatoirement depuis la base, avec un drop pondéré par la rareté (${uniqueCards} carte(s) distincte(s)). L’ordre de référence suit désormais le numéro de carte.`);
   } catch (error) {
     console.error('Erreur lors de l’ouverture du booster :', error);
     renderPlaceholder('Impossible de charger les captures pour le moment.');

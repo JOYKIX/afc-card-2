@@ -65,6 +65,14 @@ const normalizeRank = (value = '') => {
   const upper = String(value || '').trim().toUpperCase();
   return rankScale.includes(upper) ? upper : 'D';
 };
+const normalizeCardNumber = (value) => {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+};
+const formatCardNumber = (value) => {
+  const cardNumber = normalizeCardNumber(value);
+  return cardNumber ? `#${cardNumber}` : 'non attribué';
+};
 
 const setRenderStatus = (message, isError = false) => {
   if (!renderEngineStatus) return;
@@ -137,6 +145,7 @@ const getCardRecordSummary = (record) => {
     cardCapture: capture,
     rank,
     creatorName,
+    cardNumber: normalizeCardNumber(record.cardNumber ?? record.cardId),
     displayName: creatorName || 'Créateur inconnu',
     updatedAt: record.updatedAt || record.submittedAt || record.createdAt || 0,
     status: record.status || 'approved'
@@ -152,7 +161,7 @@ const formatVerificationText = (record) => {
   }
 
   if (summary.status === 'approved') {
-    return `Validée : capture ${summary.rank} de ${summary.displayName} disponible dans les boosters.`;
+    return `Validée : carte ${formatCardNumber(summary.cardNumber)} · capture ${summary.rank} de ${summary.displayName} disponible dans les boosters.`;
   }
 
   if (summary.status === 'rejected') {
