@@ -771,7 +771,7 @@ export const initCreatePage = async () => {
 
     if (!currentNickname) {
       alert('Configure ton pseudo sur la page Profil avant de soumettre une carte.');
-      window.__appRouter?.navigate?.('profile.html');
+      window.__appRouter?.navigate?.('profile');
       return;
     }
 

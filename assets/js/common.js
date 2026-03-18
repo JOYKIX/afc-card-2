@@ -28,13 +28,18 @@ const state = {
   currentHandlerToken: null
 };
 
+const emitAuthChanged = () => {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new CustomEvent('afc-auth-changed'));
+};
+
 const getShellElements = () => {
   const authStatus = document.getElementById('authStatus');
   const googleLoginBtn = document.getElementById('googleLogin');
   const logoutBtn = document.getElementById('logout');
-  const profileLink = document.getElementById('profileLink');
   const authActions = authStatus?.closest('.auth-actions') || authStatus?.parentElement || null;
-  const adminNavLinks = Array.from(document.querySelectorAll('[data-admin-link="true"]'));
+  const navLinks = Array.from(document.querySelectorAll('.site-nav [data-route]'));
+  const adminNavLinks = navLinks.filter((link) => link.dataset.adminLink === 'true');
 
   let roleBadge = document.getElementById('userRoleBadge');
   if (!roleBadge && authStatus) {
@@ -61,27 +66,33 @@ const getShellElements = () => {
     authStatus,
     googleLoginBtn,
     logoutBtn,
-    profileLink,
+    navLinks,
     roleBadge
   };
 };
 
 const getDisplayIdentity = (session = {}) => normalizeNickname(session.nickname || '') || session.googleName || session.email || 'Non connecté';
 
+const routesLikeKey = (value = '') => ['login', 'creator', 'profile', 'booster', 'album', 'admin'].includes(String(value || '').trim().toLowerCase());
+
 const navigateTo = (target, { replace = false } = {}) => {
   if (typeof window === 'undefined') return;
 
+  const normalizedTarget = routesLikeKey(target) && window.__appRouter?.getUrlForRoute
+    ? window.__appRouter.getUrlForRoute(target)
+    : target;
+
   if (window.__appRouter?.navigate) {
-    window.__appRouter.navigate(target, { replace });
+    window.__appRouter.navigate(normalizedTarget, { replace });
     return;
   }
 
   if (replace) {
-    window.location.replace(target);
+    window.location.replace(normalizedTarget);
     return;
   }
 
-  window.location.href = target;
+  window.location.href = normalizedTarget;
 };
 
 const setAuthNotice = (message = '', level = 'info') => {
@@ -112,7 +123,7 @@ const setAuthUi = (session = null) => {
     authStatus,
     googleLoginBtn,
     logoutBtn,
-    profileLink,
+    navLinks,
     roleBadge
   } = getShellElements();
 
@@ -121,7 +132,11 @@ const setAuthUi = (session = null) => {
   if (authStatus) authStatus.textContent = isConnected ? getDisplayIdentity(session) : 'Non connecté';
   setButtonVisibility(googleLoginBtn, !isConnected);
   setButtonVisibility(logoutBtn, isConnected);
-  setButtonVisibility(profileLink, isConnected);
+
+  navLinks.forEach((link) => {
+    if (link.dataset.route === 'login') return;
+    link.hidden = !isConnected && link.dataset.adminLink !== 'true';
+  });
 
   if (!roleBadge) return;
 
@@ -145,31 +160,28 @@ const setAuthUi = (session = null) => {
   roleBadge.className = `role-badge ${badge.badgeClass}`;
 };
 
-const getCurrentPage = () => {
-  if (typeof window === 'undefined') return 'creator.html';
-  return window.location.pathname.split('/').pop() || 'index.html';
+const getCurrentRouteKey = () => {
+  if (typeof window === 'undefined') return 'creator';
+  return window.__appRouter?.getCurrentRouteKey?.() || 'login';
+};
+
+const getRedirectTarget = () => {
+  if (typeof window === 'undefined') return 'creator';
+
+  const params = new URLSearchParams(window.location.search);
+  const next = String(params.get('next') || '').trim().toLowerCase();
+  return next && next !== 'login' ? next : 'creator';
 };
 
 const redirectToLogin = () => {
   if (typeof window === 'undefined') return;
-
-  const currentPage = getCurrentPage();
-  if (currentPage === 'index.html' || currentPage === 'login.html') return;
-
-  const next = `${currentPage}${window.location.search || ''}${window.location.hash || ''}`;
-  navigateTo(`index.html?next=${encodeURIComponent(next)}`);
-};
-
-const getRedirectTarget = () => {
-  if (typeof window === 'undefined') return 'creator.html';
-
-  const params = new URLSearchParams(window.location.search);
-  const next = params.get('next') || 'creator.html';
-  return (next.includes('index.html') || next.includes('login.html')) ? 'creator.html' : next;
+  const currentRouteKey = getCurrentRouteKey();
+  if (currentRouteKey === 'login') return;
+  navigateTo(`./?next=${encodeURIComponent(currentRouteKey)}`, { replace: true });
 };
 
 const redirectAfterLogin = () => {
-  navigateTo(getRedirectTarget(), { replace: true });
+  navigateTo(`./?page=${encodeURIComponent(getRedirectTarget())}`, { replace: true });
 };
 
 const buildCachedUser = (session) => {
@@ -222,6 +234,7 @@ const syncUserSession = async (user) => {
   if (!user) {
     clearAuthCache();
     applySessionState({ user: null, session: null, profile: null, notice: runtimeState.notice || '' });
+    emitAuthChanged();
     await notifyCurrentHandler();
     return;
   }
@@ -244,6 +257,7 @@ const syncUserSession = async (user) => {
 
     saveAuthCache(session);
     applySessionState({ user, session, profile: { ...profile, roles }, notice: runtimeState.notice || '' });
+    emitAuthChanged();
     await notifyCurrentHandler();
   } catch (error) {
     console.error('Erreur de synchronisation de session :', error);
@@ -254,6 +268,7 @@ const syncUserSession = async (user) => {
       profile: null,
       notice: 'Connexion Google établie, mais la synchronisation Firebase a échoué. Vérifie la connexion réseau puis recharge la page.'
     });
+    emitAuthChanged();
     await notifyCurrentHandler();
   }
 };
@@ -302,7 +317,28 @@ const bindShellActions = () => {
     if (loginButton) {
       loginButton.disabled = true;
       try {
-        await performGoogleSignIn();
+        const authResult = await performGoogleSignIn();
+        const signedUser = authResult?.user || auth.currentUser;
+
+        if (signedUser?.uid) {
+          const quickSession = {
+            uid: signedUser.uid,
+            email: (signedUser.email || '').trim().toLowerCase(),
+            googleName: signedUser.displayName || '',
+            nickname: '',
+            photoURL: signedUser.photoURL || '',
+            roles: []
+          };
+
+          saveAuthCache(quickSession);
+          applySessionState({
+            user: signedUser,
+            session: quickSession,
+            profile: quickSession,
+            notice: getAuthRuntimeState().notice || ''
+          });
+          await notifyCurrentHandler();
+        }
       } catch (error) {
         setAuthNotice(error.message, 'error');
         alert(error.message);
@@ -314,13 +350,15 @@ const bindShellActions = () => {
 
     const logoutButton = event.target.closest('#logout');
     if (logoutButton) {
-      if (!auth.currentUser) return;
-
       try {
-        await signOut(auth);
+        if (auth.currentUser) {
+          await signOut(auth);
+        }
+
         clearAuthCache();
-        const runtimeState = getAuthRuntimeState();
-        setAuthNotice(runtimeState.notice || '', runtimeState.level);
+        applySessionState({ user: null, session: null, profile: null, notice: getAuthRuntimeState().notice || '' });
+        emitAuthChanged();
+        await notifyCurrentHandler();
       } catch (error) {
         setAuthNotice('Impossible de fermer la session pour le moment.', 'error');
         console.error('Erreur de déconnexion :', error);
