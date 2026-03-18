@@ -140,5 +140,5 @@ const openBooster = async () => {
 
 openBoosterBtn?.addEventListener('click', openBooster);
 
-await initCommon();
+await initCommon({ requireAuth: true });
 setHint('Prêt à découvrir ton tirage.');
