@@ -20,6 +20,7 @@ import {
   query,
   ref,
   remove,
+  runTransaction,
   set,
   update
 } from 'https://www.gstatic.com/firebasejs/10.12.4/firebase-database.js';
@@ -181,6 +182,7 @@ export {
   query,
   ref,
   remove,
+  runTransaction,
   set,
   syncProfileOnLogin,
   signOut,
