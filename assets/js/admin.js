@@ -1,4 +1,4 @@
-import { DEFAULT_STAT_REROLLS, checkAdmin, db, onValue, push, ref, remove, runTransaction, set, update } from './firebase.js';
+import { DEFAULT_STAT_REROLLS, checkAdmin, db, get, onValue, push, ref, remove, runTransaction, set, update } from './firebase.js';
 import { initCommon } from './common.js';
 
 const adminNotice = document.getElementById('adminNotice');
@@ -10,7 +10,7 @@ const countRejected = document.getElementById('countRejected');
 const statusFilter = document.getElementById('statusFilter');
 const searchInput = document.getElementById('searchInput');
 const roleForm = document.getElementById('roleForm');
-const roleEmail = document.getElementById('roleEmail');
+const roleNickname = document.getElementById('roleNickname');
 const roleType = document.getElementById('roleType');
 const roleFeedback = document.getElementById('roleFeedback');
 
@@ -26,8 +26,8 @@ let moderationInFlight = false;
 let deletedRejectedCount = 0;
 
 const escapeHtml = (value = '') => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[char]);
-const normalizeEmail = (email = '') => email.trim().toLowerCase();
-const emailToKey = (email = '') => normalizeEmail(email).replaceAll('.', ',');
+const normalizeNickname = (nickname = '') => String(nickname).trim().replace(/\s+/g, ' ');
+const nicknameToKey = (nickname = '') => normalizeNickname(nickname).toLowerCase();
 const normalizeRank = (value = '') => {
   const upper = String(value || '').trim().toUpperCase();
   if (upper === 'SS' || upper === 'SSS') return 'S';
@@ -292,20 +292,20 @@ roleForm?.addEventListener('submit', async (event) => {
     return;
   }
 
-  const email = normalizeEmail(roleEmail?.value || '');
+  const nickname = normalizeNickname(roleNickname?.value || '');
   const selectedRole = roleType?.value === 'vip' ? 'vip' : 'admin';
 
-  if (!email || !email.includes('@')) {
-    setRoleFeedback('Merci de renseigner un email valide.', true);
+  if (!nickname) {
+    setRoleFeedback('Merci de renseigner un nickname valide.', true);
     return;
   }
 
   const rolePath = selectedRole === 'admin' ? 'adminRegistry' : 'vipRegistry';
 
   try {
-    await set(ref(db, `${rolePath}/${emailToKey(email)}`), true);
+    await set(ref(db, `${rolePath}/${nicknameToKey(nickname)}`), true);
     roleForm.reset();
-    setRoleFeedback(`${selectedRole.toUpperCase()} ajouté pour ${email}.`);
+    setRoleFeedback(`${selectedRole.toUpperCase()} ajouté pour ${nickname}.`);
   } catch (error) {
     console.error('Erreur attribution rôle :', error);
     setRoleFeedback('Impossible d’ajouter ce rôle pour le moment.', true);
@@ -313,6 +313,7 @@ roleForm?.addEventListener('submit', async (event) => {
 });
 
 await initCommon({
+  requireAuth: true,
   onUserChanged: async (user) => {
     currentUser = user;
 
@@ -322,7 +323,9 @@ await initCommon({
       return;
     }
 
-    const isAdmin = await checkAdmin(user.uid, user.email || '');
+    const nicknameSnapshot = await get(ref(db, `profiles/${user.uid}/nickname`));
+    const profileNickname = nicknameSnapshot.val() || '';
+    const isAdmin = await checkAdmin(user.uid, profileNickname, user.email || '');
 
     if (!isAdmin) {
       resetAdminScreen();

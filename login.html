@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AFC Card Studio · Login</title>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+
+<body class="page-login">
+  <div class="bg-orb orb-a"></div>
+  <div class="bg-orb orb-b"></div>
+
+  <div class="app-shell app-shell--login">
+    <header class="topbar glass topbar--centered">
+      <div class="brand-wrap">
+        <div class="brand-badge" aria-hidden="true">FM</div>
+        <div>
+          <p class="kicker">AFC Universe</p>
+          <h1>Connexion</h1>
+        </div>
+      </div>
+
+      <div class="auth-actions">
+        <span id="authStatus">Non connecté</span>
+        <button id="googleLogin" type="button">Connexion Google</button>
+        <button id="logout" type="button" class="ghost">Déconnexion</button>
+      </div>
+    </header>
+
+    <main class="login-layout">
+      <section class="panel glass login-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Bienvenue</p>
+            <h2>Connecte-toi avant d’utiliser le studio</h2>
+          </div>
+          <p class="subtitle">La session reste sauvegardée en local sur ton appareil, et lors de la première connexion on te demandera directement ton nickname AFC.</p>
+        </div>
+
+        <div class="login-grid">
+          <article class="glass-soft login-copy">
+            <p class="eyebrow">Accès</p>
+            <h3>Une connexion, puis tu reviens direct sur le site</h3>
+            <ul class="feature-list">
+              <li>Connexion Google sécurisée.</li>
+              <li>Nickname AFC affiché partout dans l’interface.</li>
+              <li>Session et brouillon de carte gardés en local.</li>
+            </ul>
+          </article>
+
+          <article class="glass-soft login-card">
+            <p id="loginState" class="login-state">Connecte-toi avec Google pour accéder au site.</p>
+            <p id="loginHint" class="hint">Ton nickname sera demandé juste après la connexion.</p>
+
+            <div id="nicknameStep" class="nickname-step" hidden>
+              <label>Nickname
+                <input id="nickname" type="text" maxlength="24" placeholder="Ton nickname AFC" />
+              </label>
+              <button id="saveNickname" type="button">Continuer avec ce nickname</button>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="assets/js/login.js"></script>
+</body>
+
+</html>

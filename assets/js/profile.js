@@ -1,4 +1,4 @@
-import { db, get, ref, update } from './firebase.js';
+import { db, get, normalizeNickname, ref, update, updateCachedNickname } from './firebase.js';
 import { initCommon } from './common.js';
 
 const nicknameInput = document.getElementById('nickname');
@@ -25,7 +25,7 @@ saveProfileBtn.addEventListener('click', async () => {
     return;
   }
 
-  const nickname = nicknameInput.value.trim();
+  const nickname = normalizeNickname(nicknameInput.value);
   if (!nickname) {
     alert('Le pseudo est obligatoire.');
     return;
@@ -33,14 +33,17 @@ saveProfileBtn.addEventListener('click', async () => {
 
   await update(ref(db, `profiles/${currentUser.uid}`), {
     nickname,
+    nicknameKey: nickname.toLowerCase(),
     email: (currentUser.email || '').trim().toLowerCase(),
     updatedAt: Date.now()
   });
 
+  updateCachedNickname(nickname);
   profileHint.textContent = `Pseudo "${nickname}" enregistré.`;
 });
 
 await initCommon({
+  requireAuth: true,
   onUserChanged: async (user) => {
     currentUser = user;
     if (!user) {

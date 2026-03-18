@@ -17,6 +17,8 @@ import {
 } from './firebase.js';
 import { initCommon } from './common.js';
 
+const CARD_DRAFT_STORAGE_KEY = 'afc-card-draft-v2';
+
 const fields = {
   name: document.getElementById('name'),
   title: document.getElementById('title'),
@@ -89,6 +91,56 @@ const computeType = () => (attack > defense ? 'attaquant' : defense > attack ? '
 const hasUnlimitedStatAccess = () => currentUserIsVip || currentUserIsAdmin;
 
 const normalizeText = (value = '') => value.trim().replace(/\s+/g, ' ');
+const saveDraft = () => {
+  try {
+    window.localStorage.setItem(CARD_DRAFT_STORAGE_KEY, JSON.stringify({
+      name: fields.name.value,
+      title: fields.title.value,
+      edition: fields.edition.value,
+      abilities: fields.abilities.value,
+      attack,
+      defense,
+      portraitDataUrl,
+      savedAt: Date.now()
+    }));
+  } catch (error) {
+    console.warn('Impossible de sauvegarder le brouillon local :', error);
+  }
+};
+
+const restoreDraft = () => {
+  try {
+    const raw = window.localStorage.getItem(CARD_DRAFT_STORAGE_KEY);
+    if (!raw) return false;
+
+    const draft = JSON.parse(raw);
+    if (!draft || typeof draft !== 'object') return false;
+
+    fields.name.value = draft.name || fields.name.value;
+    fields.title.value = titleOptions.has(draft.title) ? draft.title : fields.title.value;
+    fields.edition.value = draft.edition || fields.edition.value;
+    fields.abilities.value = draft.abilities || '';
+    portraitDataUrl = draft.portraitDataUrl || '';
+
+    portrait.style.backgroundImage = portraitDataUrl ? `url('${portraitDataUrl}')` : '';
+    if (portraitImage) {
+      portraitImage.src = portraitDataUrl || '';
+      portraitImage.hidden = !portraitDataUrl;
+    }
+
+    if (draft.attack != null || draft.defense != null) {
+      setStats({
+        attackValue: draft.attack ?? attack,
+        defenseValue: draft.defense ?? defense
+      });
+    }
+
+    return true;
+  } catch (error) {
+    console.warn('Impossible de restaurer le brouillon local :', error);
+    return false;
+  }
+};
 const sanitizeFilename = (value = '') => normalizeText(value).toLowerCase().replace(/[^a-z0-9-_]+/gi, '-').replace(/^-+|-+$/g, '') || 'afc-card';
 const normalizeRank = (value = '') => {
   const upper = String(value || '').trim().toUpperCase();
@@ -151,6 +203,7 @@ const setStats = ({ attackValue, defenseValue, syncInputs = true } = {}) => {
   defense = clampStat(defenseValue);
   if (syncInputs) syncManualStatInputs();
   render();
+  saveDraft();
 };
 
 const toFriendlySubmissionError = (error) => {
@@ -524,7 +577,10 @@ const buildCardPayload = async () => {
   };
 };
 
-form.addEventListener('input', render);
+form.addEventListener('input', () => {
+  render();
+  saveDraft();
+});
 rollStatsBtn.addEventListener('click', async () => {
   await rollStats();
 });
@@ -560,6 +616,7 @@ imageInput.addEventListener('change', (event) => {
       portraitImage.src = '';
       portraitImage.hidden = true;
     }
+    saveDraft();
     return;
   }
 
@@ -571,6 +628,7 @@ imageInput.addEventListener('change', (event) => {
       portraitImage.src = portraitDataUrl || '';
       portraitImage.hidden = !portraitDataUrl;
     }
+    saveDraft();
   };
   reader.readAsDataURL(file);
 });
@@ -642,6 +700,7 @@ downloadCardBtn.addEventListener('click', async () => {
 });
 
 await initCommon({
+  requireAuth: true,
   onUserChanged: async (user) => {
     currentUser = user;
 
@@ -661,17 +720,25 @@ await initCommon({
 
     await refreshProfile(user.uid);
     watchVerificationStatus(user.uid);
-    currentUserIsAdmin = await checkAdmin(user.uid, user.email || '');
-    currentUserIsVip = await checkVip(user.uid, user.email || '');
+    currentUserIsAdmin = await checkAdmin(user.uid, currentNickname, user.email || '');
+    currentUserIsVip = await checkVip(user.uid, currentNickname, user.email || '');
     await ensureProfileRerollCount(user.uid);
     syncManualStatInputs();
     updateRerollUi();
   }
 });
 
-fields.abilities.value = `Cri du Raptor : Baisse la défense adverse de 10 points.
+const restoredDraft = restoreDraft();
+
+if (!restoredDraft && !fields.abilities.value.trim()) {
+  fields.abilities.value = `Cri du Raptor : Baisse la défense adverse de 10 points.
 
 Stream Ban : Met hors combat la carte adverse. Peut être utilisé deux fois.`;
+}
+
 setRenderStatus('Moteur export : SVG natif prêt.', false);
-await rollStats({ consumeReroll: false });
+if (!restoredDraft) {
+  await rollStats({ consumeReroll: false });
+}
 render();
+saveDraft();

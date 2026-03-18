@@ -35,10 +35,12 @@ const firebaseConfig = {
   appId: '1:608410673000:web:3dc41b1500257aa64180dd'
 };
 
+const AUTH_CACHE_KEY = 'afc-auth-cache-v2';
+const DEFAULT_STAT_REROLLS = 3;
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
-const DEFAULT_STAT_REROLLS = 3;
 
 const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ prompt: 'select_account' });
@@ -49,6 +51,50 @@ const getCurrentDomain = () => {
   if (typeof window === 'undefined' || !window.location?.hostname) return 'inconnu';
   return window.location.hostname;
 };
+
+const normalizeEmail = (email = '') => email.trim().toLowerCase();
+const emailToKey = (email = '') => normalizeEmail(email).replaceAll('.', ',');
+const normalizeNickname = (nickname = '') => String(nickname).trim().replace(/\s+/g, ' ');
+const nicknameToKey = (nickname = '') => normalizeNickname(nickname).toLowerCase();
+const normalizeRemainingStatRerolls = (value) => {
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isInteger(parsed) || parsed < 0) return DEFAULT_STAT_REROLLS;
+  return Math.min(parsed, DEFAULT_STAT_REROLLS);
+};
+
+const loadAuthCache = () => {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const raw = window.localStorage.getItem(AUTH_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : null;
+  } catch (error) {
+    console.warn('Impossible de lire le cache auth local :', error);
+    return null;
+  }
+};
+
+const saveAuthCache = (payload) => {
+  if (typeof window === 'undefined') return;
+
+  try {
+    if (!payload) {
+      window.localStorage.removeItem(AUTH_CACHE_KEY);
+      return;
+    }
+
+    window.localStorage.setItem(AUTH_CACHE_KEY, JSON.stringify({
+      ...payload,
+      cachedAt: Date.now()
+    }));
+  } catch (error) {
+    console.warn('Impossible de sauvegarder le cache auth local :', error);
+  }
+};
+
+const clearAuthCache = () => saveAuthCache(null);
 
 const toFriendlyAuthError = (error) => {
   if (!error?.code) {
@@ -96,94 +142,117 @@ const consumeRedirect = async () => {
   }
 };
 
-const normalizeEmail = (email = '') => email.trim().toLowerCase();
-const emailToKey = (email = '') => normalizeEmail(email).replaceAll('.', ',');
-const normalizeRemainingStatRerolls = (value) => {
-  const parsed = Number.parseInt(value, 10);
-  if (!Number.isInteger(parsed) || parsed < 0) return DEFAULT_STAT_REROLLS;
-  return Math.min(parsed, DEFAULT_STAT_REROLLS);
-};
-
 const ensureDefaultAdminRegistry = async () => {
+  const defaultAdminNickname = 'femi-mars';
   const defaultAdminEmail = 'afc.cardgame@gmail.com';
-  await set(ref(db, `adminRegistry/${emailToKey(defaultAdminEmail)}`), true);
+  await Promise.all([
+    set(ref(db, `adminRegistry/${nicknameToKey(defaultAdminNickname)}`), true),
+    set(ref(db, `adminRegistry/${emailToKey(defaultAdminEmail)}`), true)
+  ]);
 };
 
 const ensureDefaultVipRegistry = async () => {
+  const defaultVipNickname = 'duveaubenoit';
   const defaultVipEmail = 'duveaubenoit@gmail.com';
-  const emailKey = emailToKey(defaultVipEmail);
-  await set(ref(db, `vipRegistry/${emailKey}`), true);
+  await Promise.all([
+    set(ref(db, `vipRegistry/${nicknameToKey(defaultVipNickname)}`), true),
+    set(ref(db, `vipRegistry/${emailToKey(defaultVipEmail)}`), true)
+  ]);
 };
 
-const checkAdmin = async (uid, email = '') => {
+const checkRoleRegistry = async (registryPath, nickname = '', email = '') => {
+  const normalizedNickname = nicknameToKey(nickname);
+  if (normalizedNickname) {
+    const nicknameSnap = await get(ref(db, `${registryPath}/${normalizedNickname}`));
+    if (nicknameSnap.val() === true) return true;
+  }
+
+  const normalizedEmail = normalizeEmail(email);
+  if (!normalizedEmail) return false;
+
+  const emailSnap = await get(ref(db, `${registryPath}/${emailToKey(normalizedEmail)}`));
+  return emailSnap.val() === true;
+};
+
+const checkAdmin = async (uid, nickname = '', email = '') => {
   const uidSnap = await get(ref(db, `admins/${uid}`));
   if (uidSnap.val() === true) return true;
-
-  const normalizedEmail = normalizeEmail(email);
-  if (!normalizedEmail) return false;
-
-  const emailSnap = await get(ref(db, `adminRegistry/${emailToKey(normalizedEmail)}`));
-  return emailSnap.val() === true;
+  return checkRoleRegistry('adminRegistry', nickname, email);
 };
 
-const checkVip = async (uid, email = '') => {
+const checkVip = async (uid, nickname = '', email = '') => {
   const uidSnap = await get(ref(db, `vips/${uid}`));
   if (uidSnap.val() === true) return true;
-
-  const normalizedEmail = normalizeEmail(email);
-  if (!normalizedEmail) return false;
-
-  const emailKey = emailToKey(normalizedEmail);
-  const emailSnap = await get(ref(db, `vipRegistry/${emailKey}`));
-  return emailSnap.val() === true;
+  return checkRoleRegistry('vipRegistry', nickname, email);
 };
 
 const syncProfileOnLogin = async (user) => {
-  if (!user?.uid) return;
+  if (!user?.uid) return null;
 
   const profileRef = ref(db, `profiles/${user.uid}`);
   const profileSnapshot = await get(profileRef);
+  const existingProfile = profileSnapshot.exists() ? profileSnapshot.val() || {} : {};
   const email = normalizeEmail(user.email || '');
-  await ensureDefaultAdminRegistry();
-  await ensureDefaultVipRegistry();
-  const isAdmin = await checkAdmin(user.uid, email);
-  const isVip = await checkVip(user.uid, email);
+  const nickname = normalizeNickname(existingProfile.nickname || '');
   const timestamp = Date.now();
 
-  if (!profileSnapshot.exists()) {
-    await set(profileRef, {
-      nickname: '',
-      email,
-      admin: isAdmin,
-      vip: isVip,
-      remainingStatRerolls: DEFAULT_STAT_REROLLS,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-      lastLoginAt: timestamp
-    });
-    return;
-  }
+  await ensureDefaultAdminRegistry();
+  await ensureDefaultVipRegistry();
 
-  const profileData = profileSnapshot.val() || {};
-  await update(profileRef, {
+  const isAdmin = await checkAdmin(user.uid, nickname, email);
+  const isVip = await checkVip(user.uid, nickname, email);
+  const nextProfile = {
+    nickname,
+    nicknameKey: nicknameToKey(nickname),
     email,
     admin: isAdmin,
     vip: isVip,
-    remainingStatRerolls: normalizeRemainingStatRerolls(profileData.remainingStatRerolls),
+    remainingStatRerolls: normalizeRemainingStatRerolls(existingProfile.remainingStatRerolls),
+    createdAt: existingProfile.createdAt || timestamp,
     updatedAt: timestamp,
     lastLoginAt: timestamp
+  };
+
+  await update(profileRef, nextProfile);
+
+  saveAuthCache({
+    uid: user.uid,
+    email,
+    googleName: user.displayName || '',
+    nickname,
+    isAdmin,
+    isVip
+  });
+
+  return nextProfile;
+};
+
+const updateCachedNickname = (nickname = '') => {
+  const currentCache = loadAuthCache();
+  if (!currentCache) return;
+
+  saveAuthCache({
+    ...currentCache,
+    nickname: normalizeNickname(nickname)
   });
 };
 
 export {
+  AUTH_CACHE_KEY,
   DEFAULT_STAT_REROLLS,
   auth,
   checkAdmin,
   checkVip,
+  clearAuthCache,
   consumeRedirect,
   db,
   equalTo,
   get,
+  loadAuthCache,
+  nicknameToKey,
+  normalizeEmail,
+  normalizeNickname,
+  normalizeRemainingStatRerolls,
   onAuthStateChanged,
   onValue,
   orderByChild,
@@ -192,10 +261,11 @@ export {
   query,
   ref,
   remove,
-  normalizeRemainingStatRerolls,
   runTransaction,
+  saveAuthCache,
   set,
-  syncProfileOnLogin,
   signOut,
-  update
+  syncProfileOnLogin,
+  update,
+  updateCachedNickname
 };
