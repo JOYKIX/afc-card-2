@@ -1,69 +1,62 @@
 import { checkAuthFast } from './lib/auth-cache.js';
 
 const routes = {
-  '': {
-    key: 'create',
-    path: 'creator.html',
+  creator: {
+    key: 'creator',
     partial: 'pages/creator.html',
     title: 'AFC Card Studio · Création',
     requireAuth: true,
     init: () => import('./create.js').then((module) => module.initCreatePage())
   },
-  'index.html': {
-    key: 'index',
-    path: 'index.html',
-    partial: 'pages/login.html',
-    title: 'AFC Card Studio',
-    init: async () => null
-  },
-  'creator.html': {
-    key: 'create',
-    path: 'creator.html',
-    partial: 'pages/creator.html',
-    title: 'AFC Card Studio · Création',
-    requireAuth: true,
-    init: () => import('./create.js').then((module) => module.initCreatePage())
-  },
-  'profile.html': {
+  profile: {
     key: 'profile',
-    path: 'profile.html',
     partial: 'pages/profile.html',
     title: 'AFC Card Studio · Profil',
     requireAuth: true,
     init: () => import('./profile.js').then((module) => module.initProfilePage())
   },
-  'booster.html': {
+  booster: {
     key: 'booster',
-    path: 'booster.html',
     partial: 'pages/booster.html',
     title: 'AFC Card Studio · Booster',
     requireAuth: true,
     init: () => import('./booster.js').then((module) => module.initBoosterPage())
   },
-  'album.html': {
+  album: {
     key: 'album',
-    path: 'album.html',
     partial: 'pages/album.html',
     title: 'AFC Card Studio · Album',
     requireAuth: true,
     init: () => import('./album.js').then((module) => module.initAlbumPage())
   },
-  'admin.html': {
+  admin: {
     key: 'admin',
-    path: 'admin.html',
     partial: 'pages/admin.html',
     title: 'AFC Card Studio · Admin',
     requireAuth: true,
     init: () => import('./admin.js').then((module) => module.initAdminPage())
   },
-  'login.html': {
+  login: {
     key: 'login',
-    path: 'login.html',
-    partial: 'pages/login.html',
-    title: 'AFC Card Studio · Login',
+    title: 'AFC Card Studio · Connexion',
     workspaceClass: 'app-workspace--login',
-    init: () => import('./login.js').then((module) => module.initLoginPage())
+    init: () => import('./login.js').then((module) => module.initLoginPage()),
+    render: () => {
+      const template = document.getElementById('loginViewTemplate');
+      return template?.innerHTML || '<main></main>';
+    }
   }
+};
+
+const legacyRouteAliases = {
+  '': 'login',
+  'index.html': 'login',
+  'creator.html': 'creator',
+  'profile.html': 'profile',
+  'booster.html': 'booster',
+  'album.html': 'album',
+  'admin.html': 'admin',
+  'login.html': 'login'
 };
 
 const app = document.getElementById('app');
@@ -78,20 +71,67 @@ const revealApp = () => {
   document.body.classList.add('app-ready');
 };
 
-const getRouteFromTarget = (target) => {
-  const url = new URL(target, window.location.href);
+const getFastUser = () => checkAuthFast();
+
+const getUrlForRoute = (routeKey, currentUrl = new URL(window.location.href)) => {
+  const url = new URL(currentUrl.href);
+
+  if (!routeKey || routeKey === 'login') {
+    url.searchParams.delete('page');
+  } else {
+    url.searchParams.set('page', routeKey);
+  }
+
+  return `${url.pathname}${url.search}${url.hash}`;
+};
+
+const normalizeRouteKey = (rawRouteKey = '') => {
+  const direct = String(rawRouteKey || '').trim().toLowerCase();
+  if (routes[direct]) return direct;
+  return legacyRouteAliases[direct] || null;
+};
+
+const getRouteKeyFromUrl = (target = window.location.href) => {
+  const url = target instanceof URL ? target : new URL(target, window.location.href);
+  const page = normalizeRouteKey(url.searchParams.get('page') || '');
+  if (page) return page;
+
   const basename = url.pathname.split('/').pop() || 'index.html';
-  const route = routes[basename] || routes['creator.html'];
+  return normalizeRouteKey(basename) || null;
+};
+
+const getResolvedRouteKey = (requestedRouteKey) => {
+  const fastUser = getFastUser();
+
+  if (!requestedRouteKey || requestedRouteKey === 'login') {
+    return fastUser ? 'creator' : 'login';
+  }
+
+  const route = routes[requestedRouteKey];
+  if (!route) return fastUser ? 'creator' : 'login';
+  if (route.requireAuth && !fastUser) return 'login';
+
+  return requestedRouteKey;
+};
+
+const buildNavigationState = (target = window.location.href) => {
+  const url = target instanceof URL ? target : new URL(target, window.location.href);
+  const requestedRouteKey = getRouteKeyFromUrl(url) || 'login';
+  const routeKey = getResolvedRouteKey(requestedRouteKey);
+  const route = routes[routeKey];
+
   return {
+    requestedRouteKey,
     route,
+    routeKey,
     url,
-    href: `${route.path}${url.search}${url.hash}`
+    href: getUrlForRoute(routeKey, url)
   };
 };
 
-const setActiveNavLink = (path) => {
+const setActiveNavLink = (routeKey) => {
   document.querySelectorAll('[data-route]').forEach((link) => {
-    link.classList.toggle('active', link.getAttribute('href') === path);
+    link.classList.toggle('active', link.dataset.route === routeKey);
   });
 };
 
@@ -100,6 +140,7 @@ const swapContent = async (html, { immediate = false } = {}) => {
     app.classList.add('is-leaving');
     await new Promise((resolve) => window.setTimeout(resolve, 120));
   }
+
   app.innerHTML = html;
   app.classList.remove('is-leaving');
   app.classList.add('is-entering');
@@ -110,79 +151,80 @@ const swapContent = async (html, { immediate = false } = {}) => {
   });
 };
 
-const toLoginHref = (targetHref) => {
-  const loginUrl = new URL('login.html', window.location.href);
-  loginUrl.searchParams.set('next', targetHref || 'creator.html');
-  return `${loginUrl.pathname.split('/').pop()}${loginUrl.search}${loginUrl.hash}`;
+const loadPage = async (routeKey, { immediate = false } = {}) => {
+  const route = routes[routeKey] || routes.login;
+
+  if (route.render) {
+    await swapContent(route.render(), { immediate });
+    return route;
+  }
+
+  const response = await fetch(route.partial, {
+    headers: { 'X-Requested-With': 'partial-router' }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Impossible de charger ${route.partial}`);
+  }
+
+  const html = await response.text();
+  await swapContent(html, { immediate });
+  return route;
 };
 
-const resolveProtectedHref = (href, route) => {
-  const fastUser = checkAuthFast();
-  if (route.requireAuth && !fastUser) {
-    return toLoginHref(href);
-  }
+const updateShellForRoute = (route) => {
+  workspace?.classList.toggle('app-workspace--login', Boolean(route.workspaceClass));
+  document.body.dataset.route = route.key;
+  document.title = route.title;
+  setActiveNavLink(route.key);
+};
 
-  if (route.key === 'login' && fastUser) {
-    return 'creator.html';
-  }
+const runRouteInit = async (route) => {
+  currentCleanup?.();
+  currentCleanup = null;
+  currentCleanup = (await route.init?.()) || null;
+};
 
-  return href;
+const renderNavigationError = () => {
+  app.innerHTML = `
+    <main class="single-layout single-layout--narrow">
+      <section class="panel glass profile-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Navigation</p>
+            <h2>Impossible de charger cette page</h2>
+          </div>
+          <p class="subtitle">Recharge la page ou réessaie dans un instant.</p>
+        </div>
+      </section>
+    </main>
+  `;
+  revealApp();
 };
 
 const navigate = async (target, { replace = false, immediate = false } = {}) => {
   const navigationId = ++activeNavigationId;
-  let { route, href } = getRouteFromTarget(target);
-  const resolvedHref = resolveProtectedHref(href, route);
-
-  if (resolvedHref !== href) {
-    ({ route, href } = getRouteFromTarget(resolvedHref));
-  }
+  const nextState = buildNavigationState(target);
 
   if (!app) return;
 
   try {
-    const response = await fetch(route.partial, { headers: { 'X-Requested-With': 'partial-router' } });
-    if (!response.ok) {
-      throw new Error(`Impossible de charger ${route.partial}`);
-    }
-
-    const html = await response.text();
+    const route = await loadPage(nextState.routeKey, { immediate });
     if (navigationId !== activeNavigationId) return;
 
-    currentCleanup?.();
-    currentCleanup = null;
-
-    await swapContent(html, { immediate });
-
-    workspace?.classList.toggle('app-workspace--login', Boolean(route.workspaceClass));
-    document.body.dataset.route = route.key;
-    document.title = route.title;
-    setActiveNavLink(route.path);
+    updateShellForRoute(route);
     revealApp();
 
     if (replace) {
-      history.replaceState({ path: href }, '', href);
-    } else if (`${window.location.pathname.split('/').pop() || 'index.html'}${window.location.search}${window.location.hash}` !== href) {
-      history.pushState({ path: href }, '', href);
+      history.replaceState({ routeKey: route.key }, '', nextState.href);
+    } else if (`${window.location.pathname}${window.location.search}${window.location.hash}` !== nextState.href) {
+      history.pushState({ routeKey: route.key }, '', nextState.href);
     }
 
-    currentCleanup = (await route.init()) || null;
+    await runRouteInit(route);
   } catch (error) {
     console.error('Erreur de navigation :', error);
-    app.innerHTML = `
-      <main class="single-layout single-layout--narrow">
-        <section class="panel glass profile-panel">
-          <div class="panel-heading">
-            <div>
-              <p class="eyebrow">Navigation</p>
-              <h2>Impossible de charger cette page</h2>
-            </div>
-            <p class="subtitle">Recharge la page ou réessaie dans un instant.</p>
-          </div>
-        </section>
-      </main>
-    `;
-    revealApp();
+    renderNavigationError();
   }
 };
 
@@ -194,31 +236,21 @@ const shouldHandleLink = (link) => {
   const url = new URL(link.href, window.location.href);
   if (url.origin !== window.location.origin) return false;
 
-  const basename = url.pathname.split('/').pop() || 'index.html';
-  return Boolean(routes[basename]);
+  return Boolean(getRouteKeyFromUrl(url));
 };
 
-const resolveInitialTarget = () => {
-  const current = new URL(window.location.href);
-  const params = new URLSearchParams(current.search);
-  const page = params.get('page');
+const syncRouteWithAuthState = () => {
+  const currentUrl = new URL(window.location.href);
+  const currentRouteKey = getRouteKeyFromUrl(currentUrl) || 'login';
+  const resolvedRouteKey = getResolvedRouteKey(currentRouteKey);
 
-  if (page && routes[page]) {
-    params.delete('page');
-    const suffix = `${params.toString() ? `?${params.toString()}` : ''}${current.hash || ''}`;
-    return resolveProtectedHref(`${page}${suffix}`, routes[page]);
+  if (currentRouteKey === 'login') return;
+
+  if (currentRouteKey !== resolvedRouteKey && resolvedRouteKey === 'login') {
+    currentUrl.searchParams.delete('page');
+    currentUrl.searchParams.set('next', currentRouteKey);
+    navigate(currentUrl.href, { replace: true, immediate: true });
   }
-
-  const basename = current.pathname.split('/').pop() || 'index.html';
-  if (basename === 'index.html' || basename === '') {
-    return checkAuthFast() ? 'creator.html' : 'login.html';
-  }
-
-  if (routes[basename]) {
-    return resolveProtectedHref(`${basename}${current.search}${current.hash}`, routes[basename]);
-  }
-
-  return checkAuthFast() ? `creator.html${current.search}${current.hash}` : toLoginHref(`creator.html${current.search}${current.hash}`);
 };
 
 document.addEventListener('click', (event) => {
@@ -233,6 +265,15 @@ window.addEventListener('popstate', () => {
   navigate(window.location.href, { replace: true, immediate: true });
 });
 
-window.__appRouter = { navigate };
+window.addEventListener('afc-auth-changed', () => {
+  syncRouteWithAuthState();
+});
 
-navigate(resolveInitialTarget(), { replace: true, immediate: true });
+window.__appRouter = {
+  loadPage,
+  navigate,
+  getCurrentRouteKey: () => getRouteKeyFromUrl(window.location.href) || 'login',
+  getUrlForRoute
+};
+
+navigate(window.location.href, { replace: true, immediate: true });

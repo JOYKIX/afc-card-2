@@ -28,19 +28,23 @@
       </div>
 
       <nav class="site-nav" aria-label="Navigation principale">
-        <a class="nav-link" href="creator.html" data-route="create">
+        <a class="nav-link" href="./?page=creator" data-route="creator">
           <span class="nav-link__eyebrow">Studio</span>
           <strong>Créer</strong>
         </a>
-        <a class="nav-link" href="booster.html" data-route="booster">
+        <a class="nav-link" href="./?page=booster" data-route="booster">
           <span class="nav-link__eyebrow">Collection</span>
           <strong>Booster</strong>
         </a>
-        <a class="nav-link" href="album.html" data-route="album">
+        <a class="nav-link" href="./?page=album" data-route="album">
           <span class="nav-link__eyebrow">Collection</span>
           <strong>Album</strong>
         </a>
-        <a class="nav-link" href="admin.html" data-admin-link="true" data-route="admin" hidden>
+        <a class="nav-link" href="./?page=profile" data-route="profile">
+          <span class="nav-link__eyebrow">Compte</span>
+          <strong>Profil</strong>
+        </a>
+        <a class="nav-link" href="./?page=admin" data-admin-link="true" data-route="admin" hidden>
           <span class="nav-link__eyebrow">Backoffice</span>
           <strong>Admin</strong>
         </a>
@@ -50,7 +54,6 @@
         <p class="eyebrow">Session</p>
         <span id="authStatus">Chargement instantané…</span>
         <div class="auth-actions__buttons auth-actions__buttons--inline">
-          <a id="profileLink" class="button-link ghost" href="profile.html" data-route="profile">Profil</a>
           <button id="googleLogin" type="button">Connexion Google</button>
           <button id="logout" type="button" class="ghost">Déconnexion</button>
         </div>
@@ -61,6 +64,44 @@
       <div id="app" class="app-view" aria-live="polite"></div>
     </div>
   </div>
+
+  <template id="loginViewTemplate">
+    <main class="login-layout">
+      <section class="panel glass login-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Bienvenue</p>
+            <h2>Connecte-toi avant d’utiliser le studio</h2>
+          </div>
+          <p class="subtitle">Connexion Google, cache local instantané et navigation fluide sans rechargement.</p>
+        </div>
+
+        <div class="login-grid">
+          <article class="glass-soft login-copy">
+            <p class="eyebrow">Accès</p>
+            <h3>Une connexion, puis retour direct dans l’app</h3>
+            <ul class="feature-list">
+              <li>Aucun rechargement de page.</li>
+              <li>Retour immédiat au studio si la session locale existe.</li>
+              <li>Synchronisation Firebase en arrière-plan.</li>
+            </ul>
+          </article>
+
+          <article class="glass-soft login-card">
+            <p id="loginState" class="login-state">Connecte-toi avec Google pour accéder au site.</p>
+            <p id="loginHint" class="hint">Ton pseudo sera demandé juste après la connexion si nécessaire.</p>
+
+            <div id="nicknameStep" class="nickname-step" hidden>
+              <label>Pseudo
+                <input id="nickname" type="text" maxlength="24" placeholder="Pseudo" />
+              </label>
+              <button id="saveNickname" type="button">Continuer avec ce pseudo</button>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+  </template>
 
   <script type="module" src="assets/js/router.js"></script>
 </body>

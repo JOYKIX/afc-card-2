@@ -114,13 +114,13 @@ const performGoogleSignIn = async () => {
   }
 
   try {
-    await signInWithPopup(auth, provider);
+    return await signInWithPopup(auth, provider);
   } catch (error) {
     const popupBlocked = error?.code === 'auth/popup-blocked' || error?.code === 'auth/cancelled-popup-request';
     if (popupBlocked) {
       try {
         await signInWithRedirect(auth, provider);
-        return;
+        return null;
       } catch (redirectError) {
         throw toFriendlyAuthError(redirectError);
       }
