@@ -60,6 +60,10 @@ const computeType = () => (attack > defense ? 'attaquant' : defense > attack ? '
 
 const normalizeText = (value = '') => value.trim().replace(/\s+/g, ' ');
 const sanitizeFilename = (value = '') => normalizeText(value).toLowerCase().replace(/[^a-z0-9-_]+/gi, '-').replace(/^-+|-+$/g, '') || 'afc-card';
+const normalizeRank = (value = '') => {
+  const upper = String(value || '').trim().toUpperCase();
+  return rankScale.includes(upper) ? upper : 'D';
+};
 
 const setRenderStatus = (message, isError = false) => {
   if (!renderEngineStatus) return;
@@ -120,12 +124,41 @@ const refreshProfile = async (uid) => {
   currentNickname = profileSnapshot.exists() ? normalizeText(profileSnapshot.val().nickname || '') : '';
 };
 
-const formatVerificationText = (card) => {
-  if (!card) return 'Aucune carte envoyée pour le moment.';
-  if (card.status === 'pending') return `En vérification : ${card.name} (${card.rank}) est en attente de validation admin.`;
-  if (card.status === 'approved') return `Validée : ${card.name} (${card.rank}) est approuvée et visible.`;
-  if (card.status === 'rejected') return `Refusée : ${card.name} (${card.rank}) a été refusée. Tu peux envoyer une nouvelle carte.`;
-  return `Statut inconnu pour ${card.name}.`;
+const getCardRecordSummary = (record) => {
+  if (!record) return null;
+
+  const capture = record.cardCapture || record.cardImage || record.image || '';
+  const rank = normalizeRank(record.rank || record.rarity);
+  const creatorName = normalizeText(record.creatorName || record.createdBy || record.ownerNickname || '');
+
+  return {
+    ...record,
+    cardCapture: capture,
+    rank,
+    creatorName,
+    displayName: creatorName || 'Créateur inconnu',
+    updatedAt: record.updatedAt || record.submittedAt || record.createdAt || 0,
+    status: record.status || 'approved'
+  };
+};
+
+const formatVerificationText = (record) => {
+  const summary = getCardRecordSummary(record);
+  if (!summary) return 'Aucune carte envoyée pour le moment.';
+
+  if (summary.status === 'pending') {
+    return `En vérification : capture ${summary.rank} envoyée par ${summary.displayName}.`;
+  }
+
+  if (summary.status === 'approved') {
+    return `Validée : capture ${summary.rank} de ${summary.displayName} disponible dans les boosters.`;
+  }
+
+  if (summary.status === 'rejected') {
+    return `Refusée : capture ${summary.rank} de ${summary.displayName}. Tu peux en envoyer une nouvelle.`;
+  }
+
+  return `Statut inconnu pour la capture ${summary.rank} de ${summary.displayName}.`;
 };
 
 const sortByRecency = (items = []) => [...items].sort((a, b) => (b.updatedAt || b.submittedAt || b.createdAt || 0) - (a.updatedAt || a.submittedAt || a.createdAt || 0));
@@ -155,8 +188,8 @@ const watchVerificationStatus = (uid) => {
       return;
     }
 
-    const cards = sortByRecency(Object.values(snapshot.val()));
-    latestApprovedCard = cards[0];
+    const cards = sortByRecency(Object.values(snapshot.val()).map(getCardRecordSummary));
+    latestApprovedCard = cards[0] || null;
     updateStatus();
   }));
 
@@ -168,15 +201,19 @@ const watchVerificationStatus = (uid) => {
       return;
     }
 
-    const verifications = sortByRecency(Object.values(snapshot.val()));
-    const latest = verifications[0] || null;
-    latestVerification = latest
-      ? {
-          ...(latest.cardSnapshot || {}),
-          status: latest.status || 'pending'
-        }
-      : null;
+    const verifications = sortByRecency(
+      Object.values(snapshot.val()).map((entry) => getCardRecordSummary({
+        ...(entry.cardSnapshot || {}),
+        ownerUid: entry.ownerUid,
+        ownerNickname: entry.ownerNickname,
+        creatorName: entry.creatorName || entry.ownerNickname || entry.cardSnapshot?.creatorName || entry.cardSnapshot?.createdBy,
+        status: entry.status || 'pending',
+        submittedAt: entry.submittedAt,
+        updatedAt: entry.updatedAt
+      }))
+    );
 
+    latestVerification = verifications[0] || null;
     updateStatus();
   }));
 
@@ -252,11 +289,10 @@ const renderCardJpeg = async ({ simplified = false } = {}) => {
   const serialized = new XMLSerializer().serializeToString(exportClone);
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
-      <rect width="100%" height="100%" fill="#0f1733"></rect>
-      <foreignObject width="100%" height="100%">
-        <div xmlns="http://www.w3.org/1999/xhtml">${serialized}</div>
-      </foreignObject>
-    </svg>`;
+      <rect width="100%" height="100%" fill="#0f1733" />
+      <foreignObject width="100%" height="100%"><div xmlns="http://www.w3.org/1999/xhtml">${serialized}</div></foreignObject>
+    </svg>
+  `;
 
   const image = await new Promise((resolve, reject) => {
     const picture = new Image();
@@ -302,31 +338,20 @@ const fileLooksSupported = (file) => supportedImageTypes.has(file.type) || /\.(j
 const buildCardPayload = async () => {
   const average = getAverage();
   const rank = getRank(average);
-  const cost = getCost(rank);
   const createdAt = Date.now();
-  const cardImage = await exportCardAsJpeg();
+  const cardCapture = await exportCardAsJpeg();
 
   return {
     ownerUid: currentUser.uid,
     ownerNickname: currentNickname,
-    name: normalizeText(fields.name.value),
-    role: fields.title.value,
-    edition: fields.edition.value,
-    abilities: fields.abilities.value.trim(),
-    attack,
-    defense,
-    average,
-    rank,
-    cost,
-    type: computeType(),
-    rarity: rank,
-    cardImage,
-    portraitImage: portraitDataUrl,
-    createdBy: currentNickname,
     creatorName: currentNickname,
-    status: 'pending',
+    createdBy: currentNickname,
+    rank,
+    rarity: rank,
+    cardCapture,
     createdAt,
-    updatedAt: createdAt
+    updatedAt: createdAt,
+    status: 'pending'
   };
 };
 
@@ -389,13 +414,15 @@ submitCardBtn.addEventListener('click', async () => {
     await set(verificationRef, {
       ownerUid: currentUser.uid,
       ownerNickname: currentNickname,
+      creatorName: currentNickname,
+      rank: payload.rank,
       status: 'pending',
       submittedAt: payload.createdAt,
       updatedAt: payload.updatedAt,
       cardSnapshot: payload
     });
 
-    alert('Carte envoyée en attente de vérification admin.');
+    alert('Capture de carte envoyée en attente de vérification admin.');
   } catch (error) {
     console.error('Erreur lors de la soumission :', error);
     alert(toFriendlySubmissionError(error));
