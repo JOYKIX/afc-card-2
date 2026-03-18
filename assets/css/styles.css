@@ -895,6 +895,37 @@ button.danger {
   gap: 0.8rem;
 }
 
+.portrait-zoom-controls {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  gap: 0.7rem;
+  align-items: center;
+}
+
+.portrait-zoom-button {
+  min-width: 2.75rem;
+  padding-inline: 0.85rem;
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.portrait-zoom-slider {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.portrait-zoom-slider input {
+  width: 100%;
+}
+
+.portrait-zoom-value {
+  justify-self: end;
+  min-width: 4.25rem;
+  text-align: center;
+}
+
 .portrait-position-tools .hint {
   font-size: 0.92rem;
 }
@@ -1398,4 +1429,19 @@ button.danger {
 .app-view.is-entering {
   opacity: 0;
   transform: translateY(-12px);
+}
+
+
+@media (max-width: 640px) {
+  .portrait-zoom-controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .portrait-zoom-slider {
+    grid-column: 1 / -1;
+  }
+
+  .portrait-zoom-value {
+    justify-self: stretch;
+  }
 }

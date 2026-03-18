@@ -41,6 +41,10 @@ let imageInput;
 let portrait;
 let portraitImage;
 let resetPortraitPositionBtn;
+let portraitZoomRange;
+let zoomInPortraitBtn;
+let zoomOutPortraitBtn;
+let portraitZoomValue;
 let verificationStatusText;
 let renderEngineStatus;
 let cardElement;
@@ -71,6 +75,7 @@ let attack = 0;
 let defense = 0;
 let portraitDataUrl = '';
 let portraitPosition = { x: 50, y: 50 };
+let portraitZoom = 1;
 let portraitNaturalSize = { width: 0, height: 0 };
 let portraitDragState = null;
 let verificationUnsubscribe = null;
@@ -97,6 +102,7 @@ const saveDraft = () => {
       defense,
       portraitDataUrl,
       portraitPosition,
+      portraitZoom,
       savedAt: Date.now()
     }));
   } catch (error) {
@@ -121,6 +127,7 @@ const restoreDraft = () => {
       x: Number.isFinite(Number(draft?.portraitPosition?.x)) ? Number(draft.portraitPosition.x) : 50,
       y: Number.isFinite(Number(draft?.portraitPosition?.y)) ? Number(draft.portraitPosition.y) : 50
     };
+    portraitZoom = Number.isFinite(Number(draft?.portraitZoom)) ? Math.min(3, Math.max(1, Number(draft.portraitZoom))) : 1;
 
     applyPortraitImage();
 
@@ -139,6 +146,8 @@ const restoreDraft = () => {
 };
 const sanitizeFilename = (value = '') => normalizeText(value).toLowerCase().replace(/[^a-z0-9-_]+/gi, '-').replace(/^-+|-+$/g, '') || 'afc-card';
 const clampPercent = (value) => Math.min(100, Math.max(0, Number(value) || 0));
+const clampPortraitZoom = (value) => Math.min(3, Math.max(1, Number(value) || 1));
+const formatPortraitZoomValue = (value) => `${Math.round(clampPortraitZoom(value) * 100)}%`;
 const formatCardNumber = (value) => {
   const cardNumber = normalizeCardNumber(value);
   return cardNumber ? `#${cardNumber}` : 'non attribué';
@@ -160,22 +169,44 @@ const syncManualStatInputs = () => {
   if (manualDefenseInput) manualDefenseInput.value = String(defense);
 };
 
+const syncPortraitZoomUi = () => {
+  if (portraitZoomRange) portraitZoomRange.value = String(clampPortraitZoom(portraitZoom));
+  if (portraitZoomValue) portraitZoomValue.textContent = formatPortraitZoomValue(portraitZoom);
+};
+
 const applyPortraitImage = () => {
+  const safeX = clampPercent(portraitPosition.x);
+  const safeY = clampPercent(portraitPosition.y);
+  const safeZoom = clampPortraitZoom(portraitZoom);
+
   portrait.style.backgroundImage = portraitDataUrl ? `url('${portraitDataUrl}')` : '';
-  portrait.style.backgroundPosition = `${clampPercent(portraitPosition.x)}% ${clampPercent(portraitPosition.y)}%`;
+  portrait.style.backgroundPosition = `${safeX}% ${safeY}%`;
+  portrait.style.setProperty('--portrait-zoom', String(safeZoom));
   portrait.classList.toggle('portrait--adjustable', Boolean(portraitDataUrl));
+  syncPortraitZoomUi();
 
   if (!portraitImage) return;
 
   portraitImage.src = portraitDataUrl || '';
   portraitImage.hidden = !portraitDataUrl;
-  portraitImage.style.objectPosition = `${clampPercent(portraitPosition.x)}% ${clampPercent(portraitPosition.y)}%`;
+  portraitImage.style.objectPosition = `${safeX}% ${safeY}%`;
 };
 
 const resetPortraitPosition = () => {
   portraitPosition = { x: 50, y: 50 };
+  portraitZoom = 1;
   applyPortraitImage();
   saveDraft();
+};
+
+const setPortraitZoom = (value, { preserveDraft = false } = {}) => {
+  portraitZoom = clampPortraitZoom(value);
+  applyPortraitImage();
+  if (preserveDraft) saveDraft();
+};
+
+const adjustPortraitZoom = (delta) => {
+  setPortraitZoom(portraitZoom + delta, { preserveDraft: true });
 };
 
 const getPortraitOverflow = () => {
@@ -184,7 +215,8 @@ const getPortraitOverflow = () => {
   }
 
   const bounds = portrait.getBoundingClientRect();
-  const scale = Math.max(bounds.width / portraitNaturalSize.width, bounds.height / portraitNaturalSize.height);
+  const baseScale = Math.max(bounds.width / portraitNaturalSize.width, bounds.height / portraitNaturalSize.height);
+  const scale = baseScale * clampPortraitZoom(portraitZoom);
 
   return {
     overflowX: Math.max(0, (portraitNaturalSize.width * scale) - bounds.width),
@@ -231,6 +263,14 @@ const stopPortraitDrag = () => {
   portraitDragState = null;
   portrait.classList.remove('is-dragging');
   saveDraft();
+};
+
+const handlePortraitWheel = (event) => {
+  if (!portraitDataUrl) return;
+  if (event.cancelable) event.preventDefault();
+
+  const step = event.deltaY < 0 ? 0.1 : -0.1;
+  adjustPortraitZoom(step);
 };
 
 const syncAvailableTitles = () => {
@@ -691,6 +731,10 @@ const bindDomReferences = () => {
   portrait = document.getElementById('portrait');
   portraitImage = document.getElementById('portraitImage');
   resetPortraitPositionBtn = document.getElementById('resetPortraitPosition');
+  portraitZoomRange = document.getElementById('portraitZoomRange');
+  zoomInPortraitBtn = document.getElementById('zoomInPortrait');
+  zoomOutPortraitBtn = document.getElementById('zoomOutPortrait');
+  portraitZoomValue = document.getElementById('portraitZoomValue');
   verificationStatusText = document.getElementById('verificationStatusText');
   renderEngineStatus = document.getElementById('renderEngineStatus');
   cardElement = document.getElementById('afcCard');
@@ -703,6 +747,7 @@ const bindDomReferences = () => {
 
 export const initCreatePage = async () => {
   bindDomReferences();
+  applyPortraitImage();
   const abortController = new AbortController();
   const { signal } = abortController;
 
@@ -742,6 +787,7 @@ export const initCreatePage = async () => {
       event.target.value = '';
       portraitDataUrl = '';
       portraitNaturalSize = { width: 0, height: 0 };
+      portraitZoom = 1;
       resetPortraitPosition();
       saveDraft();
       return;
@@ -752,6 +798,7 @@ export const initCreatePage = async () => {
       portraitDataUrl = readerEvent.target?.result || '';
       portraitNaturalSize = { width: 0, height: 0 };
       portraitPosition = { x: 50, y: 50 };
+      portraitZoom = 1;
       applyPortraitImage();
       saveDraft();
     };
@@ -833,6 +880,15 @@ export const initCreatePage = async () => {
   }, { signal });
 
   resetPortraitPositionBtn?.addEventListener('click', resetPortraitPosition, { signal });
+  portraitZoomRange?.addEventListener('input', (event) => {
+    setPortraitZoom(event.target.value, { preserveDraft: true });
+  }, { signal });
+  zoomInPortraitBtn?.addEventListener('click', () => {
+    adjustPortraitZoom(0.1);
+  }, { signal });
+  zoomOutPortraitBtn?.addEventListener('click', () => {
+    adjustPortraitZoom(-0.1);
+  }, { signal });
 
   portraitImage?.addEventListener('load', () => {
     portraitNaturalSize = {
@@ -846,6 +902,7 @@ export const initCreatePage = async () => {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
     startPortraitDrag(event);
   }, { signal });
+  portrait.addEventListener('wheel', handlePortraitWheel, { passive: false, signal });
 
   window.addEventListener('pointermove', movePortrait, { passive: false, signal });
   window.addEventListener('pointerup', stopPortraitDrag, { signal });
