@@ -487,8 +487,11 @@ button.danger {
   font-size: 1.35rem;
 }
 
-.stats .material-symbols-outlined {
-  font-size: 1.35rem;
+.stat-icon {
+  width: 1.45rem;
+  height: 1.45rem;
+  display: block;
+  fill: currentColor;
 }
 
 .stats span:last-child {
