@@ -7,7 +7,14 @@ Refonte complète en **multi-pages** pour améliorer la prise en main :
 - `admin.html` + `assets/js/admin.js` : modération des cartes en attente.
 - `booster.html` + `assets/js/booster.js` : ouverture d’un booster de 5 cartes depuis `cards` avec pondération par rareté.
 - `assets/js/common.js` : logique partagée d'interface/auth.
-- `assets/js/firebase.js` : intégration auth/base centralisée et synchronisation des profils.
+- `assets/js/firebase.js` : façade de compatibilité qui ré-exporte les services communs.
+- `assets/js/lib/firebase-sdk.js` : imports Firebase Web SDK centralisés (v12.10.0).
+- `assets/js/lib/firebase-config.js` : configuration Firebase et liste des hôtes autorisés.
+- `assets/js/lib/firebase-core.js` : initialisation unique de l’app, Auth et Realtime Database.
+- `assets/js/lib/auth-service.js` : flux de connexion Google, persistance et synchronisation des profils.
+- `assets/js/lib/auth-cache.js` : cache local de session utilisateur.
+- `assets/js/lib/roles.js` : rôles, badges, droits, rerolls et titres autorisés.
+- `assets/js/lib/format.js` : normalisation partagée (email, pseudo, rang, carte, HTML).
 - `assets/css/styles.css` : design global, navigation et composants.
 
 ## Système de grade
@@ -53,6 +60,9 @@ Refonte complète en **multi-pages** pour améliorer la prise en main :
 ## Connexion Google
 
 La connexion utilise Google avec :
+
+- `authDomain` Firebase restauré sur `afc-cardgame.firebaseapp.com` pour rester cohérent avec la configuration du projet
+- prise en charge des hôtes autorisés `joykix.github.io`, `localhost` et `127.0.0.1` côté garde-fou UI avant lancement OAuth
 
 - session par onglet, avec fallback automatique en mémoire si le navigateur la bloque
 - tentative popup (`signInWithPopup`)
