@@ -1,5 +1,6 @@
 import { db, escapeHtml, formatCardNumber, get, normalizeCardNumber, normalizeRank, ref } from './firebase.js';
 import { initCommon } from './common.js';
+import { saveAlbumDrops } from './lib/album-storage.js';
 
 const openBoosterBtn = document.getElementById('openBooster');
 const boosterHint = document.getElementById('boosterHint');
@@ -14,6 +15,7 @@ const rarityWeights = {
   Ω: 0.75
 };
 
+let currentUser = null;
 
 const normalizeCardRecord = ([id, record]) => ({
   id,
@@ -107,13 +109,17 @@ const openBooster = async () => {
     const pulls = buildBooster(cards, 5);
     renderBooster(pulls);
 
+    if (currentUser) {
+      saveAlbumDrops(currentUser.uid, pulls);
+    }
+
     const uniqueCards = new Set(pulls.map((card) => card.uniqueId)).size;
     if (cards.length === 1) {
-      setHint('Une seule carte est disponible : le booster affiche donc 5 fois la même capture.');
+      setHint('Une seule carte est disponible : le booster affiche donc 5 fois la même capture. Elle a bien été ajoutée à ton album.');
       return;
     }
 
-    setHint(`${pulls.length} cartes tirées aléatoirement, avec un drop pondéré par la rareté (${uniqueCards} carte(s) distincte(s)).`);
+    setHint(`${pulls.length} cartes tirées aléatoirement, avec un drop pondéré par la rareté (${uniqueCards} carte(s) distincte(s)). Elles sont maintenant visibles dans l'onglet Album.`);
   } catch (error) {
     console.error('Erreur lors de l’ouverture du booster :', error);
     renderPlaceholder('Impossible de charger les captures pour le moment.');
@@ -125,5 +131,10 @@ const openBooster = async () => {
 
 openBoosterBtn?.addEventListener('click', openBooster);
 
-await initCommon({ requireAuth: true });
-setHint('Prêt à découvrir ton tirage.');
+await initCommon({
+  requireAuth: true,
+  onUserChanged: async (user) => {
+    currentUser = user;
+  }
+});
+setHint('Prêt à découvrir ton tirage. Chaque drop est aussi ajouté à ton album.');

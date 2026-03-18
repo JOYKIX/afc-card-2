@@ -18,6 +18,7 @@ import {
 const authStatus = document.getElementById('authStatus');
 const googleLoginBtn = document.getElementById('googleLogin');
 const logoutBtn = document.getElementById('logout');
+const profileLink = document.getElementById('profileLink');
 const adminNavLinks = Array.from(document.querySelectorAll('[data-admin-link="true"]'));
 
 const roleBadge = document.createElement('span');
@@ -49,11 +50,21 @@ const toggleAdminNav = (visible) => {
   });
 };
 
-const setAuthUi = (session = null) => {
-  if (authStatus) authStatus.textContent = session ? getDisplayIdentity(session) : 'Non connecté';
-  if (logoutBtn) logoutBtn.disabled = !session;
+const setButtonVisibility = (element, visible) => {
+  if (!element) return;
+  element.hidden = !visible;
+  if ('disabled' in element) element.disabled = !visible;
+};
 
-  if (!session) {
+const setAuthUi = (session = null) => {
+  const isConnected = Boolean(session);
+
+  if (authStatus) authStatus.textContent = isConnected ? getDisplayIdentity(session) : 'Non connecté';
+  setButtonVisibility(googleLoginBtn, !isConnected);
+  setButtonVisibility(logoutBtn, isConnected);
+  setButtonVisibility(profileLink, isConnected);
+
+  if (!isConnected) {
     roleBadge.hidden = true;
     roleBadge.textContent = '';
     roleBadge.className = 'role-badge';
@@ -107,6 +118,8 @@ const initCommon = async ({ onUserChanged, requireAuth = false } = {}) => {
     const cachedRoles = normalizeRoles(cachedSession.roles, cachedSession);
     toggleAdminNav(canAccessAdmin(cachedRoles));
     setAuthUi({ ...cachedSession, roles: cachedRoles });
+  } else {
+    setAuthUi(null);
   }
 
   try {
@@ -124,7 +137,7 @@ const initCommon = async ({ onUserChanged, requireAuth = false } = {}) => {
       setAuthNotice(error.message, 'error');
       alert(error.message);
     } finally {
-      googleLoginBtn.disabled = false;
+      if (!googleLoginBtn.hidden) googleLoginBtn.disabled = false;
     }
   });
 

@@ -31,9 +31,9 @@
           <span class="nav-link__eyebrow">Collection</span>
           <strong>Booster</strong>
         </a>
-        <a class="nav-link" href="profile.html">
-          <span class="nav-link__eyebrow">Compte</span>
-          <strong>Profil</strong>
+        <a class="nav-link" href="album.html">
+          <span class="nav-link__eyebrow">Collection</span>
+          <strong>Album</strong>
         </a>
         <a class="nav-link" href="admin.html" data-admin-link="true" hidden>
           <span class="nav-link__eyebrow">Backoffice</span>
@@ -45,6 +45,7 @@
         <p class="eyebrow">Session</p>
         <span id="authStatus">Vérification...</span>
         <div class="auth-actions__buttons auth-actions__buttons--inline">
+          <a id="profileLink" class="button-link ghost" href="profile.html">Profil</a>
           <button id="googleLogin" type="button">Connexion Google</button>
           <button id="logout" type="button" class="ghost">Déconnexion</button>
         </div>
@@ -87,6 +88,17 @@
                 <input id="imageInput" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
               </label>
             </div>
+
+            <section class="portrait-position-tools glass-soft" aria-labelledby="portraitPositionTitle">
+              <div class="section-head-inline section-head-inline--stack-mobile">
+                <div>
+                  <p class="eyebrow">Illustration</p>
+                  <h3 id="portraitPositionTitle">Cadre libre</h3>
+                </div>
+                <button type="button" id="resetPortraitPosition" class="ghost">Recentrer l'image</button>
+              </div>
+              <p class="hint">Glisse directement l'illustration dans l'aperçu de droite pour la recadrer comme tu veux avant l'export.</p>
+            </section>
 
             <label>Capacités
               <textarea id="abilities" rows="5" required></textarea>
