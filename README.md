@@ -2,7 +2,8 @@
 
 Refonte complète en **multi-pages** pour améliorer la prise en main :
 
-- `index.html` + `assets/js/create.js` : création de carte et preview live.
+- `index.html` : entrée login et redirection vers le shell principal.
+- `creator.html` + `assets/js/create.js` : création de carte et preview live.
 - `profile.html` + `assets/js/profile.js` : gestion du pseudo joueur.
 - `admin.html` + `assets/js/admin.js` : modération des cartes en attente.
 - `booster.html` + `assets/js/booster.js` : ouverture d’un booster de 5 cartes depuis `cards` avec pondération par rareté.
@@ -30,7 +31,7 @@ Refonte complète en **multi-pages** pour améliorer la prise en main :
 
 - Chaque pseudo est désormais réservé dans `nicknameIndex/{nicknameKey}`.
 - L’unicité est **insensible à la casse** : `joykix`, `JOYKIX` et `JoYkIx` sont considérés comme identiques.
-- La page login et la page profil refusent immédiatement un pseudo déjà pris.
+- La page d’accueil (`index.html`) et la page profil refusent immédiatement un pseudo déjà pris.
 
 ## Rôles via profils
 

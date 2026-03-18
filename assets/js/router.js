@@ -1,14 +1,14 @@
 const routes = {
   '': {
     key: 'create',
-    path: 'index.html',
+    path: 'creator.html',
     partial: 'pages/create.html',
     title: 'AFC Card Studio · Création',
     init: () => import('./create.js').then((module) => module.initCreatePage())
   },
-  'index.html': {
+  'creator.html': {
     key: 'create',
-    path: 'index.html',
+    path: 'creator.html',
     partial: 'pages/create.html',
     title: 'AFC Card Studio · Création',
     init: () => import('./create.js').then((module) => module.initCreatePage())
@@ -58,8 +58,8 @@ let activeNavigationId = 0;
 
 const getRouteFromTarget = (target) => {
   const url = new URL(target, window.location.href);
-  const basename = url.pathname.split('/').pop() || 'index.html';
-  const route = routes[basename] || routes['index.html'];
+  const basename = url.pathname.split('/').pop() || 'creator.html';
+  const route = routes[basename] || routes['creator.html'];
   return {
     route,
     url,
@@ -113,7 +113,7 @@ const navigate = async (target, { replace = false } = {}) => {
 
     if (replace) {
       history.replaceState({ path: href }, '', href);
-    } else if (`${window.location.pathname.split('/').pop() || 'index.html'}${window.location.search}${window.location.hash}` !== href) {
+    } else if (`${window.location.pathname.split('/').pop() || 'creator.html'}${window.location.search}${window.location.hash}` !== href) {
       history.pushState({ path: href }, '', href);
     }
 
@@ -144,7 +144,7 @@ const shouldHandleLink = (link) => {
   const url = new URL(link.href, window.location.href);
   if (url.origin !== window.location.origin) return false;
 
-  const basename = url.pathname.split('/').pop() || 'index.html';
+  const basename = url.pathname.split('/').pop() || 'creator.html';
   return Boolean(routes[basename]);
 };
 
@@ -159,12 +159,12 @@ const resolveInitialTarget = () => {
     return `${page}${suffix}`;
   }
 
-  const basename = current.pathname.split('/').pop() || 'index.html';
+  const basename = current.pathname.split('/').pop() || 'creator.html';
   if (routes[basename]) {
     return `${basename}${current.search}${current.hash}`;
   }
 
-  return `index.html${current.search}${current.hash}`;
+  return `creator.html${current.search}${current.hash}`;
 };
 
 document.addEventListener('click', (event) => {

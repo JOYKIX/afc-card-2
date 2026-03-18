@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AFC Card Studio · Création</title>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <link rel="stylesheet" href="assets/css/card.css" />
+</head>
+
+<body data-route="create">
+  <div class="bg-orb orb-a"></div>
+  <div class="bg-orb orb-b"></div>
+
+  <div class="app-shell app-shell--dashboard">
+    <header class="topbar topbar--dashboard glass">
+      <div class="brand-wrap topbar__brand">
+        <div>
+          <p class="kicker">AFC Universe</p>
+          <h1>AFC Card Studio</h1>
+        </div>
+      </div>
+
+      <nav class="site-nav" aria-label="Navigation principale">
+        <a class="nav-link active" href="creator.html" data-route="create">
+          <span class="nav-link__eyebrow">Studio</span>
+          <strong>Créer</strong>
+        </a>
+        <a class="nav-link" href="booster.html" data-route="booster">
+          <span class="nav-link__eyebrow">Collection</span>
+          <strong>Booster</strong>
+        </a>
+        <a class="nav-link" href="album.html" data-route="album">
+          <span class="nav-link__eyebrow">Collection</span>
+          <strong>Album</strong>
+        </a>
+        <a class="nav-link" href="admin.html" data-admin-link="true" data-route="admin" hidden>
+          <span class="nav-link__eyebrow">Backoffice</span>
+          <strong>Admin</strong>
+        </a>
+      </nav>
+
+      <section class="auth-actions auth-actions--topbar glass-soft">
+        <p class="eyebrow">Session</p>
+        <span id="authStatus">Vérification...</span>
+        <div class="auth-actions__buttons auth-actions__buttons--inline">
+          <a id="profileLink" class="button-link ghost" href="profile.html" data-route="profile">Profil</a>
+          <button id="googleLogin" type="button">Connexion Google</button>
+          <button id="logout" type="button" class="ghost">Déconnexion</button>
+        </div>
+      </section>
+    </header>
+
+    <div id="appWorkspace" class="app-workspace">
+      <div id="app" class="app-view" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <script type="module" src="assets/js/router.js"></script>
+</body>
+
+</html>

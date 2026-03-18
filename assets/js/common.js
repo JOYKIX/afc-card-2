@@ -146,26 +146,26 @@ const setAuthUi = (session = null) => {
 };
 
 const getCurrentPage = () => {
-  if (typeof window === 'undefined') return 'index.html';
-  return window.location.pathname.split('/').pop() || 'index.html';
+  if (typeof window === 'undefined') return 'creator.html';
+  return window.location.pathname.split('/').pop() || 'creator.html';
 };
 
 const redirectToLogin = () => {
   if (typeof window === 'undefined') return;
 
   const currentPage = getCurrentPage();
-  if (currentPage === 'login.html') return;
+  if (currentPage === 'index.html' || currentPage === 'login.html') return;
 
   const next = `${currentPage}${window.location.search || ''}${window.location.hash || ''}`;
-  navigateTo(`login.html?next=${encodeURIComponent(next)}`);
+  navigateTo(`index.html?next=${encodeURIComponent(next)}`);
 };
 
 const getRedirectTarget = () => {
-  if (typeof window === 'undefined') return 'index.html';
+  if (typeof window === 'undefined') return 'creator.html';
 
   const params = new URLSearchParams(window.location.search);
-  const next = params.get('next') || 'index.html';
-  return next.includes('login.html') ? 'index.html' : next;
+  const next = params.get('next') || 'creator.html';
+  return (next.includes('index.html') || next.includes('login.html')) ? 'creator.html' : next;
 };
 
 const redirectAfterLogin = () => {

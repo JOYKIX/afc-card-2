@@ -9,14 +9,14 @@
       var current = new URL(window.location.href);
       var params = current.searchParams;
       params.set('page', 'booster.html');
-      var nextUrl = 'index.html?' + params.toString() + (current.hash || '');
+      var nextUrl = 'creator.html?' + params.toString() + (current.hash || '');
       window.location.replace(nextUrl);
     }());
   </script>
 </head>
 <body>
   <noscript>
-    Cette page nécessite JavaScript. Ouvre <a href="index.html?page=booster.html">le shell principal</a>.
+    Cette page nécessite JavaScript. Ouvre <a href="creator.html?page=booster.html">le shell principal</a>.
   </noscript>
 </body>
 </html>
