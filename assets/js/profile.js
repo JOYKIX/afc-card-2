@@ -9,17 +9,24 @@ let currentUser = null;
 let currentProfile = {};
 
 const refreshProfile = async (uid) => {
-  const profileSnapshot = await get(ref(db, `profiles/${uid}`));
-  currentProfile = profileSnapshot.exists() ? profileSnapshot.val() || {} : {};
+  try {
+    const profileSnapshot = await get(ref(db, `profiles/${uid}`));
+    currentProfile = profileSnapshot.exists() ? profileSnapshot.val() || {} : {};
 
-  if (!profileSnapshot.exists()) {
+    if (!profileSnapshot.exists()) {
+      nicknameInput.value = '';
+      profileHint.textContent = 'Aucun pseudo enregistré pour le moment.';
+      return;
+    }
+
+    nicknameInput.value = currentProfile.nickname || '';
+    profileHint.textContent = 'Ton pseudo est prêt à être modifié.';
+  } catch (error) {
+    console.error('Erreur chargement profil :', error);
+    currentProfile = {};
     nicknameInput.value = '';
-    profileHint.textContent = 'Aucun pseudo enregistré pour le moment.';
-    return;
+    profileHint.textContent = 'Impossible de charger ton profil pour le moment. Recharge la page après avoir rétabli la connexion.';
   }
-
-  nicknameInput.value = currentProfile.nickname || '';
-  profileHint.textContent = 'Ton pseudo est prêt à être modifié.';
 };
 
 saveProfileBtn.addEventListener('click', async () => {

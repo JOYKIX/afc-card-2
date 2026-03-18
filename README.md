@@ -54,9 +54,14 @@ Refonte complète en **multi-pages** pour améliorer la prise en main :
 
 La connexion utilise Google avec :
 
-- persistance de session (`browserLocalPersistence`)
+- persistance locale si disponible, sinon fallback automatique en session ou mémoire
 - tentative popup (`signInWithPopup`)
 - fallback automatique en redirect (`signInWithRedirect`) si popup bloquée
+- messages d’erreur plus précis pour les cas `file://`, cookies/localStorage bloqués, domaine non autorisé ou coupure réseau
+
+### Important : ne pas ouvrir les fichiers en `file://`
+
+Ouvrir `index.html` directement depuis l’explorateur peut casser l’auth Google dans certains navigateurs. Utilise toujours un serveur HTTP local ou le site déployé.
 
 ### Domaine GitHub Pages (important)
 

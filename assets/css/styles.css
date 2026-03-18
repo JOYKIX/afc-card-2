@@ -228,6 +228,22 @@ select {
   color: var(--muted-strong);
 }
 
+.auth-notice {
+  margin: 0;
+  flex-basis: 100%;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.auth-notice[data-level='warning'] {
+  color: #ffdca4;
+}
+
+.auth-notice[data-level='error'] {
+  color: #ffafc3;
+}
+
 .role-badge {
   border-radius: 999px;
   font-size: 0.72rem;
