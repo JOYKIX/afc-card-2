@@ -8,51 +8,97 @@
   <link rel="stylesheet" href="assets/css/style.css" />
 </head>
 
-<body>
+<body class="page-profile">
   <div class="bg-orb orb-a"></div>
   <div class="bg-orb orb-b"></div>
 
-  <header class="topbar glass">
-    <div class="brand-wrap">
-      <div class="brand-badge" aria-hidden="true">FM</div>
-      <div>
-        <p class="kicker">AFC Universe</p>
-        <h1>Profil joueur</h1>
+  <div class="app-shell">
+    <header class="topbar glass">
+      <div class="brand-wrap">
+        <div class="brand-badge" aria-hidden="true">FM</div>
+        <div>
+          <p class="kicker">AFC Universe</p>
+          <h1>Profil joueur</h1>
+        </div>
       </div>
-    </div>
 
-    <nav class="site-nav">
-      <a class="nav-link" href="index.html">Créer</a>
-      <a class="nav-link" href="booster.html">Booster</a>
-      <a class="nav-link active" href="profile.html">Profil</a>
-      <a class="nav-link" href="admin.html" data-admin-link="true" hidden>Admin</a>
-    </nav>
+      <nav class="site-nav" aria-label="Navigation principale">
+        <a class="nav-link" href="index.html">Créer</a>
+        <a class="nav-link" href="booster.html">Booster</a>
+        <a class="nav-link active" href="profile.html">Profil</a>
+        <a class="nav-link" href="admin.html" data-admin-link="true" hidden>Admin</a>
+      </nav>
 
-    <div class="auth-actions">
-      <span id="authStatus">Vérification...</span>
-      <button id="googleLogin" type="button">Connexion Google</button>
-      <button id="logout" type="button" class="ghost">Déconnexion</button>
-    </div>
-  </header>
+      <div class="auth-actions">
+        <span id="authStatus">Vérification...</span>
+        <button id="googleLogin" type="button">Connexion Google</button>
+        <button id="logout" type="button" class="ghost">Déconnexion</button>
+      </div>
+    </header>
 
-  <section class="page-banner">
-    <h2>Identité claire, expérience plus fluide</h2>
-    <p>Ton pseudo reste la base du suivi des cartes et de la modération. Design retravaillé pour une lecture immédiate.</p>
-  </section>
+    <section class="hero-panel glass hero-panel--split">
+      <div class="hero-copy">
+        <p class="kicker">Identité joueur</p>
+        <h2>Un profil plus clair pour lier toutes les soumissions.</h2>
+        <p>
+          La page profil adopte une structure plus simple et plus premium afin de rendre le pseudo central dans le suivi
+          des cartes, de la validation et des ouvertures de booster.
+        </p>
+        <div class="hero-chips">
+          <span>Pseudo AFC</span>
+          <span>Compte Google</span>
+          <span>Synchronisation Firebase</span>
+        </div>
+      </div>
 
-  <main class="single-layout">
-    <section class="panel glass">
-      <h2>Personnalise ton profil</h2>
-      <p class="subtitle">Renseigne ton pseudo AFC pour lier toutes tes soumissions de cartes à ton compte.</p>
-
-      <label>Pseudo
-        <input id="nickname" type="text" maxlength="24" placeholder="Ton pseudo AFC" />
-      </label>
-      <button id="saveProfile" type="button">Enregistrer le pseudo</button>
-
-      <p id="profileHint" class="hint">Connecte-toi avec Google pour démarrer.</p>
+      <div class="hero-stats" aria-label="Avantages du profil">
+        <article>
+          <strong>1</strong>
+          <span>Identité unique</span>
+        </article>
+        <article>
+          <strong>100%</strong>
+          <span>Lié aux soumissions</span>
+        </article>
+        <article>
+          <strong>Live</strong>
+          <span>Mise à jour instantanée</span>
+        </article>
+      </div>
     </section>
-  </main>
+
+    <main class="single-layout single-layout--narrow">
+      <section class="panel glass profile-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Compte</p>
+            <h2>Personnalise ton profil</h2>
+          </div>
+          <p class="subtitle">Renseigne ton pseudo AFC pour associer automatiquement tes cartes, validations et ouvertures à ton compte.</p>
+        </div>
+
+        <div class="profile-layout">
+          <div class="profile-card glass-soft">
+            <p class="eyebrow">Pourquoi c’est utile</p>
+            <h3>Un pseudo propre = un suivi propre</h3>
+            <ul class="feature-list">
+              <li>Relie chaque soumission à ton identité joueur.</li>
+              <li>Facilite la modération côté admin.</li>
+              <li>Améliore l’affichage des captures dans les boosters.</li>
+            </ul>
+          </div>
+
+          <div class="profile-form-wrap">
+            <label>Pseudo
+              <input id="nickname" type="text" maxlength="24" placeholder="Ton pseudo AFC" />
+            </label>
+            <button id="saveProfile" type="button">Enregistrer le pseudo</button>
+            <p id="profileHint" class="hint">Connecte-toi avec Google pour démarrer.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
 
   <script type="module" src="assets/js/profile.js"></script>
 </body>

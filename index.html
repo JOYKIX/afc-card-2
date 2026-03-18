@@ -8,135 +8,203 @@
   <link rel="stylesheet" href="assets/css/style.css" />
 </head>
 
-<body>
+<body class="page-create">
   <div class="bg-orb orb-a"></div>
   <div class="bg-orb orb-b"></div>
 
-  <header class="topbar glass">
-    <div class="brand-wrap">
-      <div class="brand-badge" aria-hidden="true">FM</div>
-      <div>
-        <p class="kicker">AFC Universe</p>
-        <h1>AFC Card Studio</h1>
+  <div class="app-shell">
+    <header class="topbar glass">
+      <div class="brand-wrap">
+        <div class="brand-badge" aria-hidden="true">FM</div>
+        <div>
+          <p class="kicker">AFC Universe</p>
+          <h1>AFC Card Studio</h1>
+        </div>
       </div>
-    </div>
 
-    <nav class="site-nav">
-      <a class="nav-link active" href="index.html">Créer</a>
-      <a class="nav-link" href="booster.html">Booster</a>
-      <a class="nav-link" href="profile.html">Profil</a>
-      <a class="nav-link" href="admin.html" data-admin-link="true" hidden>Admin</a>
-    </nav>
+      <nav class="site-nav" aria-label="Navigation principale">
+        <a class="nav-link active" href="index.html">Créer</a>
+        <a class="nav-link" href="booster.html">Booster</a>
+        <a class="nav-link" href="profile.html">Profil</a>
+        <a class="nav-link" href="admin.html" data-admin-link="true" hidden>Admin</a>
+      </nav>
 
-    <div class="auth-actions">
-      <span id="authStatus">Vérification...</span>
-      <button id="googleLogin" type="button">Connexion Google</button>
-      <button id="logout" type="button" class="ghost">Déconnexion</button>
-    </div>
-  </header>
+      <div class="auth-actions">
+        <span id="authStatus">Vérification...</span>
+        <button id="googleLogin" type="button">Connexion Google</button>
+        <button id="logout" type="button" class="ghost">Déconnexion</button>
+      </div>
+    </header>
 
-  <section class="page-banner">
-    <h2>Direction Artistique “Neon Shōnen”</h2>
-    <p>Refonte complète UI/UX inspirée de Fémi : contrastes chauds/froids, énergie manga, lisibilité renforcée et parcours plus fluide.</p>
-  </section>
-
-  <main class="layout">
-    <section class="panel glass editor-panel">
-      <h2>Atelier de création</h2>
-      <p class="subtitle">Crée une carte premium en quelques étapes : identité, photo, capacités, stats, puis envoi en vérification.</p>
-
-      <form id="cardForm" class="editor-form">
-        <label>Nom
-          <input id="name" type="text" maxlength="24" value="Fémi-Mars" required />
-        </label>
-
-        <label>Rôle
-          <select id="title" required>
-            <option>Responsable staff</option>
-            <option>Gardien de l'AFC</option>
-            <option>Streamers</option>
-            <option>Viewers</option>
-          </select>
-        </label>
-
-        <label>Édition
-          <input id="edition" type="text" value="2e édition" readonly />
-        </label>
-
-        <label>Capacités
-          <textarea id="abilities" rows="4" required></textarea>
-        </label>
-
-        <label>Photo (JPG / JPEG / PNG / WEBP)
-          <input id="imageInput" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
-        </label>
-
-        <div class="actions">
-          <button type="button" id="rollStats">Générer attaque / défense</button>
-          <button type="button" id="submitCard">Envoyer en vérification</button>
-          <button type="button" id="downloadCard">Télécharger la carte</button>
+    <section class="hero-panel glass hero-panel--split">
+      <div class="hero-copy">
+        <p class="kicker">Studio de création premium</p>
+        <h2>Refonte complète du parcours de création AFC.</h2>
+        <p>
+          Nouvelle mise en page plus éditoriale, meilleure hiérarchie visuelle et flux plus lisible pour préparer,
+          prévisualiser et envoyer chaque carte en validation.
+        </p>
+        <div class="hero-chips">
+          <span>Prévisualisation live</span>
+          <span>Export JPG sécurisé</span>
+          <span>Suivi Firebase</span>
         </div>
+      </div>
 
-        <section class="verification-box" id="verificationBox">
-          <h3>Suivi de vérification</h3>
-          <p id="verificationStatusText">Connecte-toi pour suivre ta capture en validation.</p>
-          <p id="renderEngineStatus" class="render-engine-status">Moteur export: initialisation...</p>
-        </section>
-      </form>
+      <div class="hero-stats" aria-label="Points clés">
+        <article>
+          <strong>4</strong>
+          <span>Étapes de création</span>
+        </article>
+        <article>
+          <strong>Live</strong>
+          <span>Rendu de la carte</span>
+        </article>
+        <article>
+          <strong>VIP</strong>
+          <span>Soumissions sans limite</span>
+        </article>
+      </div>
     </section>
 
-    <section class="preview-wrap">
-      <article class="afc-card rank-D" id="afcCard">
-        <div class="holo"></div>
-        <div class="rank-aura" aria-hidden="true"></div>
-        <header class="card-header">
-          <div class="meta-left">
-            <span id="cardCost">2</span>
+    <main class="layout layout--create">
+      <section class="panel glass editor-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Atelier</p>
+            <h2>Composer une nouvelle carte</h2>
           </div>
-          <div class="identity">
-            <p class="kicker" id="cardTypeTop">équilibré</p>
-            <h3 id="cardName">Fémi-Mars</h3>
-            <p id="cardTitle">Responsable staff</p>
-          </div>
-          <div class="meta-right">
-            <span id="cardRank">C</span>
-            <small id="cardAverage">32</small>
-          </div>
-        </header>
-
-        <div class="portrait-shell">
-          <div class="portrait" id="portrait"></div>
+          <p class="subtitle">Définis l’identité, ajoute les capacités, prépare la capture et déclenche la soumission en un seul écran.</p>
         </div>
 
-        <section class="skills">
-          <h4>Capacités</h4>
-          <p id="cardAbilities"></p>
-        </section>
+        <form id="cardForm" class="editor-form">
+          <div class="form-grid form-grid--two">
+            <label>Nom
+              <input id="name" type="text" maxlength="24" value="Fémi-Mars" required />
+            </label>
 
-        <footer class="stats">
-          <div>
-            <strong aria-label="Attaque">
-              <svg class="stat-icon stat-icon--attack" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <path d="M13.91 2.91a1 1 0 0 1 1.41 0l5.77 5.77a1 1 0 0 1 0 1.41l-1.83 1.83a1 1 0 0 1-1.41 0l-.76-.76-2.12 2.12 2.12 2.12.76-.76a1 1 0 0 1 1.41 0l1.83 1.83a1 1 0 0 1 0 1.41l-1.41 1.41a1 1 0 0 1-1.41 0l-1.83-1.83a1 1 0 0 1 0-1.41l.76-.76-2.12-2.12-2.12 2.12.76.76a1 1 0 0 1 0 1.41l-1.83 1.83a1 1 0 0 1-1.41 0L7.5 18.09a1 1 0 0 1 0-1.41l1.83-1.83a1 1 0 0 1 1.41 0l.76.76 2.12-2.12-2.12-2.12-.76.76a1 1 0 0 1-1.41 0L7.5 10.09a1 1 0 0 1 0-1.41l1.41-1.41a1 1 0 0 1 1.41 0l1.83 1.83a1 1 0 0 1 0 1.41l-.76.76 2.12 2.12 2.12-2.12-.76-.76a1 1 0 0 1 0-1.41l1.83-1.83z"/>
-                <path d="M4.21 3.79a1 1 0 0 1 1.41 0l3.17 3.17-1.41 1.41L5.62 6.62l-1.41 1.41 1.76 1.75-1.41 1.41L2.79 9.44a1 1 0 0 1 0-1.41l1.42-1.42L2.79 5.2a1 1 0 0 1 0-1.41l1.42-1.42z"/>
-              </svg>
-            </strong>
-            <span id="attack">0</span>
+            <label>Rôle
+              <select id="title" required>
+                <option>Responsable staff</option>
+                <option>Gardien de l'AFC</option>
+                <option>Streamers</option>
+                <option>Viewers</option>
+              </select>
+            </label>
           </div>
-          <div>
-            <strong aria-label="Défense">
-              <svg class="stat-icon stat-icon--defense" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <path d="M12 2.2 5 5.3v6.03c0 4.43 2.99 8.57 7 9.67 4.01-1.1 7-5.24 7-9.67V5.3L12 2.2zm0 2.19 5 2.22v4.72c0 3.31-2.11 6.53-5 7.58-2.89-1.05-5-4.27-5-7.58V6.61l5-2.22z"/>
-              </svg>
-            </strong>
-            <span id="defense">0</span>
-          </div>
-        </footer>
 
-        <span class="edition-chip" id="cardEdition">2e édition</span>
-      </article>
-    </section>
-  </main>
+          <div class="form-grid form-grid--two">
+            <label>Édition
+              <input id="edition" type="text" value="2e édition" readonly />
+            </label>
+
+            <label>Photo (JPG / JPEG / PNG / WEBP)
+              <input id="imageInput" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
+            </label>
+          </div>
+
+          <label>Capacités
+            <textarea id="abilities" rows="5" required></textarea>
+          </label>
+
+          <div class="actions actions--spread">
+            <button type="button" id="rollStats">Générer attaque / défense</button>
+            <button type="button" id="submitCard">Envoyer en vérification</button>
+            <button type="button" id="downloadCard" class="ghost">Télécharger la carte</button>
+          </div>
+
+          <section class="verification-box" id="verificationBox">
+            <div class="section-head-inline">
+              <div>
+                <p class="eyebrow">Validation</p>
+                <h3>Suivi de vérification</h3>
+              </div>
+              <span class="section-pill">Temps réel</span>
+            </div>
+            <p id="verificationStatusText">Connecte-toi pour suivre ta capture en validation.</p>
+            <p id="renderEngineStatus" class="render-engine-status">Moteur export: initialisation...</p>
+          </section>
+        </form>
+      </section>
+
+      <section class="preview-column">
+        <article class="panel glass preview-panel">
+          <div class="panel-heading panel-heading--compact">
+            <div>
+              <p class="eyebrow">Preview</p>
+              <h2>Carte générée en direct</h2>
+            </div>
+            <p class="subtitle">Le design s’ajuste selon les stats et le rang calculé.</p>
+          </div>
+
+          <div class="preview-wrap">
+            <article class="afc-card rank-D" id="afcCard">
+              <div class="holo"></div>
+              <div class="rank-aura" aria-hidden="true"></div>
+              <header class="card-header">
+                <div class="meta-left">
+                  <span id="cardCost">2</span>
+                </div>
+                <div class="identity">
+                  <p class="kicker" id="cardTypeTop">équilibré</p>
+                  <h3 id="cardName">Fémi-Mars</h3>
+                  <p id="cardTitle">Responsable staff</p>
+                </div>
+                <div class="meta-right">
+                  <span id="cardRank">C</span>
+                  <small id="cardAverage">32</small>
+                </div>
+              </header>
+
+              <div class="portrait-shell">
+                <div class="portrait" id="portrait"></div>
+              </div>
+
+              <section class="skills">
+                <h4>Capacités</h4>
+                <p id="cardAbilities"></p>
+              </section>
+
+              <footer class="stats">
+                <div>
+                  <strong aria-label="Attaque">
+                    <svg class="stat-icon stat-icon--attack" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                      <path d="M13.91 2.91a1 1 0 0 1 1.41 0l5.77 5.77a1 1 0 0 1 0 1.41l-1.83 1.83a1 1 0 0 1-1.41 0l-.76-.76-2.12 2.12 2.12 2.12.76-.76a1 1 0 0 1 1.41 0l1.83 1.83a1 1 0 0 1 0 1.41l-1.41 1.41a1 1 0 0 1-1.41 0l-1.83-1.83a1 1 0 0 1 0-1.41l.76-.76-2.12-2.12-2.12 2.12.76.76a1 1 0 0 1 0 1.41l-1.83 1.83a1 1 0 0 1-1.41 0L7.5 18.09a1 1 0 0 1 0-1.41l1.83-1.83a1 1 0 0 1 1.41 0l.76.76 2.12-2.12-2.12-2.12-.76.76a1 1 0 0 1-1.41 0L7.5 10.09a1 1 0 0 1 0-1.41l1.41-1.41a1 1 0 0 1 1.41 0l1.83 1.83a1 1 0 0 1 0 1.41l-.76.76 2.12 2.12 2.12-2.12-.76-.76a1 1 0 0 1 0-1.41l1.83-1.83z"/>
+                      <path d="M4.21 3.79a1 1 0 0 1 1.41 0l3.17 3.17-1.41 1.41L5.62 6.62l-1.41 1.41 1.76 1.75-1.41 1.41L2.79 9.44a1 1 0 0 1 0-1.41l1.42-1.42L2.79 5.2a1 1 0 0 1 0-1.41l1.42-1.42z"/>
+                    </svg>
+                  </strong>
+                  <span id="attack">0</span>
+                </div>
+                <div>
+                  <strong aria-label="Défense">
+                    <svg class="stat-icon stat-icon--defense" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                      <path d="M12 2.2 5 5.3v6.03c0 4.43 2.99 8.57 7 9.67 4.01-1.1 7-5.24 7-9.67V5.3L12 2.2zm0 2.19 5 2.22v4.72c0 3.31-2.11 6.53-5 7.58-2.89-1.05-5-4.27-5-7.58V6.61l5-2.22z"/>
+                    </svg>
+                  </strong>
+                  <span id="defense">0</span>
+                </div>
+              </footer>
+
+              <span class="edition-chip" id="cardEdition">2e édition</span>
+            </article>
+          </div>
+        </article>
+
+        <aside class="insight-grid">
+          <article class="glass insight-card">
+            <p class="eyebrow">Conseil</p>
+            <h3>Soigne les capacités</h3>
+            <p>Privilégie des effets lisibles, courts et immédiatement compréhensibles par la modération.</p>
+          </article>
+          <article class="glass insight-card">
+            <p class="eyebrow">Rythme</p>
+            <h3>Prépare avant l’envoi</h3>
+            <p>Vérifie le pseudo sur ton profil puis exporte la carte pour valider le rendu final avant soumission.</p>
+          </article>
+        </aside>
+      </section>
+    </main>
+  </div>
 
   <script type="module" src="assets/js/create.js"></script>
 </body>
