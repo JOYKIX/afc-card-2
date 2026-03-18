@@ -1,4 +1,20 @@
-import { checkVip, db, equalTo, get, onValue, orderByChild, push, query, ref, set } from './firebase.js';
+import {
+  DEFAULT_STAT_REROLLS,
+  checkAdmin,
+  checkVip,
+  db,
+  equalTo,
+  get,
+  normalizeRemainingStatRerolls,
+  onValue,
+  orderByChild,
+  push,
+  query,
+  ref,
+  runTransaction,
+  set,
+  update
+} from './firebase.js';
 import { initCommon } from './common.js';
 
 const fields = {
@@ -31,14 +47,23 @@ const portraitImage = document.getElementById('portraitImage');
 const verificationStatusText = document.getElementById('verificationStatusText');
 const renderEngineStatus = document.getElementById('renderEngineStatus');
 const cardElement = document.getElementById('afcCard');
+const rerollBadge = document.getElementById('rerollBadge');
+const rerollStatusText = document.getElementById('rerollStatusText');
+const manualStatsBox = document.getElementById('manualStatsBox');
+const manualAttackInput = document.getElementById('manualAttack');
+const manualDefenseInput = document.getElementById('manualDefense');
 
 const rankScale = ['D', 'C', 'B', 'A', 'S', 'SS', 'SSS'];
 const titleOptions = new Set(['Responsable staff', "Gardien de l'AFC", 'Streamers', 'Viewers']);
 const supportedImageTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
+const MIN_STAT = 30;
+const MAX_STAT = 90;
 
 let currentUser = null;
 let currentNickname = '';
 let currentUserIsVip = false;
+let currentUserIsAdmin = false;
+let remainingStatRerolls = DEFAULT_STAT_REROLLS;
 let attack = 0;
 let defense = 0;
 let portraitDataUrl = '';
@@ -58,6 +83,7 @@ const getRank = (average) => {
 
 const getCost = (rank) => rankScale.indexOf(rank) + 1;
 const computeType = () => (attack > defense ? 'attaquant' : defense > attack ? 'défenseur' : 'équilibré');
+const hasUnlimitedStatAccess = () => currentUserIsVip || currentUserIsAdmin;
 
 const normalizeText = (value = '') => value.trim().replace(/\s+/g, ' ');
 const sanitizeFilename = (value = '') => normalizeText(value).toLowerCase().replace(/[^a-z0-9-_]+/gi, '-').replace(/^-+|-+$/g, '') || 'afc-card';
@@ -73,11 +99,54 @@ const formatCardNumber = (value) => {
   const cardNumber = normalizeCardNumber(value);
   return cardNumber ? `#${cardNumber}` : 'non attribué';
 };
+const clampStat = (value) => {
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isInteger(parsed)) return MIN_STAT;
+  return Math.min(MAX_STAT, Math.max(MIN_STAT, parsed));
+};
 
 const setRenderStatus = (message, isError = false) => {
   if (!renderEngineStatus) return;
   renderEngineStatus.textContent = message;
   renderEngineStatus.dataset.state = isError ? 'error' : 'ready';
+};
+
+const syncManualStatInputs = () => {
+  if (manualAttackInput) manualAttackInput.value = String(attack);
+  if (manualDefenseInput) manualDefenseInput.value = String(defense);
+};
+
+const updateRerollUi = () => {
+  const unlimited = hasUnlimitedStatAccess();
+
+  if (rerollBadge) {
+    rerollBadge.textContent = unlimited ? 'Rerolls infinis' : `${remainingStatRerolls}/${DEFAULT_STAT_REROLLS} rerolls`;
+  }
+
+  if (rerollStatusText) {
+    if (!currentUser) {
+      rerollStatusText.textContent = 'Connecte-toi pour voir ton nombre de rerolls restants.';
+    } else if (unlimited) {
+      rerollStatusText.textContent = 'Compte VIP/Admin : rerolls illimités et modification manuelle des stats activée.';
+    } else {
+      rerollStatusText.textContent = `Il te reste ${remainingStatRerolls} reroll${remainingStatRerolls > 1 ? 's' : ''} sauvegardé${remainingStatRerolls > 1 ? 's' : ''} en base.`;
+    }
+  }
+
+  if (rollStatsBtn) {
+    rollStatsBtn.disabled = Boolean(currentUser && !unlimited && remainingStatRerolls <= 0);
+  }
+
+  if (manualStatsBox) {
+    manualStatsBox.hidden = !unlimited;
+  }
+};
+
+const setStats = ({ attackValue, defenseValue, syncInputs = true } = {}) => {
+  attack = clampStat(attackValue);
+  defense = clampStat(defenseValue);
+  if (syncInputs) syncManualStatInputs();
+  render();
 };
 
 const toFriendlySubmissionError = (error) => {
@@ -122,15 +191,68 @@ const render = () => {
   output.defense.textContent = defense;
 };
 
-const rollStats = () => {
-  attack = Math.floor(Math.random() * 61) + 30;
-  defense = Math.floor(Math.random() * 61) + 30;
-  render();
+const randomizeStats = () => ({
+  attackValue: Math.floor(Math.random() * (MAX_STAT - MIN_STAT + 1)) + MIN_STAT,
+  defenseValue: Math.floor(Math.random() * (MAX_STAT - MIN_STAT + 1)) + MIN_STAT
+});
+
+const ensureProfileRerollCount = async (uid) => {
+  const profileRef = ref(db, `profiles/${uid}`);
+  const profileSnapshot = await get(profileRef);
+  const profileData = profileSnapshot.exists() ? profileSnapshot.val() || {} : {};
+  const normalized = normalizeRemainingStatRerolls(profileData.remainingStatRerolls);
+
+  remainingStatRerolls = normalized;
+
+  if (!profileSnapshot.exists() || profileData.remainingStatRerolls !== normalized) {
+    await update(profileRef, {
+      remainingStatRerolls: normalized,
+      updatedAt: Date.now()
+    });
+  }
+
+  updateRerollUi();
+};
+
+const consumeStoredReroll = async () => {
+  if (!currentUser || hasUnlimitedStatAccess()) return true;
+
+  const rerollRef = ref(db, `profiles/${currentUser.uid}/remainingStatRerolls`);
+  const result = await runTransaction(rerollRef, (currentValue) => {
+    const normalized = normalizeRemainingStatRerolls(currentValue);
+    if (normalized <= 0) return;
+    return normalized - 1;
+  });
+
+  if (!result.committed) return false;
+
+  remainingStatRerolls = normalizeRemainingStatRerolls(result.snapshot.val());
+  updateRerollUi();
+  return true;
+};
+
+const rollStats = async ({ consumeReroll = true } = {}) => {
+  if (consumeReroll && !hasUnlimitedStatAccess()) {
+    const hasReroll = await consumeStoredReroll();
+    if (!hasReroll) {
+      remainingStatRerolls = 0;
+      updateRerollUi();
+      alert('Tu n’as plus de rerolls disponibles. Si ta carte est refusée en vérification, ton compteur remontera à 3.');
+      return false;
+    }
+  }
+
+  setStats(randomizeStats());
+  return true;
 };
 
 const refreshProfile = async (uid) => {
   const profileSnapshot = await get(ref(db, `profiles/${uid}`));
   currentNickname = profileSnapshot.exists() ? normalizeText(profileSnapshot.val().nickname || '') : '';
+  remainingStatRerolls = profileSnapshot.exists()
+    ? normalizeRemainingStatRerolls(profileSnapshot.val().remainingStatRerolls)
+    : DEFAULT_STAT_REROLLS;
+  updateRerollUi();
 };
 
 const getCardRecordSummary = (record) => {
@@ -366,7 +488,27 @@ const buildCardPayload = async () => {
 };
 
 form.addEventListener('input', render);
-rollStatsBtn.addEventListener('click', rollStats);
+rollStatsBtn.addEventListener('click', async () => {
+  await rollStats();
+});
+
+manualAttackInput?.addEventListener('input', () => {
+  if (!hasUnlimitedStatAccess()) return;
+  setStats({
+    attackValue: manualAttackInput.value,
+    defenseValue: manualDefenseInput?.value ?? defense,
+    syncInputs: false
+  });
+});
+
+manualDefenseInput?.addEventListener('input', () => {
+  if (!hasUnlimitedStatAccess()) return;
+  setStats({
+    attackValue: manualAttackInput?.value ?? attack,
+    defenseValue: manualDefenseInput.value,
+    syncInputs: false
+  });
+});
 
 imageInput.addEventListener('change', (event) => {
   const file = event.target.files?.[0];
@@ -469,17 +611,24 @@ await initCommon({
     if (!user) {
       currentNickname = '';
       currentUserIsVip = false;
+      currentUserIsAdmin = false;
+      remainingStatRerolls = DEFAULT_STAT_REROLLS;
       verificationStatusText.textContent = 'Connecte-toi pour voir le statut de ta carte.';
       if (verificationUnsubscribe) {
         verificationUnsubscribe();
         verificationUnsubscribe = null;
       }
+      updateRerollUi();
       return;
     }
 
     await refreshProfile(user.uid);
     watchVerificationStatus(user.uid);
+    currentUserIsAdmin = await checkAdmin(user.uid, user.email || '');
     currentUserIsVip = await checkVip(user.uid, user.email || '');
+    await ensureProfileRerollCount(user.uid);
+    syncManualStatInputs();
+    updateRerollUi();
   }
 });
 
@@ -487,5 +636,5 @@ fields.abilities.value = `Cri du Raptor : Baisse la défense adverse de 10 point
 
 Stream Ban : Met hors combat la carte adverse. Peut être utilisé deux fois.`;
 setRenderStatus('Moteur export : SVG natif prêt.', false);
-rollStats();
+await rollStats({ consumeReroll: false });
 render();

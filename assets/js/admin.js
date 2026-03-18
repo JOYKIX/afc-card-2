@@ -1,4 +1,4 @@
-import { checkAdmin, db, onValue, push, ref, remove, runTransaction, set } from './firebase.js';
+import { DEFAULT_STAT_REROLLS, checkAdmin, db, onValue, push, ref, remove, runTransaction, set, update } from './firebase.js';
 import { initCommon } from './common.js';
 
 const adminNotice = document.getElementById('adminNotice');
@@ -207,6 +207,15 @@ const moveApprovedCardToCollection = async (current, now) => {
   await remove(ref(db, `cardVerification/${current.verificationId}`));
 };
 
+const resetOwnerRerollsOnRejection = async (ownerUid) => {
+  if (!ownerUid) return;
+
+  await update(ref(db, `profiles/${ownerUid}`), {
+    remainingStatRerolls: DEFAULT_STAT_REROLLS,
+    updatedAt: Date.now()
+  });
+};
+
 const moderateCurrentCard = async (status) => {
   const current = pendingQueue[0];
   if (!current || !currentUser || moderationInFlight) return;
@@ -220,6 +229,7 @@ const moderateCurrentCard = async (status) => {
     if (status === 'approved') {
       await moveApprovedCardToCollection(current, now);
     } else {
+      await resetOwnerRerollsOnRejection(current.entry.ownerUid || current.card.ownerUid);
       await remove(ref(db, `cardVerification/${current.verificationId}`));
       deletedRejectedCount += 1;
       refreshStats();

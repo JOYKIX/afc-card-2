@@ -107,6 +107,25 @@
             <textarea id="abilities" rows="5" required></textarea>
           </label>
 
+          <section class="stat-controls glass-soft" id="statControls">
+            <div class="section-head-inline">
+              <div>
+                <p class="eyebrow">Stats</p>
+                <h3>Attaque & défense</h3>
+              </div>
+              <span class="section-pill" id="rerollBadge">3 rerolls</span>
+            </div>
+            <p class="subtitle" id="rerollStatusText">Connecte-toi pour voir ton nombre de rerolls restants.</p>
+            <div class="form-grid form-grid--two" id="manualStatsBox" hidden>
+              <label>Attaque manuelle
+                <input id="manualAttack" type="number" min="30" max="90" step="1" value="30" />
+              </label>
+              <label>Défense manuelle
+                <input id="manualDefense" type="number" min="30" max="90" step="1" value="30" />
+              </label>
+            </div>
+          </section>
+
           <div class="actions actions--spread">
             <button type="button" id="rollStats">Générer attaque / défense</button>
             <button type="button" id="submitCard">Envoyer en vérification</button>
