@@ -157,10 +157,9 @@
               </header>
 
               <div class="portrait-shell">
-                <div class="portrait-overlay" aria-hidden="true">
-                  <span class="portrait-overlay__tag">Illustration</span>
+                <div class="portrait" id="portrait">
+                  <img class="portrait-image" id="portraitImage" alt="" hidden />
                 </div>
-                <div class="portrait" id="portrait"></div>
               </div>
 
               <section class="card-body">
@@ -174,14 +173,12 @@
                     <strong aria-label="Attaque">
                       <img class="stat-icon stat-icon--attack" src="assets/images/swords.svg" alt="" />
                     </strong>
-                    <span class="stat-label">Attaque</span>
                     <span id="attack">0</span>
                   </div>
                   <div class="stat-card stat-card--defense">
                     <strong aria-label="Défense">
                       <img class="stat-icon stat-icon--defense" src="assets/images/shield.svg" alt="" />
                     </strong>
-                    <span class="stat-label">Défense</span>
                     <span id="defense">0</span>
                   </div>
                 </footer>

@@ -27,6 +27,7 @@ const submitCardBtn = document.getElementById('submitCard');
 const downloadCardBtn = document.getElementById('downloadCard');
 const imageInput = document.getElementById('imageInput');
 const portrait = document.getElementById('portrait');
+const portraitImage = document.getElementById('portraitImage');
 const verificationStatusText = document.getElementById('verificationStatusText');
 const renderEngineStatus = document.getElementById('renderEngineStatus');
 const cardElement = document.getElementById('afcCard');
@@ -367,6 +368,10 @@ imageInput.addEventListener('change', (event) => {
     event.target.value = '';
     portraitDataUrl = '';
     portrait.style.backgroundImage = '';
+    if (portraitImage) {
+      portraitImage.src = '';
+      portraitImage.hidden = true;
+    }
     return;
   }
 
@@ -374,6 +379,10 @@ imageInput.addEventListener('change', (event) => {
   reader.onload = (readerEvent) => {
     portraitDataUrl = readerEvent.target?.result || '';
     portrait.style.backgroundImage = portraitDataUrl ? `url('${portraitDataUrl}')` : '';
+    if (portraitImage) {
+      portraitImage.src = portraitDataUrl || '';
+      portraitImage.hidden = !portraitDataUrl;
+    }
   };
   reader.readAsDataURL(file);
 });

@@ -819,7 +819,7 @@ button.danger {
   position: relative;
   overflow: hidden;
   display: grid;
-  grid-template-rows: auto minmax(0, 1.12fr) minmax(0, 0.88fr);
+  grid-template-rows: auto minmax(0, 1fr) minmax(0, 0.9fr);
   gap: 0.9rem;
   box-shadow:
     0 38px 78px rgba(0, 0, 0, 0.58),
@@ -934,21 +934,11 @@ button.danger {
     linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 18%),
     rgba(8, 4, 15, 0.42);
   padding: 0.62rem;
-  min-height: 290px;
+  min-height: 252px;
   z-index: 1;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
-.portrait-overlay {
-  position: absolute;
-  inset: 0.95rem 0.95rem auto 0.95rem;
-  display: flex;
-  justify-content: flex-end;
-  pointer-events: none;
-  z-index: 2;
-}
-
-.portrait-overlay__tag,
 .section-label {
   display: inline-flex;
   align-items: center;
@@ -975,7 +965,17 @@ button.danger {
     linear-gradient(145deg, rgba(255, 255, 255, 0.06), transparent 34%),
     linear-gradient(140deg, var(--portrait-grad-1), var(--portrait-grad-2));
   background-position: center;
-  background-size: cover;
+  background-size: contain;
+  background-repeat: no-repeat;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.portrait-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
   display: block;
 }
 
@@ -1046,14 +1046,6 @@ button.danger {
   height: 1.25rem;
   display: block;
   object-fit: contain;
-}
-
-.stat-label {
-  font-size: 0.72rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  font-weight: 800;
-  color: rgba(255, 240, 246, 0.78);
 }
 
 .stat-card span:last-child {
