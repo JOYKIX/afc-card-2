@@ -1,12 +1,11 @@
 {
-  "SSS" : 0.1,
-  "SPlus": 1,
+  "Ω" : 0.1,
   "S": 5,
   "A": 15,
   "B": 30,
   "C": 45,
   "cards": [
-    {"id": 0, "rarity": "SPlus"},
+    {"id": 0, "rarity": "S"},
     {"id": 1, "rarity": "A"},
     {"id": 2, "rarity": "A"},
     {"id": 3, "rarity": "A"},
@@ -23,14 +22,14 @@
     {"id": 14, "rarity": "D"},
     {"id": 15, "rarity": "A"},
     {"id": 16, "rarity": "D"},
-    {"id": 17, "rarity": "SPlus"},
+    {"id": 17, "rarity": "S"},
     {"id": 18, "rarity": "A"},
     {"id": 19, "rarity": "A"},
     {"id": 20, "rarity": "B"},
     {"id": 21, "rarity": "B"},
     {"id": 22, "rarity": "A"},
     {"id": 23, "rarity": "A"},
-	{"id": 24, "rarity": "S+"},
+	{"id": 24, "rarity": "S"},
     {"id": 25, "rarity": "C"},
     {"id": 26, "rarity": "D"},
     {"id": 27, "rarity": "B"},
@@ -55,6 +54,6 @@
     {"id": 46, "rarity": "B"},
     {"id": 47, "rarity": "B"},
     {"id": 48, "rarity": "A"},
-    {"id": 49, "rarity": "SSS"},
+    {"id": 49, "rarity": "Ω"}
   ]
 }

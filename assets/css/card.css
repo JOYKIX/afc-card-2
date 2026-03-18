@@ -525,30 +525,18 @@
   --portrait-grad-2: rgba(34, 6, 6, 0.94);
 }
 
-.rank-SS {
-  --card-grad-1: #d97706;
-  --card-grad-2: #451a03;
-  --card-grad-3: #241102;
-  --edge: #fcd34d;
-  --glow: rgba(252, 211, 77, 0.52);
-  --shine: rgba(253, 230, 138, 0.32);
-  --portrait-grad-1: rgba(251, 191, 36, 0.44);
-  --portrait-grad-2: rgba(36, 17, 2, 0.94);
+.rank-Ω {
+  --card-grad-1: #facc15;
+  --card-grad-2: #713f12;
+  --card-grad-3: #26140a;
+  --edge: #fef08a;
+  --glow: rgba(250, 204, 21, 0.58);
+  --shine: rgba(254, 249, 195, 0.36);
+  --portrait-grad-1: rgba(250, 204, 21, 0.46);
+  --portrait-grad-2: rgba(38, 20, 10, 0.94);
 }
 
-.rank-SSS {
-  --card-grad-1: #14b8a6;
-  --card-grad-2: #042f2e;
-  --card-grad-3: #02201e;
-  --edge: #99f6e4;
-  --glow: rgba(153, 246, 228, 0.56);
-  --shine: rgba(204, 251, 241, 0.34);
-  --portrait-grad-1: rgba(45, 212, 191, 0.44);
-  --portrait-grad-2: rgba(2, 32, 30, 0.94);
-}
-
-.rank-SSS .holo,
-.rank-SS .holo,
+.rank-Ω .holo,
 .rank-S .holo {
   opacity: 0.9;
 }

@@ -53,11 +53,11 @@ const manualStatsBox = document.getElementById('manualStatsBox');
 const manualAttackInput = document.getElementById('manualAttack');
 const manualDefenseInput = document.getElementById('manualDefense');
 
-const rankScale = ['D', 'C', 'B', 'A', 'S', 'SS', 'SSS'];
+const rankScale = ['D', 'C', 'B', 'A', 'S', 'Ω'];
 const titleOptions = new Set(['Responsable staff', "Gardien de l'AFC", 'Streamers', 'Viewers']);
 const supportedImageTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const MIN_STAT = 30;
-const MAX_STAT = 90;
+const MAX_STAT = 100;
 
 let currentUser = null;
 let currentNickname = '';
@@ -69,11 +69,10 @@ let defense = 0;
 let portraitDataUrl = '';
 let verificationUnsubscribe = null;
 
-const getAverage = () => Math.round((attack + defense) / 2);
+const getAverage = () => (attack + defense) / 2;
 
 const getRank = (average) => {
-  if (average >= 90) return 'SSS';
-  if (average >= 80) return 'SS';
+  if (average === 100) return 'Ω';
   if (average >= 70) return 'S';
   if (average >= 60) return 'A';
   if (average >= 50) return 'B';
@@ -89,6 +88,7 @@ const normalizeText = (value = '') => value.trim().replace(/\s+/g, ' ');
 const sanitizeFilename = (value = '') => normalizeText(value).toLowerCase().replace(/[^a-z0-9-_]+/gi, '-').replace(/^-+|-+$/g, '') || 'afc-card';
 const normalizeRank = (value = '') => {
   const upper = String(value || '').trim().toUpperCase();
+  if (upper === 'SS' || upper === 'SSS') return 'S';
   return rankScale.includes(upper) ? upper : 'D';
 };
 const normalizeCardNumber = (value) => {
@@ -183,7 +183,7 @@ const render = () => {
   output.edition.textContent = fields.edition.value;
   output.name.textContent = fields.name.value;
   output.title.textContent = fields.title.value;
-  output.average.textContent = average;
+  output.average.textContent = Number.isInteger(average) ? String(average) : average.toFixed(1);
   output.abilities.textContent = fields.abilities.value;
   output.rank.textContent = rank;
   output.topType.textContent = computeType();
