@@ -7,6 +7,7 @@ const boosterGrid = document.getElementById('boosterGrid');
 
 const rankScale = ['D', 'C', 'B', 'A', 'S', 'SS', 'SSS'];
 
+const escapeHtml = (value = '') => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[char]);
 const normalizeRarity = (card) => {
   const rarity = (card?.rarity || card?.rank || 'D').toString().toUpperCase();
   return rankScale.includes(rarity) ? rarity : 'D';
@@ -58,27 +59,26 @@ const pickUniqueCards = (cards, count = 5) => {
 const cardTemplate = (card, index) => {
   const rank = normalizeRarity(card);
   const cardImage = card.cardImage || card.image || '';
-  const safeName = (card.name || 'AFC').replace(/"/g, '&quot;');
   const imageMarkup = cardImage
-    ? `<img src="${cardImage}" alt="Carte ${safeName}" loading="lazy">`
+    ? `<img src="${escapeHtml(cardImage)}" alt="Carte ${escapeHtml(card.name || 'AFC')}" loading="lazy">`
     : '<div class="booster-placeholder">Aucune image</div>';
 
   return `
-    <article class="afc-card rank-${rank}" style="animation-delay:${index * 90}ms">
+    <article class="afc-card rank-${escapeHtml(rank)}" style="animation-delay:${index * 90}ms">
       <div class="holo"></div>
       <header class="card-header">
         <div class="meta-left">
-          <span>${card.cost ?? '-'}</span>
-          <small>${card.edition || '2e édition'}</small>
+          <span>${escapeHtml(card.cost ?? '-')}</span>
+          <small>${escapeHtml(card.edition || '2e édition')}</small>
         </div>
         <div class="identity">
-          <p class="kicker">${card.type || 'équilibré'}</p>
-          <h3>${card.name || 'Carte AFC'}</h3>
-          <p>${card.role || 'Inconnue'}</p>
+          <p class="kicker">${escapeHtml(card.type || 'équilibré')}</p>
+          <h3>${escapeHtml(card.name || 'Carte AFC')}</h3>
+          <p>${escapeHtml(card.role || 'Inconnue')}</p>
         </div>
         <div class="meta-right">
-          <span>${rank}</span>
-          <small>${card.average ?? '-'}</small>
+          <span>${escapeHtml(rank)}</span>
+          <small>${escapeHtml(card.average ?? '-')}</small>
         </div>
       </header>
 
@@ -88,21 +88,21 @@ const cardTemplate = (card, index) => {
 
       <section class="skills">
         <h4>Capacités</h4>
-        <p>${card.abilities || '-'}</p>
+        <p>${escapeHtml(card.abilities || '-')}</p>
       </section>
 
       <footer class="stats">
         <div>
           <strong><span class="material-symbols-outlined" aria-hidden="true">swords</span></strong>
-          <span>${card.attack ?? '-'}</span>
+          <span>${escapeHtml(card.attack ?? '-')}</span>
         </div>
         <div>
           <strong><span class="material-symbols-outlined" aria-hidden="true">shield</span></strong>
-          <span>${card.defense ?? '-'}</span>
+          <span>${escapeHtml(card.defense ?? '-')}</span>
         </div>
       </footer>
 
-      <span class="serial">${card.serial || 'AFC-EN-ATTENTE'}</span>
+      <span class="serial">${escapeHtml(card.serial || 'AFC-EN-ATTENTE')}</span>
     </article>
   `;
 };
@@ -115,9 +115,7 @@ const fetchApprovedCards = async () => {
   const approvedQuery = query(ref(db, 'cards'), orderByChild('status'), equalTo('approved'));
   const snapshot = await get(approvedQuery);
 
-  if (snapshot.exists()) {
-    return Object.values(snapshot.val());
-  }
+  if (snapshot.exists()) return Object.values(snapshot.val());
 
   const allCardsSnapshot = await get(ref(db, 'cards'));
   if (!allCardsSnapshot.exists()) return [];
@@ -142,7 +140,6 @@ const openBooster = async () => {
     }
 
     const picks = pickUniqueCards(cards, 5);
-
     renderBooster(picks);
     boosterHint.textContent = `Booster ouvert : ${picks.length} carte(s) tirée(s).`;
   } catch (error) {

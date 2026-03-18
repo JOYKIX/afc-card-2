@@ -1,4 +1,4 @@
-import { checkAdmin, db, onValue, push, ref, remove, set, update } from './firebase.js';
+import { checkAdmin, db, onValue, push, ref, set, update } from './firebase.js';
 import { initCommon } from './common.js';
 
 const adminNotice = document.getElementById('adminNotice');
@@ -19,10 +19,12 @@ let cardsById = {};
 let verificationById = {};
 let pendingQueue = [];
 let unsubs = [];
+let moderationInFlight = false;
 
 const escapeHtml = (value = '') => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[char]);
 const normalizeEmail = (email = '') => email.trim().toLowerCase();
 const emailToKey = (email = '') => normalizeEmail(email).replaceAll('.', ',');
+const sortByRecency = (entries = []) => [...entries].sort((a, b) => (b.entry.updatedAt || b.entry.submittedAt || 0) - (a.entry.updatedAt || a.entry.submittedAt || 0));
 
 const setRoleFeedback = (message, isError = false) => {
   if (!roleFeedback) return;
@@ -31,22 +33,20 @@ const setRoleFeedback = (message, isError = false) => {
 };
 
 const refreshStats = () => {
-  const stats = {
-    pending: Object.values(verificationById).filter((entry) => entry.status === 'pending').length,
-    approved: Object.values(cardsById).length,
-    rejected: Object.values(verificationById).filter((entry) => entry.status === 'rejected').length
-  };
+  const verificationEntries = Object.values(verificationById);
+  const approvedCards = Object.values(cardsById).filter((card) => (card.status || 'approved') === 'approved');
 
-  countPending.textContent = String(stats.pending);
-  countApproved.textContent = String(stats.approved);
-  countRejected.textContent = String(stats.rejected);
+  countPending.textContent = String(verificationEntries.filter((entry) => entry.status === 'pending').length);
+  countApproved.textContent = String(approvedCards.length);
+  countRejected.textContent = String(verificationEntries.filter((entry) => entry.status === 'rejected').length);
 };
 
 const buildPendingQueue = () => {
-  pendingQueue = Object.entries(verificationById)
-    .map(([verificationId, entry]) => ({ verificationId, entry, card: entry.cardSnapshot || {} }))
-    .filter(({ entry }) => entry.status === 'pending')
-    .sort((a, b) => (a.entry.submittedAt || 0) - (b.entry.submittedAt || 0));
+  pendingQueue = sortByRecency(
+    Object.entries(verificationById)
+      .map(([verificationId, entry]) => ({ verificationId, entry, card: entry.cardSnapshot || {} }))
+      .filter(({ entry }) => entry.status === 'pending')
+  );
 };
 
 const renderTinderCard = () => {
@@ -69,11 +69,11 @@ const renderTinderCard = () => {
       <div class="tinder-body">
         <h3>${escapeHtml(card.name || 'Carte')} · ${escapeHtml(card.role || '-')}</h3>
         <p>Par ${escapeHtml(entry.ownerNickname || '-')}</p>
-        <p>Rang ${escapeHtml(card.rank || '-')} · Format JPEG vérification</p>
+        <p>Rang ${escapeHtml(card.rank || '-')} · ${escapeHtml(card.average ?? '-')} de moyenne</p>
       </div>
       <div class="actions tinder-actions">
-        <button type="button" data-moderation="approved">Valider</button>
-        <button type="button" class="danger" data-moderation="rejected">Refuser</button>
+        <button type="button" data-moderation="approved" ${moderationInFlight ? 'disabled' : ''}>Valider</button>
+        <button type="button" class="danger" data-moderation="rejected" ${moderationInFlight ? 'disabled' : ''}>Refuser</button>
       </div>
     </article>
   `;
@@ -89,14 +89,15 @@ const renderVerificationSection = () => {
   const statusValue = statusFilter?.value || 'all';
   const queryText = (searchInput?.value || '').trim().toLowerCase();
 
-  const merged = Object.entries(verificationById)
-    .map(([verificationId, entry]) => ({ verificationId, entry, card: entry.cardSnapshot || {} }))
-    .sort((a, b) => (b.entry.updatedAt || 0) - (a.entry.updatedAt || 0));
+  const merged = sortByRecency(
+    Object.entries(verificationById).map(([verificationId, entry]) => ({ verificationId, entry, card: entry.cardSnapshot || {} }))
+  );
 
   const filtered = merged.filter(({ entry, card }) => {
     if (statusValue !== 'all' && entry.status !== statusValue) return false;
     if (!queryText) return true;
-    const haystack = `${entry.ownerNickname || ''} ${card.name || ''} ${card.role || ''}`.toLowerCase();
+
+    const haystack = `${entry.ownerNickname || ''} ${card.name || ''} ${card.role || ''} ${card.rank || ''}`.toLowerCase();
     return haystack.includes(queryText);
   });
 
@@ -110,9 +111,9 @@ const renderVerificationSection = () => {
     const item = document.createElement('article');
     item.className = 'pending-item';
     item.innerHTML = `
-      <h3>${escapeHtml(card.name || entry.cardSnapshot?.name || 'Carte')} · ${escapeHtml(card.role || entry.cardSnapshot?.role || '-')}</h3>
+      <h3>${escapeHtml(card.name || 'Carte')} · ${escapeHtml(card.role || '-')}</h3>
       <p>Par ${escapeHtml(entry.ownerNickname || card.ownerNickname || '-')} — Statut <strong>${escapeHtml(entry.status || 'pending')}</strong></p>
-      <p>Rang ${escapeHtml(card.rank || entry.cardSnapshot?.rank || '-')} · Snapshot JPEG</p>
+      <p>Rang ${escapeHtml(card.rank || '-')} · Attaque ${escapeHtml(card.attack ?? '-')} · Défense ${escapeHtml(card.defense ?? '-')}</p>
     `;
     verificationCards.appendChild(item);
   });
@@ -120,7 +121,10 @@ const renderVerificationSection = () => {
 
 const moderateCurrentCard = async (status) => {
   const current = pendingQueue[0];
-  if (!current || !currentUser) return;
+  if (!current || !currentUser || moderationInFlight) return;
+
+  moderationInFlight = true;
+  renderTinderCard();
 
   const now = Date.now();
 
@@ -133,30 +137,32 @@ const moderateCurrentCard = async (status) => {
     });
 
     if (status === 'approved') {
-      const cardRef = push(ref(db, 'cards'));
-      await set(cardRef, {
+      const approvedCardRef = push(ref(db, 'cards'));
+      await set(approvedCardRef, {
         ...current.card,
         ownerUid: current.entry.ownerUid,
         ownerNickname: current.entry.ownerNickname,
         status: 'approved',
         rarity: current.card.rarity || current.card.rank || 'D',
         cardImage: current.card.cardImage || '',
-        createdAt: current.entry.submittedAt || now,
+        portraitImage: current.card.portraitImage || current.card.image || '',
+        createdAt: current.entry.submittedAt || current.card.createdAt || now,
         moderatedBy: currentUser.uid,
         moderatedAt: now,
         updatedAt: now
       });
     }
-
-    await remove(ref(db, `cardVerification/${current.verificationId}`));
   } catch (error) {
-    console.error('Erreur de modération:', error);
+    console.error('Erreur de modération :', error);
     alert('Impossible de modérer cette carte pour le moment. Réessaie.');
+  } finally {
+    moderationInFlight = false;
+    renderTinderCard();
   }
 };
 
 const clearRealtime = () => {
-  unsubs.forEach((fn) => fn());
+  unsubs.forEach((unsubscribe) => unsubscribe());
   unsubs = [];
 };
 
@@ -165,6 +171,7 @@ const resetAdminScreen = () => {
   cardsById = {};
   verificationById = {};
   pendingQueue = [];
+  moderationInFlight = false;
   refreshStats();
   tinderReview.innerHTML = '';
   verificationCards.innerHTML = '';
@@ -177,8 +184,6 @@ const bindRealtime = () => {
     onValue(ref(db, 'cards'), (snapshot) => {
       cardsById = snapshot.exists() ? snapshot.val() : {};
       refreshStats();
-      buildPendingQueue();
-      renderTinderCard();
       renderVerificationSection();
     })
   );
@@ -211,15 +216,13 @@ roleForm?.addEventListener('submit', async (event) => {
   }
 
   const rolePath = selectedRole === 'admin' ? 'adminRegistry' : 'vipRegistry';
-  const emailKey = emailToKey(email);
 
   try {
-    await set(ref(db, `${rolePath}/${emailKey}`), true);
-
+    await set(ref(db, `${rolePath}/${emailToKey(email)}`), true);
     setRoleFeedback(`Accès ${selectedRole.toUpperCase()} ajouté pour ${email}.`);
     roleForm.reset();
   } catch (error) {
-    console.error('Erreur ajout rôle:', error);
+    console.error('Erreur ajout rôle :', error);
     setRoleFeedback('Impossible d’ajouter cet accès pour le moment.', true);
   }
 });
