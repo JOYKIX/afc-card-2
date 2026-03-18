@@ -1,14 +1,15 @@
 import {
-  DEFAULT_STAT_REROLLS,
   db,
-  equalTo,
+  escapeHtml,
+  formatCardNumber,
   get,
+  nicknameToKey,
+  normalizeCardNumber,
+  normalizeNickname,
+  normalizeRank,
   normalizeRemainingStatRerolls,
   normalizeRoles,
   onValue,
-  orderByChild,
-  push,
-  query,
   ref,
   remove,
   runTransaction,
@@ -32,8 +33,8 @@ const roleNickname = document.getElementById('roleNickname');
 const roleFeedback = document.getElementById('roleFeedback');
 const roleCheckboxes = Array.from(document.querySelectorAll('input[name="roleOption"]'));
 
-const rankScale = ['D', 'C', 'B', 'A', 'S', 'Ω'];
 const assignableRoles = ['vip', 'streamers', 'staff afc', 'creator', 'admin', 'african king'];
+const sortByRecency = (entries = []) => [...entries].sort((a, b) => (b.entry?.updatedAt || b.entry?.submittedAt || b.entry?.createdAt || 0) - (a.entry?.updatedAt || a.entry?.submittedAt || a.entry?.createdAt || 0));
 const cardNumberCounterRef = ref(db, 'metadata/cardNumberCounter');
 
 let currentUser = null;
@@ -44,27 +45,10 @@ let unsubs = [];
 let moderationInFlight = false;
 let deletedRejectedCount = 0;
 
-const escapeHtml = (value = '') => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[char]);
-const normalizeNickname = (nickname = '') => String(nickname).trim().replace(/\s+/g, ' ');
-const nicknameToKey = (nickname = '') => normalizeNickname(nickname).toLowerCase();
-const normalizeRank = (value = '') => {
-  const upper = String(value || '').trim().toUpperCase();
-  if (upper === 'SS' || upper === 'SSS') return 'S';
-  return rankScale.includes(upper) ? upper : 'D';
-};
-const normalizeCardNumber = (value) => {
-  const parsed = Number.parseInt(value, 10);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
-};
-const formatCardNumber = (value) => {
-  const cardNumber = normalizeCardNumber(value);
-  return cardNumber ? `#${cardNumber}` : 'Non attribué';
-};
 const getHighestAssignedCardNumber = (records = {}) => Object.values(records).reduce((max, record) => {
   const cardNumber = normalizeCardNumber(record?.cardNumber ?? record?.cardId);
   return cardNumber ? Math.max(max, cardNumber) : max;
 }, 0);
-const sortByRecency = (entries = []) => [...entries].sort((a, b) => (b.entry.updatedAt || b.entry.submittedAt || b.entry.createdAt || 0) - (a.entry.updatedAt || a.entry.submittedAt || a.entry.createdAt || 0));
 
 const normalizeCardRecord = (record = {}) => ({
   ...record,

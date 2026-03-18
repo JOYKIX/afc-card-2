@@ -10,8 +10,12 @@ import {
   getProfileRoles,
   getRerollDisplayValueForRoles,
   hasUnlimitedStatAccessForRoles,
+  normalizeCardNumber,
   normalizeCardTitle,
+  normalizeRank,
   normalizeRemainingStatRerolls,
+  normalizeText,
+  rankScale,
   onValue,
   orderByChild,
   push,
@@ -61,7 +65,6 @@ const manualStatsBox = document.getElementById('manualStatsBox');
 const manualAttackInput = document.getElementById('manualAttack');
 const manualDefenseInput = document.getElementById('manualDefense');
 
-const rankScale = ['D', 'C', 'B', 'A', 'S', 'Ω'];
 const titleOptions = new Set(CARD_TITLES);
 const supportedImageTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const MIN_STAT = 1;
@@ -95,7 +98,6 @@ const getCost = (rank) => rankScale.indexOf(rank) + 1;
 const computeType = () => (attack > defense ? 'attaquant' : defense > attack ? 'défenseur' : 'équilibré');
 const hasUnlimitedStatAccess = () => hasUnlimitedStatAccessForRoles(currentUserRoles);
 
-const normalizeText = (value = '') => value.trim().replace(/\s+/g, ' ');
 const saveDraft = () => {
   try {
     window.localStorage.setItem(CARD_DRAFT_STORAGE_KEY, JSON.stringify({
@@ -147,15 +149,6 @@ const restoreDraft = () => {
   }
 };
 const sanitizeFilename = (value = '') => normalizeText(value).toLowerCase().replace(/[^a-z0-9-_]+/gi, '-').replace(/^-+|-+$/g, '') || 'afc-card';
-const normalizeRank = (value = '') => {
-  const upper = String(value || '').trim().toUpperCase();
-  if (upper === 'SS' || upper === 'SSS') return 'S';
-  return rankScale.includes(upper) ? upper : 'D';
-};
-const normalizeCardNumber = (value) => {
-  const parsed = Number.parseInt(value, 10);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
-};
 const formatCardNumber = (value) => {
   const cardNumber = normalizeCardNumber(value);
   return cardNumber ? `#${cardNumber}` : 'non attribué';
