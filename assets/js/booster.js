@@ -1,11 +1,10 @@
-import { db, get, ref } from './firebase.js';
+import { db, escapeHtml, formatCardNumber, get, normalizeCardNumber, normalizeRank, ref } from './firebase.js';
 import { initCommon } from './common.js';
 
 const openBoosterBtn = document.getElementById('openBooster');
 const boosterHint = document.getElementById('boosterHint');
 const boosterGrid = document.getElementById('boosterGrid');
 
-const rankScale = ['D', 'C', 'B', 'A', 'S', 'Ω'];
 const rarityWeights = {
   D: 24,
   C: 16,
@@ -15,20 +14,6 @@ const rarityWeights = {
   Ω: 0.75
 };
 
-const escapeHtml = (value = '') => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[char]);
-const normalizeRank = (value = '') => {
-  const upper = String(value || '').trim().toUpperCase();
-  if (upper === 'SS' || upper === 'SSS') return 'S';
-  return rankScale.includes(upper) ? upper : 'D';
-};
-const normalizeCardNumber = (value) => {
-  const parsed = Number.parseInt(value, 10);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
-};
-const formatCardNumber = (value) => {
-  const cardNumber = normalizeCardNumber(value);
-  return cardNumber ? `#${cardNumber}` : 'Sans numéro';
-};
 
 const normalizeCardRecord = ([id, record]) => ({
   id,
@@ -64,7 +49,7 @@ const renderBooster = (cards) => {
       </div>
       <div class="booster-capture__meta">
         <strong>#${index + 1} · ${escapeHtml(card.creatorName)}</strong>
-        <small>Carte ${escapeHtml(formatCardNumber(card.cardNumber))} · capture validée</small>
+        <small>Carte ${escapeHtml(formatCardNumber(card.cardNumber, 'Sans numéro'))} · capture validée</small>
       </div>
       <div class="booster-capture__rank">${escapeHtml(card.rank)}</div>
     `;
