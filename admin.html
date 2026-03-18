@@ -41,11 +41,11 @@
         <p class="kicker">Administration</p>
         <h2>Gère la validation des cartes depuis la console admin.</h2>
         <p>
-          Pilote la file de validation, gère les accès et consulte l’historique des soumissions depuis une seule console.
+          Pilote la file de validation, ajuste les rôles depuis les profils et consulte l’historique des soumissions.
         </p>
         <div class="hero-chips">
           <span>Vue prioritaire</span>
-          <span>Gestion des accès</span>
+          <span>Rôles via profils</span>
           <span>Historique filtrable</span>
         </div>
       </div>
@@ -80,7 +80,7 @@
           </article>
           <article>
             <strong id="countRejected">0</strong>
-            <span>Supprimées (session)</span>
+            <span>Refusées</span>
           </article>
         </div>
 
@@ -105,7 +105,7 @@
                 </div>
                 <span class="section-pill">Admin / VIP</span>
               </div>
-              <p class="subtitle">Ajoute un compte admin ou VIP via son nickname pour attribuer les bons accès.</p>
+              <p class="subtitle">Cherche un profil par nickname pour activer le bon rôle directement dessus.</p>
               <form id="roleForm" class="role-form">
                 <label>Nickname
                   <input id="roleNickname" type="text" placeholder="Pseudo AFC" required />
@@ -116,7 +116,7 @@
                     <option value="vip">VIP</option>
                   </select>
                 </label>
-                <button id="roleSubmit" type="submit">Ajouter l'accès</button>
+                <button id="roleSubmit" type="submit">Mettre à jour le rôle</button>
               </form>
               <p id="roleFeedback" class="hint" aria-live="polite"></p>
             </section>

@@ -7,7 +7,7 @@ Refonte complète en **multi-pages** pour améliorer la prise en main :
 - `admin.html` + `assets/js/admin.js` : modération des cartes en attente.
 - `booster.html` + `assets/js/booster.js` : ouverture d’un booster de 5 cartes depuis `cards` avec pondération par rareté.
 - `assets/js/common.js` : logique partagée d'interface/auth.
-- `assets/js/firebase.js` : intégration Firebase centralisée (Auth + Realtime DB).
+- `assets/js/firebase.js` : intégration auth/base centralisée et synchronisation des profils.
 - `assets/css/style.css` : design global, navigation et composants.
 
 ## Système de grade
@@ -26,19 +26,20 @@ Refonte complète en **multi-pages** pour améliorer la prise en main :
 - Si une carte est refusée côté admin, le compteur du créateur est automatiquement remis à `3`.
 - Les comptes VIP et Admin disposent de rerolls infinis et peuvent saisir manuellement l’attaque et la défense.
 
-## Connexion Google (Firebase Auth)
+## Connexion Google
 
-La connexion utilise Firebase Auth avec :
+La connexion utilise Google avec :
 
-- persistance locale (`browserLocalPersistence`)
+- persistance de session (`browserLocalPersistence`)
 - tentative popup (`signInWithPopup`)
 - fallback automatique en redirect (`signInWithRedirect`) si popup bloquée
 
-## Registre admin (Realtime Database)
+## Rôles via profils
 
-- Les admins peuvent être déclarés par UID via `admins/{uid}: true`.
-- Un registre par email est aussi utilisé via `adminRegistry/{email_normalisé}: true` (le point `.` est remplacé par `,`).
-- Par défaut, `afc.cardgame@gmail.com` est automatiquement inscrit comme admin.
+- Les droits sont désormais portés directement par `profiles/{uid}`.
+- Le booléen `admin` ouvre l’accès à la console admin.
+- Le booléen `vip` débloque les avantages VIP sur la création de cartes.
+- La console admin retrouve un profil par `nicknameKey` puis met à jour ces deux champs sur le profil concerné.
 
 
 ### Domaine GitHub Pages (important)

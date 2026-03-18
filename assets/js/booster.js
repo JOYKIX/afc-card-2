@@ -64,7 +64,7 @@ const renderBooster = (cards) => {
       </div>
       <div class="booster-capture__meta">
         <strong>#${index + 1} · ${escapeHtml(card.creatorName)}</strong>
-        <small>Carte ${escapeHtml(formatCardNumber(card.cardNumber))} · capture récupérée depuis la base Firebase</small>
+        <small>Carte ${escapeHtml(formatCardNumber(card.cardNumber))} · capture validée</small>
       </div>
       <div class="booster-capture__rank">${escapeHtml(card.rank)}</div>
     `;
@@ -108,13 +108,13 @@ const loadApprovedCards = async () => {
 
 const openBooster = async () => {
   openBoosterBtn.disabled = true;
-  setHint('Ouverture du booster… récupération des captures dans Firebase.');
+  setHint('Ouverture du booster… préparation des captures validées.');
 
   try {
     const cards = await loadApprovedCards();
 
     if (cards.length === 0) {
-      renderPlaceholder('Aucune capture validée disponible dans la base.');
+      renderPlaceholder('Aucune capture validée disponible pour le moment.');
       setHint('Ajoute ou valide au moins une carte pour ouvrir un booster.', true);
       return;
     }
@@ -124,15 +124,15 @@ const openBooster = async () => {
 
     const uniqueCards = new Set(pulls.map((card) => card.uniqueId)).size;
     if (cards.length === 1) {
-      setHint('Une seule carte existe dans la base : le booster affiche donc 5 fois la même capture.');
+      setHint('Une seule carte est disponible : le booster affiche donc 5 fois la même capture.');
       return;
     }
 
-    setHint(`${pulls.length} cartes tirées aléatoirement depuis la base, avec un drop pondéré par la rareté (${uniqueCards} carte(s) distincte(s)). L’ordre de référence suit désormais le numéro de carte.`);
+    setHint(`${pulls.length} cartes tirées aléatoirement, avec un drop pondéré par la rareté (${uniqueCards} carte(s) distincte(s)).`);
   } catch (error) {
     console.error('Erreur lors de l’ouverture du booster :', error);
     renderPlaceholder('Impossible de charger les captures pour le moment.');
-    setHint('Erreur Firebase pendant l’ouverture du booster. Réessaie dans quelques secondes.', true);
+    setHint('Impossible d’ouvrir le booster pour le moment. Réessaie dans quelques secondes.', true);
   } finally {
     openBoosterBtn.disabled = false;
   }

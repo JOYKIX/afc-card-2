@@ -126,8 +126,8 @@ const initCommon = async ({ onUserChanged, requireAuth = false } = {}) => {
 
     const profile = await syncProfileOnLogin(user);
     const nickname = normalizeNickname(profile?.nickname || '');
-    const isAdmin = await checkAdmin(user.uid, nickname, user.email || '');
-    const isVip = await checkVip(user.uid, nickname, user.email || '');
+    const isAdmin = await checkAdmin(user.uid);
+    const isVip = await checkVip(user.uid);
     const session = {
       uid: user.uid,
       email: (user.email || '').trim().toLowerCase(),
