@@ -10,6 +10,13 @@ Refonte complète en **multi-pages** pour améliorer la prise en main :
 - `assets/js/firebase.js` : intégration Firebase centralisée (Auth + Realtime DB).
 - `assets/css/style.css` : design global, navigation et composants.
 
+## Rerolls de stats
+
+- Chaque profil conserve désormais `profiles/{uid}/remainingStatRerolls` en base, avec un plafond de `3`.
+- Un reroll consommé sur la page de création décrémente ce compteur pour les comptes standards.
+- Si une carte est refusée côté admin, le compteur du créateur est automatiquement remis à `3`.
+- Les comptes VIP et Admin disposent de rerolls infinis et peuvent saisir manuellement l’attaque et la défense.
+
 ## Connexion Google (Firebase Auth)
 
 La connexion utilise Firebase Auth avec :

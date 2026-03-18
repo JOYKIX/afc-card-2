@@ -575,13 +575,20 @@ button.danger {
 .tinder-card,
 .role-manager,
 .admin-tips,
-.status-banner {
+.status-banner,
+.stat-controls {
   border: 1px solid var(--line);
   background: rgba(16, 8, 24, 0.64);
 }
 
-.verification-box {
+.verification-box,
+.stat-controls {
   padding: 1rem;
+}
+
+.stat-controls {
+  display: grid;
+  gap: 0.8rem;
 }
 
 .status-banner {

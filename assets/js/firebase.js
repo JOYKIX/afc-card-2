@@ -38,6 +38,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
+const DEFAULT_STAT_REROLLS = 3;
 
 const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ prompt: 'select_account' });
@@ -97,6 +98,11 @@ const consumeRedirect = async () => {
 
 const normalizeEmail = (email = '') => email.trim().toLowerCase();
 const emailToKey = (email = '') => normalizeEmail(email).replaceAll('.', ',');
+const normalizeRemainingStatRerolls = (value) => {
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isInteger(parsed) || parsed < 0) return DEFAULT_STAT_REROLLS;
+  return Math.min(parsed, DEFAULT_STAT_REROLLS);
+};
 
 const ensureDefaultAdminRegistry = async () => {
   const defaultAdminEmail = 'afc.cardgame@gmail.com';
@@ -150,6 +156,7 @@ const syncProfileOnLogin = async (user) => {
       email,
       admin: isAdmin,
       vip: isVip,
+      remainingStatRerolls: DEFAULT_STAT_REROLLS,
       createdAt: timestamp,
       updatedAt: timestamp,
       lastLoginAt: timestamp
@@ -157,16 +164,19 @@ const syncProfileOnLogin = async (user) => {
     return;
   }
 
+  const profileData = profileSnapshot.val() || {};
   await update(profileRef, {
     email,
     admin: isAdmin,
     vip: isVip,
+    remainingStatRerolls: normalizeRemainingStatRerolls(profileData.remainingStatRerolls),
     updatedAt: timestamp,
     lastLoginAt: timestamp
   });
 };
 
 export {
+  DEFAULT_STAT_REROLLS,
   auth,
   checkAdmin,
   checkVip,
@@ -182,6 +192,7 @@ export {
   query,
   ref,
   remove,
+  normalizeRemainingStatRerolls,
   runTransaction,
   set,
   syncProfileOnLogin,
