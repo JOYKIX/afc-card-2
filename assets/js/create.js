@@ -312,6 +312,19 @@ const exportCardAsJpeg = async () => {
 };
 
 
+const exportCardAsJpeg = async () => {
+  try {
+    renderEngine = 'html2canvas';
+    return await renderCardJpeg();
+  } catch (primaryError) {
+    console.warn('Export html2canvas échoué, fallback SVG activé:', primaryError);
+    renderEngine = 'svg-foreignobject';
+    setRenderStatus('Moteur export fallback actif (qualité réduite).', true);
+    return renderCardJpeg();
+  }
+};
+
+
 form.addEventListener('input', render);
 rollStatsBtn.addEventListener('click', rollStats);
 
