@@ -54,31 +54,17 @@ Refonte complète en **multi-pages** pour améliorer la prise en main :
 
 La connexion utilise Google avec :
 
-- persistance locale si disponible, sinon fallback automatique en session ou mémoire
+- session par onglet, avec fallback automatique en mémoire si le navigateur la bloque
 - tentative popup (`signInWithPopup`)
 - fallback automatique en redirect (`signInWithRedirect`) si popup bloquée
-- messages d’erreur plus précis pour les cas `file://`, cookies/localStorage bloqués, domaine non autorisé ou coupure réseau
-
-### Important : ne pas ouvrir les fichiers en `file://`
-
-Ouvrir `index.html` directement depuis l’explorateur peut casser l’auth Google dans certains navigateurs. Utilise toujours un serveur HTTP local ou le site déployé.
+- messages d’erreur plus précis pour les cas domaine non autorisé, cookies/session bloqués ou coupure réseau
 
 ### Domaine GitHub Pages (important)
 
-Si le site est publié sur `*.github.io`, ajoute **exactement** ton domaine (ex: `joykix.github.io`) dans:
+Le site doit être utilisé depuis **`https://joykix.github.io`** et ce domaine doit être ajouté dans :
 
 `Firebase Console > Authentication > Settings > Domaines autorisés`
 
 Sinon Firebase renvoie l'erreur `auth/unauthorized-domain` au clic sur **Connexion Google**.
 
-## Lancer en local
-
-```bash
-python3 -m http.server 4173
-```
-
-Puis ouvre :
-
-- `http://localhost:4173/index.html`
-- `http://localhost:4173/profile.html`
-- `http://localhost:4173/admin.html`
+La version locale n’est plus prévue pour l’authentification Google : ouvre directement le site déployé sur `https://joykix.github.io`.

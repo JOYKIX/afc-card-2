@@ -1,6 +1,5 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js';
 import {
-  browserLocalPersistence,
   browserSessionPersistence,
   getAuth,
   getRedirectResult,
@@ -29,7 +28,7 @@ import {
 
 const firebaseConfig = {
   apiKey: 'AIzaSyD6fflHphjbeMI6dqNG817sk2K_b3ORAGQ',
-  authDomain: 'afc-cardgame.firebaseapp.com',
+  authDomain: 'joykix.github.io',
   databaseURL: 'https://afc-cardgame-default-rtdb.europe-west1.firebasedatabase.app',
   projectId: 'afc-cardgame',
   storageBucket: 'afc-cardgame.firebasestorage.app',
@@ -38,6 +37,7 @@ const firebaseConfig = {
 };
 
 const AUTH_CACHE_KEY = 'afc-auth-cache-v3';
+const DEPLOYED_AUTH_DOMAIN = 'joykix.github.io';
 const DEFAULT_STAT_REROLLS = 3;
 const EXTENDED_STAT_REROLLS = 10;
 const DEFAULT_ROLE = 'african army';
@@ -145,7 +145,7 @@ const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ prompt: 'select_account' });
 
 const authRuntimeState = {
-  persistence: 'local',
+  persistence: 'session',
   level: 'info',
   notice: ''
 };
@@ -157,11 +157,6 @@ const getCurrentOrigin = () => {
 
 const configureAuthPersistence = async () => {
   const persistenceOptions = [
-    {
-      mode: 'local',
-      label: 'session persistante sur cet appareil',
-      persistence: browserLocalPersistence
-    },
     {
       mode: 'session',
       label: 'session limitée à cet onglet',
@@ -178,10 +173,10 @@ const configureAuthPersistence = async () => {
     try {
       await setPersistence(auth, option.persistence);
       authRuntimeState.persistence = option.mode;
-      authRuntimeState.level = option.mode === 'local' ? 'info' : 'warning';
-      authRuntimeState.notice = option.mode === 'local'
+      authRuntimeState.level = option.mode === 'session' ? 'info' : 'warning';
+      authRuntimeState.notice = option.mode === 'session'
         ? ''
-        : `Le navigateur limite le stockage local : ${option.label}.`;
+        : `Le navigateur limite la session Firebase : ${option.label}.`;
       return;
     } catch (error) {
       console.warn(`Persistence auth indisponible (${option.mode}) :`, error);
@@ -338,7 +333,7 @@ const toFriendlyAuthError = (error) => {
     const domain = getCurrentDomain();
     const origin = getCurrentOrigin();
     return new Error(
-      `Domaine non autorisé (${domain}) pour l’origine ${origin}. Ajoute ce domaine dans Firebase Console > Authentication > Settings > Domaines autorisés, puis réessaie.`
+      `Domaine non autorisé (${domain}) pour l’origine ${origin}. Autorise ${DEPLOYED_AUTH_DOMAIN} dans Firebase Console > Authentication > Settings > Domaines autorisés, puis réessaie depuis https://${DEPLOYED_AUTH_DOMAIN}.`
     );
   }
 
@@ -358,8 +353,13 @@ const toFriendlyAuthError = (error) => {
 };
 
 const performGoogleSignIn = async () => {
-  if (typeof window !== 'undefined' && window.location?.protocol === 'file:') {
-    throw new Error('La connexion Google ne fonctionne pas en ouvrant les fichiers directement. Lance un serveur HTTP local (ex: python3 -m http.server 4173) puis ouvre le site via http://localhost:4173.');
+  if (typeof window !== 'undefined') {
+    const hostname = window.location?.hostname || '';
+    const protocol = window.location?.protocol || '';
+
+    if (protocol === 'file:' || hostname !== DEPLOYED_AUTH_DOMAIN) {
+      throw new Error(`La connexion Google est disponible uniquement sur https://${DEPLOYED_AUTH_DOMAIN}. Ouvre le site sur ce domaine puis réessaie.`);
+    }
   }
 
   try {
