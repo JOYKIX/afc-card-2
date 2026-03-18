@@ -13,25 +13,23 @@
   <div class="bg-orb orb-b"></div>
 
   <div class="app-shell app-shell--dashboard app-shell--login-shell">
-    <aside class="app-sidebar glass app-sidebar--login">
-      <div class="sidebar-stack">
-        <div class="brand-wrap brand-wrap--sidebar">
-          <div>
-            <p class="kicker">AFC Universe</p>
-            <h1>Connexion</h1>
-          </div>
+    <header class="topbar topbar--dashboard glass">
+      <div class="brand-wrap topbar__brand">
+        <div>
+          <p class="kicker">AFC Universe</p>
+          <h1>Connexion</h1>
         </div>
-
-        <section class="auth-actions auth-actions--sidebar glass-soft">
-          <p class="eyebrow">Session</p>
-          <span id="authStatus">Non connecté</span>
-          <div class="auth-actions__buttons">
-            <button id="googleLogin" type="button">Connexion Google</button>
-            <button id="logout" type="button" class="ghost">Déconnexion</button>
-          </div>
-        </section>
       </div>
-    </aside>
+
+      <section class="auth-actions auth-actions--topbar glass-soft">
+        <p class="eyebrow">Session</p>
+        <span id="authStatus">Non connecté</span>
+        <div class="auth-actions__buttons auth-actions__buttons--inline">
+          <button id="googleLogin" type="button">Connexion Google</button>
+          <button id="logout" type="button" class="ghost">Déconnexion</button>
+        </div>
+      </section>
+    </header>
 
     <div class="app-workspace app-workspace--login">
 
