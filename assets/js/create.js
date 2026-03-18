@@ -18,7 +18,6 @@ const output = {
   rank: document.getElementById('cardRank'),
   attack: document.getElementById('attack'),
   defense: document.getElementById('defense'),
-  serial: document.getElementById('cardSerial'),
   topType: document.getElementById('cardTypeTop')
 };
 
@@ -41,8 +40,7 @@ let defense = 0;
 let portraitDataUrl = '';
 let verificationUnsubscribe = null;
 let currentUserIsVip = false;
-let renderEngine = 'unavailable';
-let html2canvasReady = null;
+const cardElement = document.getElementById('afcCard');
 
 const getAverage = () => Math.round((attack + defense) / 2);
 const getRank = (average) => {
@@ -84,24 +82,6 @@ const toFriendlySubmissionError = (error) => {
 };
 
 
-const formatCardNumber = (count, createdAt) => {
-  const date = new Date(createdAt);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const serial = String(count).padStart(4, '0');
-  return `AFC-${year}${month}${day}-${serial}`;
-};
-
-const getNextCardNumber = async () => {
-  const cardsSnapshot = await get(ref(db, 'cards'));
-  const verificationSnapshot = await get(ref(db, 'cardVerification'));
-
-  const approvedCount = cardsSnapshot.exists() ? Object.keys(cardsSnapshot.val()).length : 0;
-  const pendingCount = verificationSnapshot.exists() ? Object.keys(verificationSnapshot.val()).length : 0;
-
-  return approvedCount + pendingCount + 1;
-};
 
 const applyRankTheme = (rank) => {
   const card = document.getElementById('afcCard');
@@ -227,53 +207,108 @@ const canSubmitCard = async (uid, isVip) => {
   return !pendingVerification;
 };
 
-const renderCardJpeg = async () => {
-  if (renderEngine === 'svg-foreignobject') {
-    const card = document.getElementById('afcCard');
-    const bounds = card.getBoundingClientRect();
-    const width = Math.max(1, Math.round(bounds.width));
-    const height = Math.max(1, Math.round(bounds.height));
-    const clone = card.cloneNode(true);
-
-    clone.style.margin = '0';
-    clone.style.transform = 'none';
-
-    const xhtml = new XMLSerializer().serializeToString(clone);
-    const svg = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
-        <foreignObject width="100%" height="100%">
-          <div xmlns="http://www.w3.org/1999/xhtml">${xhtml}</div>
-        </foreignObject>
-      </svg>`;
-
-    const dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-
-    const img = await new Promise((resolve, reject) => {
-      const picture = new Image();
-      picture.onload = () => resolve(picture);
-      picture.onerror = () => reject(new Error('fallback-serializer-failed'));
-      picture.src = dataUrl;
-    });
-
-    const canvas = document.createElement('canvas');
-    canvas.width = width * 2;
-    canvas.height = height * 2;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      throw new Error('canvas-context-unavailable');
-    }
-    ctx.scale(2, 2);
-    ctx.drawImage(img, 0, 0, width, height);
-    return canvas.toDataURL('image/jpeg', 0.94);
+const ensureExportableCanvas = (canvas) => {
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  if (!ctx) {
+    throw new Error('canvas-context-unavailable');
   }
 
-  if (!window.html2canvas) {
-    throw new Error('html2canvas non chargé.');
+  const points = [
+    [Math.floor(canvas.width * 0.5), Math.floor(canvas.height * 0.5)],
+    [Math.floor(canvas.width * 0.2), Math.floor(canvas.height * 0.2)],
+    [Math.floor(canvas.width * 0.8), Math.floor(canvas.height * 0.8)]
+  ];
+
+  const luminance = points.map(([x, y]) => {
+    const pixel = ctx.getImageData(x, y, 1, 1).data;
+    return (pixel[0] + pixel[1] + pixel[2]) / 3;
+  });
+
+  const average = luminance.reduce((sum, value) => sum + value, 0) / luminance.length;
+  if (average < 3) {
+    throw new Error('black-export-detected');
+  }
+};
+
+const inlineComputedStyles = (sourceRoot, cloneRoot) => {
+  const sourceNodes = [sourceRoot, ...sourceRoot.querySelectorAll('*')];
+  const cloneNodes = [cloneRoot, ...cloneRoot.querySelectorAll('*')];
+
+  sourceNodes.forEach((sourceNode, index) => {
+    const cloneNode = cloneNodes[index];
+    if (!cloneNode || cloneNode.nodeType !== Node.ELEMENT_NODE) return;
+
+    const computed = window.getComputedStyle(sourceNode);
+    const styleText = Array.from(computed)
+      .map((property) => `${property}:${computed.getPropertyValue(property)};`)
+      .join('');
+
+    cloneNode.setAttribute('style', styleText);
+  });
+};
+
+const renderCardJpeg = async ({ simplified = false } = {}) => {
+  const bounds = cardElement.getBoundingClientRect();
+  const width = Math.max(1, Math.round(bounds.width));
+  const height = Math.max(1, Math.round(bounds.height));
+
+  const exportClone = cardElement.cloneNode(true);
+  exportClone.classList.add('is-exporting');
+  if (simplified) {
+    exportClone.classList.add('is-exporting-lite');
   }
 
-  const card = document.getElementById('afcCard');
-  const canvas = await window.html2canvas(card, { backgroundColor: null, scale: 2, useCORS: true });
+  inlineComputedStyles(cardElement, exportClone);
+  exportClone.style.margin = '0';
+  exportClone.style.transform = 'none';
+  exportClone.style.width = `${width}px`;
+  exportClone.style.height = `${height}px`;
+
+  const serialized = new XMLSerializer().serializeToString(exportClone);
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+      <rect width="100%" height="100%" fill="#0f1733"></rect>
+      <foreignObject width="100%" height="100%">
+        <div xmlns="http://www.w3.org/1999/xhtml">${serialized}</div>
+      </foreignObject>
+    </svg>`;
+
+  const dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+  const image = await new Promise((resolve, reject) => {
+    const picture = new Image();
+    picture.onload = () => resolve(picture);
+    picture.onerror = () => reject(new Error('svg-render-failed'));
+    picture.src = dataUrl;
+  });
+
+  const canvas = document.createElement('canvas');
+  canvas.width = width * 2;
+  canvas.height = height * 2;
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    throw new Error('canvas-context-unavailable');
+  }
+
+  ctx.fillStyle = '#0f1733';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.scale(2, 2);
+  ctx.drawImage(image, 0, 0, width, height);
+
+  ensureExportableCanvas(canvas);
   return canvas.toDataURL('image/jpeg', 0.94);
+};
+
+const exportCardAsJpeg = async () => {
+  try {
+    return await renderCardJpeg();
+  } catch (error) {
+    console.warn('Export premium échoué, tentative simplifiée:', error);
+    setRenderStatus('Export premium indisponible, tentative sécurisée...', true);
+    const retry = await renderCardJpeg({ simplified: true });
+    setRenderStatus('Moteur export: SVG sécurisé actif.', false);
+    return retry;
+  }
 };
 
 
@@ -334,9 +369,7 @@ submitCardBtn.addEventListener('click', async () => {
     const rank = getRank(average);
     const cost = getCost(rank);
     const createdAt = Date.now();
-    const cardImage = await renderCardJpeg();
-    const cardNumber = await getNextCardNumber();
-    const serial = formatCardNumber(cardNumber, createdAt);
+    const cardImage = await exportCardAsJpeg();
 
     const payload = {
       ownerUid: currentUser.uid,
@@ -355,7 +388,6 @@ submitCardBtn.addEventListener('click', async () => {
       cardImage,
       createdBy: currentNickname,
       creatorName: currentNickname,
-      serial,
       status: 'pending',
       createdAt,
       updatedAt: createdAt
@@ -369,7 +401,6 @@ submitCardBtn.addEventListener('click', async () => {
       submittedAt: createdAt,
       updatedAt: createdAt,
       cardSnapshot: {
-        serial: payload.serial,
         name: payload.name,
         role: payload.role,
         rank: payload.rank,
@@ -378,8 +409,6 @@ submitCardBtn.addEventListener('click', async () => {
         creatorName: payload.creatorName
       }
     });
-
-    output.serial.textContent = serial;
 
     alert('Carte envoyée en attente de vérification admin.');
   } catch (error) {
@@ -392,7 +421,7 @@ submitCardBtn.addEventListener('click', async () => {
 
 downloadCardBtn.addEventListener('click', async () => {
   try {
-    const jpegDataUrl = await renderCardJpeg();
+    const jpegDataUrl = await exportCardAsJpeg();
     const link = document.createElement('a');
     link.download = `${fields.name.value || 'afc-card'}.jpg`;
     link.href = jpegDataUrl;
@@ -402,15 +431,6 @@ downloadCardBtn.addEventListener('click', async () => {
     alert('Export indisponible pour le moment. Recharge la page puis réessaie.');
   }
 });
-
-const script = document.createElement('script');
-script.src = 'assets/vendor/html2canvas.min.js';
-script.defer = true;
-html2canvasReady = new Promise((resolve, reject) => {
-  script.onload = resolve;
-  script.onerror = reject;
-});
-document.head.appendChild(script);
 
 await initCommon({
   onUserChanged: async (user) => {
@@ -433,20 +453,9 @@ await initCommon({
   }
 });
 
-fields.abilities.value = `Cri du Raptor : Baisse la défense adverse de 10 points.\n\nStream Ban : Met hors combat la carte adverse. Peut être utilisé deux fois.`;
-try {
-  await html2canvasReady;
-  if (typeof window.html2canvas === 'function') {
-    renderEngine = 'html2canvas';
-    setRenderStatus('Moteur export: html2canvas chargé (offline).');
-  } else {
-    renderEngine = 'svg-foreignobject';
-    setRenderStatus('Moteur export fallback actif (qualité réduite).', true);
-  }
-} catch (error) {
-  renderEngine = 'svg-foreignobject';
-  console.error('Chargement html2canvas impossible, fallback activé:', error);
-  setRenderStatus('Moteur export fallback actif (qualité réduite).', true);
-}
+fields.abilities.value = `Cri du Raptor : Baisse la défense adverse de 10 points.
+
+Stream Ban : Met hors combat la carte adverse. Peut être utilisé deux fois.`;
+setRenderStatus('Moteur export: SVG natif prêt.', false);
 rollStats();
 render();
