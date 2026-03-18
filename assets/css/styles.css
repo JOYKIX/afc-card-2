@@ -29,8 +29,8 @@
   --radius-md: 20px;
   --radius-sm: 16px;
   --content-width: 1440px;
-  --dashboard-topbar-offset: 132px;
-  --dashboard-topbar-offset-mobile: 248px;
+  --dashboard-topbar-offset: 156px;
+  --dashboard-topbar-offset-mobile: 272px;
 }
 
 * {
@@ -1197,17 +1197,15 @@ button.danger {
 .topbar--dashboard {
   position: fixed;
   top: 0;
-  left: 50%;
-  width: min(calc(100% - 2rem), 1500px);
-  transform: translateX(-50%);
+  left: 0;
+  width: 100%;
   z-index: 1000;
   display: grid;
   grid-template-columns: minmax(220px, auto) minmax(0, 1fr) minmax(280px, auto);
   align-items: center;
   gap: 1rem;
-  padding: 1rem 1.2rem;
-  margin-top: 12px;
-  border-radius: 28px;
+  padding: 1rem max(1rem, calc((100vw - 1500px) / 2 + 1.2rem));
+  border-radius: 0 0 28px 28px;
 }
 
 .topbar__brand {
@@ -1359,8 +1357,7 @@ button.danger {
   }
 
   .topbar--dashboard {
-    width: min(calc(100% - 1rem), 1500px);
-    padding: 1rem;
+    padding: 1rem max(0.75rem, calc((100vw - 1500px) / 2 + 0.75rem));
   }
 
   .site-nav {
