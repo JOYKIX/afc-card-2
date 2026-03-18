@@ -2,8 +2,8 @@
   width: 530px;
   min-width: 530px;
   aspect-ratio: 5 / 7;
-  border-radius: 38px;
-  border: 10px solid var(--edge);
+  border-radius: 30px;
+  border: 15px solid var(--edge);
   padding: 0.95rem;
   position: relative;
   overflow: hidden;
