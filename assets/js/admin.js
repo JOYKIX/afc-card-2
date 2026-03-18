@@ -1,4 +1,4 @@
-import { checkAdmin, db, onValue, push, ref, remove, set, update } from './firebase.js';
+import { checkAdmin, db, onValue, push, ref, remove, set } from './firebase.js';
 import { initCommon } from './common.js';
 
 const adminNotice = document.getElementById('adminNotice');
@@ -22,6 +22,7 @@ let verificationById = {};
 let pendingQueue = [];
 let unsubs = [];
 let moderationInFlight = false;
+let deletedRejectedCount = 0;
 
 const escapeHtml = (value = '') => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[char]);
 const normalizeEmail = (email = '') => email.trim().toLowerCase();
@@ -68,7 +69,7 @@ const refreshStats = () => {
 
   countPending.textContent = String(verificationEntries.filter((entry) => entry.status === 'pending').length);
   countApproved.textContent = String(approvedCards.length);
-  countRejected.textContent = String(verificationEntries.filter((entry) => entry.status === 'rejected').length);
+  countRejected.textContent = String(deletedRejectedCount);
 };
 
 const buildPendingQueue = () => {
@@ -186,12 +187,9 @@ const moderateCurrentCard = async (status) => {
     if (status === 'approved') {
       await moveApprovedCardToCollection(current, now);
     } else {
-      await update(ref(db, `cardVerification/${current.verificationId}`), {
-        status,
-        moderatedBy: currentUser.uid,
-        moderatedAt: now,
-        updatedAt: now
-      });
+      await remove(ref(db, `cardVerification/${current.verificationId}`));
+      deletedRejectedCount += 1;
+      refreshStats();
     }
   } catch (error) {
     console.error('Erreur de modération :', error);
@@ -213,6 +211,7 @@ const resetAdminScreen = () => {
   verificationById = {};
   pendingQueue = [];
   moderationInFlight = false;
+  deletedRejectedCount = 0;
   refreshStats();
   tinderReview.innerHTML = '';
   verificationCards.innerHTML = '';
@@ -288,7 +287,7 @@ await initCommon({
       return;
     }
 
-    adminNotice.textContent = 'Accès admin confirmé. Les cartes validées sont déplacées de cardVerification vers cards.';
+    adminNotice.textContent = 'Accès admin confirmé. Les cartes validées vont dans cards et les refus sont supprimés de cardVerification.';
     bindRealtime();
   }
 });

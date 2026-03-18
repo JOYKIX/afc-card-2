@@ -5,6 +5,7 @@ Refonte complète en **multi-pages** pour améliorer la prise en main :
 - `index.html` + `assets/js/create.js` : création de carte et preview live.
 - `profile.html` + `assets/js/profile.js` : gestion du pseudo joueur.
 - `admin.html` + `assets/js/admin.js` : modération des cartes en attente.
+- `booster.html` + `assets/js/booster.js` : ouverture d’un booster de 5 cartes depuis `cards` avec pondération par rareté.
 - `assets/js/common.js` : logique partagée d'interface/auth.
 - `assets/js/firebase.js` : intégration Firebase centralisée (Auth + Realtime DB).
 - `assets/css/style.css` : design global, navigation et composants.
