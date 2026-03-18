@@ -236,16 +236,46 @@ select {
   border: 1px solid var(--line);
 }
 
-.role-admin {
-  background: rgba(255, 217, 105, 0.2);
-  color: #fff0b6;
-  border-color: rgba(255, 217, 105, 0.5);
+.role-african-army {
+  background: rgba(78, 157, 255, 0.18);
+  color: #cfe7ff;
+  border-color: rgba(78, 157, 255, 0.42);
 }
 
 .role-vip {
-  background: rgba(139, 70, 255, 0.24);
-  color: #f1d4ff;
-  border-color: rgba(218, 173, 255, 0.4);
+  background: rgba(255, 120, 192, 0.18);
+  color: #ffd8ea;
+  border-color: rgba(255, 120, 192, 0.42);
+}
+
+.role-streamers {
+  background: rgba(165, 98, 255, 0.2);
+  color: #ecd9ff;
+  border-color: rgba(165, 98, 255, 0.42);
+}
+
+.role-staff-afc {
+  background: rgba(255, 90, 90, 0.18);
+  color: #ffd8d8;
+  border-color: rgba(255, 90, 90, 0.42);
+}
+
+.role-creator {
+  background: rgba(72, 233, 255, 0.18);
+  color: #d5fbff;
+  border-color: rgba(72, 233, 255, 0.42);
+}
+
+.role-admin {
+  background: rgba(255, 170, 72, 0.22);
+  color: #ffe3bf;
+  border-color: rgba(255, 170, 72, 0.48);
+}
+
+.role-african-king {
+  background: rgba(198, 62, 130, 0.24);
+  color: #ffd7ee;
+  border-color: rgba(198, 62, 130, 0.48);
 }
 
 .hero-panel,

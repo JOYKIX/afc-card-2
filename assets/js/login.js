@@ -1,4 +1,4 @@
-import { db, get, normalizeNickname, ref, update, updateCachedNickname } from './firebase.js';
+import { claimNickname, db, get, normalizeNickname, ref, update, updateCachedNickname } from './firebase.js';
 import { getRedirectTarget, initCommon } from './common.js';
 
 const loginState = document.getElementById('loginState');
@@ -8,6 +8,7 @@ const saveNicknameBtn = document.getElementById('saveNickname');
 const loginHint = document.getElementById('loginHint');
 
 let currentUser = null;
+let currentProfile = {};
 
 const showLoginState = (message) => {
   if (loginState) loginState.textContent = message;
@@ -36,15 +37,35 @@ saveNicknameBtn?.addEventListener('click', async () => {
 
   saveNicknameBtn.disabled = true;
   try {
-    await update(ref(db, `profiles/${currentUser.uid}`), {
+    const claim = await claimNickname({
+      uid: currentUser.uid,
       nickname,
-      nicknameKey: nickname.toLowerCase(),
+      previousNicknameKey: currentProfile.nicknameKey || ''
+    });
+
+    await update(ref(db, `profiles/${currentUser.uid}`), {
+      nickname: claim.nickname,
+      nicknameKey: claim.nicknameKey,
       updatedAt: Date.now()
     });
-    updateCachedNickname(nickname);
-    showLoginState(`Bienvenue ${nickname} ! Redirection en cours...`);
+
+    currentProfile = {
+      ...currentProfile,
+      nickname: claim.nickname,
+      nicknameKey: claim.nicknameKey
+    };
+
+    updateCachedNickname(claim.nickname);
+    showLoginState(`Bienvenue ${claim.nickname} ! Redirection en cours...`);
     showNicknameStep(false);
     window.location.href = getRedirectTarget();
+  } catch (error) {
+    if (error.message === 'nickname-already-taken') {
+      alert('Ce nickname est déjà pris, même avec une casse différente. Choisis-en un autre.');
+    } else {
+      console.error('Erreur lors de l’enregistrement du nickname :', error);
+      alert('Impossible d’enregistrer ce nickname pour le moment. Réessaie.');
+    }
   } finally {
     saveNicknameBtn.disabled = false;
   }
@@ -55,14 +76,15 @@ await initCommon({
     currentUser = user;
 
     if (!user) {
+      currentProfile = {};
       showLoginState('Connecte-toi avec Google pour accéder au site.');
       showNicknameStep(false);
       if (loginHint) loginHint.textContent = 'Ton nickname sera demandé juste après la connexion.';
       return;
     }
 
-    const profile = await loadProfile(user.uid);
-    const nickname = normalizeNickname(profile.nickname || context?.profile?.nickname || '');
+    currentProfile = await loadProfile(user.uid);
+    const nickname = normalizeNickname(currentProfile.nickname || context?.profile?.nickname || '');
 
     if (nickname) {
       showLoginState(`Bienvenue ${nickname} ! Redirection...`);
@@ -71,9 +93,9 @@ await initCommon({
       return;
     }
 
-    showLoginState('Choisis ton nickname pour terminer la connexion.');
+    showLoginState('Choisis ton nickname unique pour terminer la connexion.');
     showNicknameStep(true);
-    if (loginHint) loginHint.textContent = 'Ce nickname sera utilisé partout dans le studio.';
+    if (loginHint) loginHint.textContent = 'Ce nickname est unique, sans différence entre majuscules et minuscules.';
     nicknameInput?.focus();
   }
 });

@@ -1,4 +1,22 @@
-import { DEFAULT_STAT_REROLLS, checkAdmin, db, equalTo, get, onValue, orderByChild, push, query, ref, remove, runTransaction, set, update, updateCachedRoles } from './firebase.js';
+import {
+  DEFAULT_STAT_REROLLS,
+  db,
+  equalTo,
+  get,
+  normalizeRemainingStatRerolls,
+  normalizeRoles,
+  onValue,
+  orderByChild,
+  push,
+  query,
+  ref,
+  remove,
+  runTransaction,
+  set,
+  update,
+  updateCachedRoles,
+  canValidateCards
+} from './firebase.js';
 import { initCommon } from './common.js';
 
 const adminNotice = document.getElementById('adminNotice');
@@ -11,10 +29,11 @@ const statusFilter = document.getElementById('statusFilter');
 const searchInput = document.getElementById('searchInput');
 const roleForm = document.getElementById('roleForm');
 const roleNickname = document.getElementById('roleNickname');
-const roleType = document.getElementById('roleType');
 const roleFeedback = document.getElementById('roleFeedback');
+const roleCheckboxes = Array.from(document.querySelectorAll('input[name="roleOption"]'));
 
 const rankScale = ['D', 'C', 'B', 'A', 'S', 'Ω'];
+const assignableRoles = ['vip', 'streamers', 'staff afc', 'creator', 'admin', 'african king'];
 const cardNumberCounterRef = ref(db, 'metadata/cardNumberCounter');
 
 let currentUser = null;
@@ -77,6 +96,8 @@ const setRoleFeedback = (message, isError = false) => {
   roleFeedback.textContent = message;
   roleFeedback.style.color = isError ? '#ff9eb7' : '';
 };
+
+const getSelectedRoles = () => normalizeRoles(roleCheckboxes.filter((checkbox) => checkbox.checked).map((checkbox) => checkbox.value));
 
 const refreshStats = () => {
   const verificationEntries = Object.values(verificationById);
@@ -211,8 +232,12 @@ const moveApprovedCardToCollection = async (current, now) => {
 const resetOwnerRerollsOnRejection = async (ownerUid) => {
   if (!ownerUid) return;
 
+  const profileSnapshot = await get(ref(db, `profiles/${ownerUid}`));
+  const profileData = profileSnapshot.exists() ? profileSnapshot.val() || {} : {};
+  const nextRoles = normalizeRoles(profileData.roles, profileData);
+
   await update(ref(db, `profiles/${ownerUid}`), {
-    remainingStatRerolls: DEFAULT_STAT_REROLLS,
+    remainingStatRerolls: normalizeRemainingStatRerolls(null, nextRoles),
     updatedAt: Date.now()
   });
 };
@@ -288,6 +313,13 @@ const findProfileByNickname = async (nickname) => {
   const nicknameKey = nicknameToKey(nickname);
   if (!nicknameKey) return null;
 
+  const nicknameSnapshot = await get(ref(db, `nicknameIndex/${nicknameKey}`));
+  if (nicknameSnapshot.exists()) {
+    const uid = nicknameSnapshot.val();
+    const profileSnapshot = await get(ref(db, `profiles/${uid}`));
+    return profileSnapshot.exists() ? { uid, profile: profileSnapshot.val() || {} } : null;
+  }
+
   const profileQuery = query(ref(db, 'profiles'), orderByChild('nicknameKey'), equalTo(nicknameKey));
   const snapshot = await get(profileQuery);
   if (!snapshot.exists()) return null;
@@ -300,12 +332,13 @@ roleForm?.addEventListener('submit', async (event) => {
   event.preventDefault();
 
   if (!currentUser) {
-    setRoleFeedback('Connecte-toi avec un compte admin.', true);
+    setRoleFeedback('Connecte-toi avec un compte autorisé à valider les cartes.', true);
     return;
   }
 
   const nickname = normalizeNickname(roleNickname?.value || '');
-  const selectedRole = roleType?.value === 'vip' ? 'vip' : 'admin';
+  const selectedRoles = getSelectedRoles().filter((role) => assignableRoles.includes(role));
+  const nextRoles = normalizeRoles(selectedRoles);
 
   if (!nickname) {
     setRoleFeedback('Merci de renseigner un nickname valide.', true);
@@ -319,52 +352,48 @@ roleForm?.addEventListener('submit', async (event) => {
       return;
     }
 
-    const nextRoles = {
-      admin: selectedRole === 'admin',
-      vip: selectedRole === 'vip'
-    };
-
     await update(ref(db, `profiles/${profileEntry.uid}`), {
-      ...nextRoles,
+      roles: nextRoles,
+      admin: null,
+      vip: null,
+      remainingStatRerolls: normalizeRemainingStatRerolls(profileEntry.profile.remainingStatRerolls, nextRoles),
       updatedAt: Date.now()
     });
 
     if (profileEntry.uid === currentUser.uid) {
-      updateCachedRoles({
-        isAdmin: nextRoles.admin,
-        isVip: nextRoles.vip
-      });
+      updateCachedRoles(nextRoles);
     }
 
     roleForm.reset();
-    setRoleFeedback(`${nickname} passe en ${selectedRole.toUpperCase()}.`);
+    setRoleFeedback(`${nickname} a maintenant les rôles : ${nextRoles.join(', ')}.`);
   } catch (error) {
     console.error('Erreur attribution rôle :', error);
-    setRoleFeedback('Impossible de mettre à jour ce rôle pour le moment.', true);
+    setRoleFeedback('Impossible de mettre à jour ces rôles pour le moment.', true);
   }
 });
 
 await initCommon({
   requireAuth: true,
-  onUserChanged: async (user) => {
+  onUserChanged: async (user, context) => {
     currentUser = user;
 
     if (!user) {
       resetAdminScreen();
-      adminNotice.textContent = 'Connecte-toi avec un compte admin.';
+      adminNotice.textContent = 'Connecte-toi avec un compte autorisé à modérer.';
       return;
     }
 
-    const isAdmin = await checkAdmin(user.uid);
+    const roles = context?.session?.roles || [];
+    const canModerate = canValidateCards(roles);
 
-    if (!isAdmin) {
+    if (!canModerate) {
       resetAdminScreen();
-      adminNotice.textContent = 'Accès refusé : ce compte n’est pas admin.';
+      adminNotice.textContent = 'Accès refusé : ce compte n’a pas le droit de validation.';
       return;
     }
 
     bindRealtime();
-    adminNotice.textContent = 'Accès admin confirmé. Valide, refuse et mets à jour les rôles depuis les profils.';
+    adminNotice.textContent = 'Accès modération confirmé. Gère les validations et mets à jour les rôles depuis les profils.';
   }
 });
 
