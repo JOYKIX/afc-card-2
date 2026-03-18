@@ -371,17 +371,7 @@ button.danger {
   pointer-events: none;
   background: linear-gradient(120deg, transparent 15%, rgba(255, 255, 255, 0.17) 32%, transparent 50%);
   mix-blend-mode: screen;
-  animation: holoShift 6s linear infinite;
-}
-
-@keyframes holoShift {
-  from {
-    transform: translateX(-35%) rotate(0.001deg);
-  }
-
-  to {
-    transform: translateX(35%) rotate(0.001deg);
-  }
+  opacity: 0.72;
 }
 
 .card-header {
@@ -710,30 +700,65 @@ button.danger {
   gap: 0.8rem;
 }
 
-.booster-grid .afc-card {
-  width: 100%;
-  min-height: 420px;
-  padding: 0.75rem;
-  border-radius: 18px;
+.booster-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.9rem;
+}
+
+.booster-capture {
+  border-radius: 24px;
+  padding: 0.85rem;
+  border: 1px solid var(--line);
+  background: linear-gradient(145deg, rgba(20, 8, 30, 0.92), rgba(38, 12, 55, 0.88));
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.34), 0 0 24px var(--glow);
+  display: grid;
+  gap: 0.8rem;
   opacity: 0;
   transform: translateY(10px) scale(0.98);
   animation: revealCard 0.45s ease forwards;
 }
 
-.booster-grid .portrait {
-  min-height: 140px;
+.booster-capture__frame {
+  min-height: 280px;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(7, 4, 12, 0.84);
+  display: grid;
+  place-items: center;
 }
 
-.booster-grid .card-header {
-  grid-template-columns: 58px 1fr 58px;
+.booster-capture__frame img,
+.pending-thumb img,
+.tinder-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
-.booster-grid .stats strong {
-  font-size: 1.1rem;
+.booster-capture__meta {
+  display: grid;
+  gap: 0.18rem;
 }
 
-.booster-grid .skills h4 {
-  margin-bottom: 0.35rem;
+.booster-capture__meta strong {
+  font-size: 1rem;
+}
+
+.booster-capture__meta small {
+  color: var(--muted);
+}
+
+.booster-capture__rank {
+  width: fit-content;
+  padding: 0.22rem 0.62rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-weight: 800;
+  letter-spacing: 0.08em;
 }
 
 @keyframes revealCard {
@@ -788,4 +813,31 @@ button.danger {
     width: 42px;
     height: 42px;
   }
+}
+
+
+.pending-item--visual {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 0.9rem;
+  align-items: center;
+}
+
+.pending-thumb {
+  min-height: 160px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(8, 4, 14, 0.85);
+}
+
+.pending-thumb .booster-placeholder,
+.tinder-image .booster-placeholder,
+.booster-capture__frame .booster-placeholder {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  padding: 1rem;
+  text-align: center;
 }
