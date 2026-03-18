@@ -56,8 +56,16 @@ const manualDefenseInput = document.getElementById('manualDefense');
 const rankScale = ['D', 'C', 'B', 'A', 'S', 'Ω'];
 const titleOptions = new Set(['Responsable staff', "Gardien de l'AFC", 'Streamers', 'Viewers']);
 const supportedImageTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
-const MIN_STAT = 30;
+const MIN_STAT = 1;
 const MAX_STAT = 100;
+const RANK_RANGES = [
+  { rank: 'D', minAverage: 1, maxAverage: 19 },
+  { rank: 'C', minAverage: 20, maxAverage: 39 },
+  { rank: 'B', minAverage: 40, maxAverage: 59 },
+  { rank: 'A', minAverage: 60, maxAverage: 79 },
+  { rank: 'S', minAverage: 80, maxAverage: 99 },
+  { rank: 'Ω', minAverage: 100, maxAverage: 100 }
+];
 
 let currentUser = null;
 let currentNickname = '';
@@ -72,12 +80,8 @@ let verificationUnsubscribe = null;
 const getAverage = () => (attack + defense) / 2;
 
 const getRank = (average) => {
-  if (average === 100) return 'Ω';
-  if (average >= 70) return 'S';
-  if (average >= 60) return 'A';
-  if (average >= 50) return 'B';
-  if (average >= 40) return 'C';
-  return 'D';
+  const matchedRange = RANK_RANGES.find(({ minAverage, maxAverage }) => average >= minAverage && average <= maxAverage);
+  return matchedRange?.rank || 'D';
 };
 
 const getCost = (rank) => rankScale.indexOf(rank) + 1;
@@ -191,10 +195,43 @@ const render = () => {
   output.defense.textContent = defense;
 };
 
-const randomizeStats = () => ({
-  attackValue: Math.floor(Math.random() * (MAX_STAT - MIN_STAT + 1)) + MIN_STAT,
-  defenseValue: Math.floor(Math.random() * (MAX_STAT - MIN_STAT + 1)) + MIN_STAT
-});
+const getRandomStat = () => Math.floor(Math.random() * (MAX_STAT - MIN_STAT + 1)) + MIN_STAT;
+
+const drawTargetRank = () => {
+  const roll = Math.random();
+
+  if (roll < 0.01) return 'Ω';
+  if (roll < 0.208) return 'S';
+  if (roll < 0.406) return 'A';
+  if (roll < 0.604) return 'B';
+  if (roll < 0.802) return 'C';
+  return 'D';
+};
+
+const randomizeStats = () => {
+  const targetRank = drawTargetRank();
+  const targetRange = RANK_RANGES.find(({ rank }) => rank === targetRank) || RANK_RANGES[0];
+
+  if (targetRank === 'Ω') {
+    return { attackValue: MAX_STAT, defenseValue: MAX_STAT };
+  }
+
+  for (let attempt = 0; attempt < 500; attempt += 1) {
+    const attackValue = getRandomStat();
+    const defenseValue = getRandomStat();
+    const average = (attackValue + defenseValue) / 2;
+
+    if (average >= targetRange.minAverage && average <= targetRange.maxAverage) {
+      return { attackValue, defenseValue };
+    }
+  }
+
+  const fallbackAverage = Math.round((targetRange.minAverage + targetRange.maxAverage) / 2);
+  return {
+    attackValue: fallbackAverage,
+    defenseValue: fallbackAverage
+  };
+};
 
 const ensureProfileRerollCount = async (uid) => {
   const profileRef = ref(db, `profiles/${uid}`);

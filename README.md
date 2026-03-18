@@ -14,6 +14,9 @@ Refonte complète en **multi-pages** pour améliorer la prise en main :
 
 - Progression actuelle : `D → C → B → A → S → Ω`.
 - Le rang `Ω` est exclusivement réservé aux cartes avec une moyenne exacte de `100`.
+- Les stats d’attaque et de défense sont bornées entre `1` et `100`.
+- Les plages de moyenne sont rééquilibrées ainsi : `D` (1-19), `C` (20-39), `B` (40-59), `A` (60-79), `S` (80-99), `Ω` (100).
+- Les rerolls génèrent désormais des stats rééquilibrées pour mieux répartir les rangs `D` à `S`, avec `Ω` conservé comme tirage exceptionnel.
 - Les anciennes cartes `SS` et `SSS` sont normalisées en `S` à l’affichage et dans les outils d’admin/booster.
 
 ## Rerolls de stats
