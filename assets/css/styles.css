@@ -195,7 +195,7 @@ button {
 
 .topbar {
   position: sticky;
-  top: 12px;
+  top: 0;
   z-index: 20;
   padding: 1rem 1.2rem;
   border-radius: var(--radius-lg);
@@ -1191,20 +1191,21 @@ button.danger {
   width: min(calc(100% - 2rem), 1500px);
   display: grid;
   gap: 1rem;
-  padding: var(--dashboard-topbar-offset) 0 2rem;
+  padding: calc(var(--dashboard-topbar-offset) + 0.75rem) 0 2rem;
 }
 
 .topbar--dashboard {
   position: fixed;
   top: 0;
-  left: 0;
-  width: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(calc(100% - 2rem), 1500px);
   z-index: 1000;
   display: grid;
   grid-template-columns: minmax(220px, auto) minmax(0, 1fr) minmax(280px, auto);
   align-items: center;
   gap: 1rem;
-  padding: 1rem max(1rem, calc((100vw - 1500px) / 2 + 1.2rem));
+  padding: 1rem 1.2rem;
   border-radius: 0 0 28px 28px;
 }
 
@@ -1353,11 +1354,12 @@ button.danger {
 @media (max-width: 960px) {
   .app-shell--dashboard {
     width: min(calc(100% - 1rem), 1500px);
-    padding-top: var(--dashboard-topbar-offset-mobile);
+    padding-top: calc(var(--dashboard-topbar-offset-mobile) + 0.75rem);
   }
 
   .topbar--dashboard {
-    padding: 1rem max(0.75rem, calc((100vw - 1500px) / 2 + 0.75rem));
+    width: min(calc(100% - 1rem), 1500px);
+    padding: 1rem 0.75rem;
   }
 
   .site-nav {
