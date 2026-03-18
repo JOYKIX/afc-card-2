@@ -10,6 +10,12 @@ Refonte complète en **multi-pages** pour améliorer la prise en main :
 - `assets/js/firebase.js` : intégration Firebase centralisée (Auth + Realtime DB).
 - `assets/css/style.css` : design global, navigation et composants.
 
+## Système de grade
+
+- Progression actuelle : `D → C → B → A → S → Ω`.
+- Le rang `Ω` est exclusivement réservé aux cartes avec une moyenne exacte de `100`.
+- Les anciennes cartes `SS` et `SSS` sont normalisées en `S` à l’affichage et dans les outils d’admin/booster.
+
 ## Rerolls de stats
 
 - Chaque profil conserve désormais `profiles/{uid}/remainingStatRerolls` en base, avec un plafond de `3`.

@@ -5,20 +5,20 @@ const openBoosterBtn = document.getElementById('openBooster');
 const boosterHint = document.getElementById('boosterHint');
 const boosterGrid = document.getElementById('boosterGrid');
 
-const rankScale = ['D', 'C', 'B', 'A', 'S', 'SS', 'SSS'];
+const rankScale = ['D', 'C', 'B', 'A', 'S', 'Ω'];
 const rarityWeights = {
   D: 24,
   C: 16,
   B: 10,
   A: 6,
   S: 3,
-  SS: 1.5,
-  SSS: 0.75
+  Ω: 0.75
 };
 
 const escapeHtml = (value = '') => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[char]);
 const normalizeRank = (value = '') => {
   const upper = String(value || '').trim().toUpperCase();
+  if (upper === 'SS' || upper === 'SSS') return 'S';
   return rankScale.includes(upper) ? upper : 'D';
 };
 const normalizeCardNumber = (value) => {

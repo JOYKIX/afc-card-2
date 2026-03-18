@@ -14,7 +14,7 @@ const roleEmail = document.getElementById('roleEmail');
 const roleType = document.getElementById('roleType');
 const roleFeedback = document.getElementById('roleFeedback');
 
-const rankScale = ['D', 'C', 'B', 'A', 'S', 'SS', 'SSS'];
+const rankScale = ['D', 'C', 'B', 'A', 'S', 'Ω'];
 const cardNumberCounterRef = ref(db, 'metadata/cardNumberCounter');
 
 let currentUser = null;
@@ -30,6 +30,7 @@ const normalizeEmail = (email = '') => email.trim().toLowerCase();
 const emailToKey = (email = '') => normalizeEmail(email).replaceAll('.', ',');
 const normalizeRank = (value = '') => {
   const upper = String(value || '').trim().toUpperCase();
+  if (upper === 'SS' || upper === 'SSS') return 'S';
   return rankScale.includes(upper) ? upper : 'D';
 };
 const normalizeCardNumber = (value) => {
