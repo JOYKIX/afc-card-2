@@ -185,7 +185,7 @@ const updateRerollUi = () => {
     } else if (unlimited) {
       rerollStatusText.textContent = 'Compte VIP/Admin : rerolls illimités et modification manuelle des stats activée.';
     } else {
-      rerollStatusText.textContent = `Il te reste ${remainingStatRerolls} reroll${remainingStatRerolls > 1 ? 's' : ''} sauvegardé${remainingStatRerolls > 1 ? 's' : ''} en base.`;
+      rerollStatusText.textContent = `Il te reste ${remainingStatRerolls} reroll${remainingStatRerolls > 1 ? 's' : ''} disponible${remainingStatRerolls > 1 ? 's' : ''}.`;
     }
   }
 
@@ -212,7 +212,7 @@ const toFriendlySubmissionError = (error) => {
   const messageLower = message.toLowerCase();
 
   if (code.includes('PERMISSION_DENIED') || messageLower.includes('permission_denied')) {
-    return 'Échec de l’envoi : la base refuse cette écriture (règles Firebase). Contacte un admin.';
+    return 'Échec de l’envoi : tu n’as pas les droits nécessaires. Contacte un admin.';
   }
 
   if (code.includes('NETWORK_ERROR') || messageLower.includes('network')) {
@@ -720,8 +720,8 @@ await initCommon({
 
     await refreshProfile(user.uid);
     watchVerificationStatus(user.uid);
-    currentUserIsAdmin = await checkAdmin(user.uid, currentNickname, user.email || '');
-    currentUserIsVip = await checkVip(user.uid, currentNickname, user.email || '');
+    currentUserIsAdmin = await checkAdmin(user.uid);
+    currentUserIsVip = await checkVip(user.uid);
     await ensureProfileRerollCount(user.uid);
     syncManualStatInputs();
     updateRerollUi();

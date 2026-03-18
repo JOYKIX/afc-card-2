@@ -16,7 +16,7 @@ const refreshProfile = async (uid) => {
   }
 
   nicknameInput.value = profileSnapshot.val().nickname || '';
-  profileHint.textContent = 'Pseudo chargé depuis Firebase.';
+  profileHint.textContent = 'Ton pseudo est prêt à être modifié.';
 };
 
 saveProfileBtn.addEventListener('click', async () => {

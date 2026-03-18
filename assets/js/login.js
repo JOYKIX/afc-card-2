@@ -65,15 +65,15 @@ await initCommon({
     const nickname = normalizeNickname(profile.nickname || context?.profile?.nickname || '');
 
     if (nickname) {
-      showLoginState(`Session retrouvée pour ${nickname}. Redirection...`);
+      showLoginState(`Bienvenue ${nickname} ! Redirection...`);
       showNicknameStep(false);
       window.location.href = getRedirectTarget();
       return;
     }
 
-    showLoginState('Première connexion détectée : choisis maintenant ton nickname.');
+    showLoginState('Choisis ton nickname pour terminer la connexion.');
     showNicknameStep(true);
-    if (loginHint) loginHint.textContent = 'Ce nickname sera affiché dans le site et servira pour les rôles VIP/Admin.';
+    if (loginHint) loginHint.textContent = 'Ce nickname sera utilisé partout dans le studio.';
     nicknameInput?.focus();
   }
 });

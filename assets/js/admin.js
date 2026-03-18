@@ -1,4 +1,4 @@
-import { DEFAULT_STAT_REROLLS, checkAdmin, db, get, onValue, push, ref, remove, runTransaction, set, update } from './firebase.js';
+import { DEFAULT_STAT_REROLLS, checkAdmin, db, equalTo, get, onValue, orderByChild, push, query, ref, remove, runTransaction, set, update, updateCachedRoles } from './firebase.js';
 import { initCommon } from './common.js';
 
 const adminNotice = document.getElementById('adminNotice');
@@ -284,6 +284,18 @@ const bindRealtime = () => {
   );
 };
 
+const findProfileByNickname = async (nickname) => {
+  const nicknameKey = nicknameToKey(nickname);
+  if (!nicknameKey) return null;
+
+  const profileQuery = query(ref(db, 'profiles'), orderByChild('nicknameKey'), equalTo(nicknameKey));
+  const snapshot = await get(profileQuery);
+  if (!snapshot.exists()) return null;
+
+  const [uid, profile] = Object.entries(snapshot.val())[0] || [];
+  return uid ? { uid, profile: profile || {} } : null;
+};
+
 roleForm?.addEventListener('submit', async (event) => {
   event.preventDefault();
 
@@ -300,15 +312,35 @@ roleForm?.addEventListener('submit', async (event) => {
     return;
   }
 
-  const rolePath = selectedRole === 'admin' ? 'adminRegistry' : 'vipRegistry';
-
   try {
-    await set(ref(db, `${rolePath}/${nicknameToKey(nickname)}`), true);
+    const profileEntry = await findProfileByNickname(nickname);
+    if (!profileEntry) {
+      setRoleFeedback('Aucun profil trouvé avec ce nickname.', true);
+      return;
+    }
+
+    const nextRoles = {
+      admin: selectedRole === 'admin',
+      vip: selectedRole === 'vip'
+    };
+
+    await update(ref(db, `profiles/${profileEntry.uid}`), {
+      ...nextRoles,
+      updatedAt: Date.now()
+    });
+
+    if (profileEntry.uid === currentUser.uid) {
+      updateCachedRoles({
+        isAdmin: nextRoles.admin,
+        isVip: nextRoles.vip
+      });
+    }
+
     roleForm.reset();
-    setRoleFeedback(`${selectedRole.toUpperCase()} ajouté pour ${nickname}.`);
+    setRoleFeedback(`${nickname} passe en ${selectedRole.toUpperCase()}.`);
   } catch (error) {
     console.error('Erreur attribution rôle :', error);
-    setRoleFeedback('Impossible d’ajouter ce rôle pour le moment.', true);
+    setRoleFeedback('Impossible de mettre à jour ce rôle pour le moment.', true);
   }
 });
 
@@ -323,9 +355,7 @@ await initCommon({
       return;
     }
 
-    const nicknameSnapshot = await get(ref(db, `profiles/${user.uid}/nickname`));
-    const profileNickname = nicknameSnapshot.val() || '';
-    const isAdmin = await checkAdmin(user.uid, profileNickname, user.email || '');
+    const isAdmin = await checkAdmin(user.uid);
 
     if (!isAdmin) {
       resetAdminScreen();
@@ -334,7 +364,7 @@ await initCommon({
     }
 
     bindRealtime();
-    adminNotice.textContent = 'Accès admin confirmé. Les cartes validées reçoivent désormais un numéro unique puis vont dans cards.';
+    adminNotice.textContent = 'Accès admin confirmé. Valide, refuse et mets à jour les rôles depuis les profils.';
   }
 });
 
