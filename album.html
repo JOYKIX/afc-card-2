@@ -4,11 +4,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AFC Card Studio · Profil</title>
+  <title>AFC Card Studio · Album</title>
   <link rel="stylesheet" href="assets/css/styles.css" />
 </head>
 
-<body class="page-profile">
+<body class="page-album">
   <div class="bg-orb orb-a"></div>
   <div class="bg-orb orb-b"></div>
 
@@ -17,7 +17,7 @@
       <div class="brand-wrap topbar__brand">
         <div>
           <p class="kicker">AFC Universe</p>
-          <h1>Player Profile</h1>
+          <h1>Album des drops</h1>
         </div>
       </div>
 
@@ -30,7 +30,7 @@
           <span class="nav-link__eyebrow">Collection</span>
           <strong>Booster</strong>
         </a>
-        <a class="nav-link" href="album.html">
+        <a class="nav-link active" href="album.html">
           <span class="nav-link__eyebrow">Collection</span>
           <strong>Album</strong>
         </a>
@@ -52,42 +52,24 @@
     </header>
 
     <div class="app-workspace">
-
-      <main class="single-layout single-layout--narrow">
-        <section class="panel glass profile-panel">
-          <div class="panel-heading">
+      <main class="single-layout">
+        <section class="panel glass panel--album">
+          <div class="panel-heading panel-heading--spread">
             <div>
-              <p class="eyebrow">Compte</p>
-              <h2>Personnalise ton profil</h2>
+              <p class="eyebrow">Collection perso</p>
+              <h2>Ton album de drops</h2>
             </div>
-            <p class="subtitle">Renseigne ton pseudo AFC pour associer automatiquement tes cartes, validations et ouvertures à ton compte.</p>
+            <span id="albumCount" class="section-pill">0 carte</span>
           </div>
-
-          <div class="profile-layout">
-            <div class="profile-card glass-soft">
-              <p class="eyebrow">Astuce</p>
-              <h3>Un pseudo clair = un profil propre</h3>
-              <ul class="feature-list">
-                <li>Ton pseudo s’actualise directement sur ton profil.</li>
-                <li>Les cartes gardent le bon nom joueur plus facilement.</li>
-                <li>Tu évites les changements à refaire ailleurs.</li>
-              </ul>
-            </div>
-
-            <div class="profile-form-wrap">
-              <label>Pseudo
-                <input id="nickname" type="text" maxlength="24" placeholder="Ton pseudo AFC" />
-              </label>
-              <button id="saveProfile" type="button">Enregistrer le pseudo</button>
-              <p id="profileHint" class="hint">Connecte-toi avec Google pour démarrer.</p>
-            </div>
-          </div>
+          <p class="subtitle">Retrouve ici toutes les cartes que tu as tirées dans tes boosters. Chaque drop est mémorisé localement pour ton compte.</p>
+          <p id="albumHint" class="hint">Chargement de ton album...</p>
+          <section id="albumGrid" class="album-grid"></section>
         </section>
       </main>
     </div>
   </div>
 
-  <script type="module" src="assets/js/profile.js"></script>
+  <script type="module" src="assets/js/album.js"></script>
 </body>
 
 </html>

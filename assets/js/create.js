@@ -56,6 +56,7 @@ const downloadCardBtn = document.getElementById('downloadCard');
 const imageInput = document.getElementById('imageInput');
 const portrait = document.getElementById('portrait');
 const portraitImage = document.getElementById('portraitImage');
+const resetPortraitPositionBtn = document.getElementById('resetPortraitPosition');
 const verificationStatusText = document.getElementById('verificationStatusText');
 const renderEngineStatus = document.getElementById('renderEngineStatus');
 const cardElement = document.getElementById('afcCard');
@@ -85,6 +86,9 @@ let remainingStatRerolls = DEFAULT_STAT_REROLLS;
 let attack = 0;
 let defense = 0;
 let portraitDataUrl = '';
+let portraitPosition = { x: 50, y: 50 };
+let portraitNaturalSize = { width: 0, height: 0 };
+let portraitDragState = null;
 let verificationUnsubscribe = null;
 
 const getAverage = () => (attack + defense) / 2;
@@ -108,6 +112,7 @@ const saveDraft = () => {
       attack,
       defense,
       portraitDataUrl,
+      portraitPosition,
       savedAt: Date.now()
     }));
   } catch (error) {
@@ -128,12 +133,12 @@ const restoreDraft = () => {
     fields.edition.value = draft.edition || fields.edition.value;
     fields.abilities.value = draft.abilities || '';
     portraitDataUrl = draft.portraitDataUrl || '';
+    portraitPosition = {
+      x: Number.isFinite(Number(draft?.portraitPosition?.x)) ? Number(draft.portraitPosition.x) : 50,
+      y: Number.isFinite(Number(draft?.portraitPosition?.y)) ? Number(draft.portraitPosition.y) : 50
+    };
 
-    portrait.style.backgroundImage = portraitDataUrl ? `url('${portraitDataUrl}')` : '';
-    if (portraitImage) {
-      portraitImage.src = portraitDataUrl || '';
-      portraitImage.hidden = !portraitDataUrl;
-    }
+    applyPortraitImage();
 
     if (draft.attack != null || draft.defense != null) {
       setStats({
@@ -149,6 +154,7 @@ const restoreDraft = () => {
   }
 };
 const sanitizeFilename = (value = '') => normalizeText(value).toLowerCase().replace(/[^a-z0-9-_]+/gi, '-').replace(/^-+|-+$/g, '') || 'afc-card';
+const clampPercent = (value) => Math.min(100, Math.max(0, Number(value) || 0));
 const formatCardNumber = (value) => {
   const cardNumber = normalizeCardNumber(value);
   return cardNumber ? `#${cardNumber}` : 'non attribué';
@@ -168,6 +174,79 @@ const setRenderStatus = (message, isError = false) => {
 const syncManualStatInputs = () => {
   if (manualAttackInput) manualAttackInput.value = String(attack);
   if (manualDefenseInput) manualDefenseInput.value = String(defense);
+};
+
+const applyPortraitImage = () => {
+  portrait.style.backgroundImage = portraitDataUrl ? `url('${portraitDataUrl}')` : '';
+  portrait.style.backgroundPosition = `${clampPercent(portraitPosition.x)}% ${clampPercent(portraitPosition.y)}%`;
+  portrait.classList.toggle('portrait--adjustable', Boolean(portraitDataUrl));
+
+  if (!portraitImage) return;
+
+  portraitImage.src = portraitDataUrl || '';
+  portraitImage.hidden = !portraitDataUrl;
+  portraitImage.style.objectPosition = `${clampPercent(portraitPosition.x)}% ${clampPercent(portraitPosition.y)}%`;
+};
+
+const resetPortraitPosition = () => {
+  portraitPosition = { x: 50, y: 50 };
+  applyPortraitImage();
+  saveDraft();
+};
+
+const getPortraitOverflow = () => {
+  if (!portraitImage || !portraitNaturalSize.width || !portraitNaturalSize.height) {
+    return { overflowX: 0, overflowY: 0 };
+  }
+
+  const bounds = portrait.getBoundingClientRect();
+  const scale = Math.max(bounds.width / portraitNaturalSize.width, bounds.height / portraitNaturalSize.height);
+
+  return {
+    overflowX: Math.max(0, (portraitNaturalSize.width * scale) - bounds.width),
+    overflowY: Math.max(0, (portraitNaturalSize.height * scale) - bounds.height)
+  };
+};
+
+const startPortraitDrag = (event) => {
+  if (!portraitDataUrl) return;
+
+  const pointer = event.touches?.[0] || event;
+  const { overflowX, overflowY } = getPortraitOverflow();
+
+  portraitDragState = {
+    startX: pointer.clientX,
+    startY: pointer.clientY,
+    originX: portraitPosition.x,
+    originY: portraitPosition.y,
+    overflowX,
+    overflowY
+  };
+
+  portrait.classList.add('is-dragging');
+};
+
+const movePortrait = (event) => {
+  if (!portraitDragState) return;
+
+  const pointer = event.touches?.[0] || event;
+  const deltaX = pointer.clientX - portraitDragState.startX;
+  const deltaY = pointer.clientY - portraitDragState.startY;
+
+  portraitPosition = {
+    x: portraitDragState.overflowX > 0 ? clampPercent(portraitDragState.originX - ((deltaX / portraitDragState.overflowX) * 100)) : 50,
+    y: portraitDragState.overflowY > 0 ? clampPercent(portraitDragState.originY - ((deltaY / portraitDragState.overflowY) * 100)) : 50
+  };
+
+  applyPortraitImage();
+  if (event.cancelable) event.preventDefault();
+};
+
+const stopPortraitDrag = () => {
+  if (!portraitDragState) return;
+  portraitDragState = null;
+  portrait.classList.remove('is-dragging');
+  saveDraft();
 };
 
 const syncAvailableTitles = () => {
@@ -632,11 +711,8 @@ imageInput.addEventListener('change', (event) => {
     alert('Format refusé. Utilise JPG/JPEG, PNG ou WEBP.');
     event.target.value = '';
     portraitDataUrl = '';
-    portrait.style.backgroundImage = '';
-    if (portraitImage) {
-      portraitImage.src = '';
-      portraitImage.hidden = true;
-    }
+    portraitNaturalSize = { width: 0, height: 0 };
+    resetPortraitPosition();
     saveDraft();
     return;
   }
@@ -644,11 +720,9 @@ imageInput.addEventListener('change', (event) => {
   const reader = new FileReader();
   reader.onload = (readerEvent) => {
     portraitDataUrl = readerEvent.target?.result || '';
-    portrait.style.backgroundImage = portraitDataUrl ? `url('${portraitDataUrl}')` : '';
-    if (portraitImage) {
-      portraitImage.src = portraitDataUrl || '';
-      portraitImage.hidden = !portraitDataUrl;
-    }
+    portraitNaturalSize = { width: 0, height: 0 };
+    portraitPosition = { x: 50, y: 50 };
+    applyPortraitImage();
     saveDraft();
   };
   reader.readAsDataURL(file);
@@ -728,6 +802,25 @@ downloadCardBtn.addEventListener('click', async () => {
   }
 });
 
+resetPortraitPositionBtn?.addEventListener('click', resetPortraitPosition);
+
+portraitImage?.addEventListener('load', () => {
+  portraitNaturalSize = {
+    width: portraitImage.naturalWidth || 0,
+    height: portraitImage.naturalHeight || 0
+  };
+  applyPortraitImage();
+});
+
+portrait.addEventListener('pointerdown', (event) => {
+  if (event.pointerType === 'mouse' && event.button !== 0) return;
+  startPortraitDrag(event);
+});
+window.addEventListener('pointermove', movePortrait, { passive: false });
+window.addEventListener('pointerup', stopPortraitDrag);
+window.addEventListener('pointercancel', stopPortraitDrag);
+
+
 await initCommon({
   requireAuth: true,
   onUserChanged: async (user) => {
@@ -758,6 +851,7 @@ await initCommon({
 });
 
 const restoredDraft = restoreDraft();
+applyPortraitImage();
 
 if (!restoredDraft && !fields.abilities.value.trim()) {
   fields.abilities.value = `Cri du Raptor : Baisse la défense adverse de 10 points.

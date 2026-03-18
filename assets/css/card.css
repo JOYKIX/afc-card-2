@@ -292,6 +292,15 @@
   display: grid;
   place-items: center;
   overflow: hidden;
+  touch-action: none;
+}
+
+.portrait--adjustable {
+  cursor: grab;
+}
+
+.portrait--adjustable.is-dragging {
+  cursor: grabbing;
 }
 
 .portrait-overlay {
@@ -307,6 +316,9 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: 50% 50%;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 .edition-chip {

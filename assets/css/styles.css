@@ -36,6 +36,32 @@
 html {
   color-scheme: dark;
   scroll-behavior: smooth;
+  scrollbar-color: rgba(255, 115, 187, 0.85) rgba(16, 9, 25, 0.92);
+  scrollbar-width: thin;
+}
+
+::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
+}
+
+::-webkit-scrollbar-track {
+  background: linear-gradient(180deg, rgba(14, 8, 22, 0.96), rgba(30, 12, 44, 0.96));
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  border: 3px solid rgba(13, 7, 20, 0.98);
+  background: linear-gradient(180deg, rgba(255, 61, 122, 0.95), rgba(139, 70, 255, 0.95), rgba(83, 235, 255, 0.88));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(255, 115, 187, 1), rgba(139, 70, 255, 1), rgba(83, 235, 255, 0.95));
+}
+
+::-webkit-scrollbar-corner {
+  background: rgba(14, 8, 22, 0.96);
 }
 
 body {
@@ -329,6 +355,8 @@ button {
 .profile-card,
 .admin-focus,
 .booster-capture,
+.album-card,
+.album-empty,
 .review-stats article,
 .hero-stats article,
 .hero-side-card {
@@ -554,7 +582,8 @@ textarea {
   min-height: 132px;
 }
 
-button {
+button,
+.button-link {
   border: 1px solid rgba(83, 235, 255, 0.18);
   border-radius: 16px;
   background: linear-gradient(135deg, rgba(255, 61, 122, 0.92), rgba(139, 70, 255, 0.9));
@@ -567,13 +596,22 @@ button {
   transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease, border-color 0.2s ease;
 }
 
-button:hover {
+.button-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+button:hover,
+.button-link:hover {
   transform: translateY(-2px);
   filter: brightness(1.05);
   border-color: rgba(129, 237, 255, 0.22);
   box-shadow: 0 14px 28px rgba(255, 61, 122, 0.2);
 }
 
+.button-link:active,
 button:active {
   transform: translateY(0);
 }
@@ -585,7 +623,8 @@ button:disabled {
   box-shadow: none;
 }
 
-button.ghost {
+button.ghost,
+.button-link.ghost {
   background: rgba(23, 11, 35, 0.96);
 }
 
@@ -669,6 +708,8 @@ button.danger {
 .stat-controls,
 .review-stats article,
 .booster-capture,
+.album-card,
+.album-empty,
 .admin-focus,
 .profile-card,
 .insight-card,
@@ -681,7 +722,8 @@ button.danger {
 }
 
 .verification-box,
-.stat-controls {
+.stat-controls,
+.portrait-position-tools {
   padding: 1rem;
 }
 
@@ -839,18 +881,31 @@ button.danger {
   align-items: start;
 }
 
-.panel--booster {
+.panel--booster,
+.panel--album {
   overflow: hidden;
 }
 
-.booster-grid {
+.portrait-position-tools {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.portrait-position-tools .hint {
+  font-size: 0.92rem;
+}
+
+.booster-grid,
+.album-grid {
   margin-top: 1rem;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
   gap: 1rem;
 }
 
-.booster-capture {
+.booster-capture,
+.album-card,
+.album-empty {
   padding: 0.95rem;
   display: grid;
   gap: 0.8rem;
@@ -859,7 +914,14 @@ button.danger {
   animation: revealCard 0.45s ease forwards;
 }
 
-.booster-capture__frame {
+.album-empty {
+  min-height: 220px;
+  place-items: center;
+  text-align: center;
+}
+
+.booster-capture__frame,
+.album-card__frame {
   min-height: 300px;
   border-radius: 20px;
   overflow: hidden;
@@ -869,19 +931,48 @@ button.danger {
   place-items: center;
 }
 
-.booster-capture__meta {
+.booster-capture__meta,
+.album-card__meta {
   display: grid;
   gap: 0.25rem;
 }
 
-.booster-capture__meta strong {
+.booster-capture__meta strong,
+.album-card__meta strong {
   font-size: 1.02rem;
+}
+
+.album-card__meta {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.album-card__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.42rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #fff3fb;
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .booster-capture__rank {
   width: fit-content;
   font-weight: 800;
   letter-spacing: 0.08em;
+}
+
+.album-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .role-options {
@@ -1119,7 +1210,8 @@ button.danger {
   flex-wrap: wrap;
 }
 
-.auth-actions__buttons--inline button {
+.auth-actions__buttons--inline button,
+.auth-actions__buttons--inline .button-link {
   width: auto;
 }
 
@@ -1281,6 +1373,7 @@ button.danger {
   }
 
   .auth-actions__buttons--inline button,
+  .auth-actions__buttons--inline .button-link,
   .actions button {
     width: 100%;
   }
