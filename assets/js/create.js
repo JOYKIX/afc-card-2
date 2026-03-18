@@ -1,10 +1,16 @@
 import {
+  CARD_TITLES,
   DEFAULT_STAT_REROLLS,
-  checkAdmin,
-  checkVip,
+  TITLE_LABELS,
   db,
   equalTo,
   get,
+  getAllowedCardTitlesForRoles,
+  getMaxPendingSubmissionsForRoles,
+  getProfileRoles,
+  getRerollDisplayValueForRoles,
+  hasUnlimitedStatAccessForRoles,
+  normalizeCardTitle,
   normalizeRemainingStatRerolls,
   onValue,
   orderByChild,
@@ -56,7 +62,7 @@ const manualAttackInput = document.getElementById('manualAttack');
 const manualDefenseInput = document.getElementById('manualDefense');
 
 const rankScale = ['D', 'C', 'B', 'A', 'S', 'Ω'];
-const titleOptions = new Set(['Responsable staff', "Gardien de l'AFC", 'Streamers', 'Viewers']);
+const titleOptions = new Set(CARD_TITLES);
 const supportedImageTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const MIN_STAT = 1;
 const MAX_STAT = 100;
@@ -71,8 +77,7 @@ const RANK_RANGES = [
 
 let currentUser = null;
 let currentNickname = '';
-let currentUserIsVip = false;
-let currentUserIsAdmin = false;
+let currentUserRoles = ['african army'];
 let remainingStatRerolls = DEFAULT_STAT_REROLLS;
 let attack = 0;
 let defense = 0;
@@ -88,7 +93,7 @@ const getRank = (average) => {
 
 const getCost = (rank) => rankScale.indexOf(rank) + 1;
 const computeType = () => (attack > defense ? 'attaquant' : defense > attack ? 'défenseur' : 'équilibré');
-const hasUnlimitedStatAccess = () => currentUserIsVip || currentUserIsAdmin;
+const hasUnlimitedStatAccess = () => hasUnlimitedStatAccessForRoles(currentUserRoles);
 
 const normalizeText = (value = '') => value.trim().replace(/\s+/g, ' ');
 const saveDraft = () => {
@@ -172,18 +177,40 @@ const syncManualStatInputs = () => {
   if (manualDefenseInput) manualDefenseInput.value = String(defense);
 };
 
+const syncAvailableTitles = () => {
+  if (!fields.title) return;
+
+  const allowedTitles = getAllowedCardTitlesForRoles(currentUserRoles);
+  const selectedTitle = normalizeCardTitle(fields.title.value);
+
+  Array.from(fields.title.options).forEach((option) => {
+    const normalized = normalizeCardTitle(option.value);
+    const isAllowed = allowedTitles.includes(normalized);
+    option.disabled = !isAllowed;
+    option.hidden = !isAllowed;
+    option.textContent = TITLE_LABELS[normalized] || option.textContent;
+  });
+
+  if (!allowedTitles.includes(selectedTitle)) {
+    const fallback = allowedTitles[0] || CARD_TITLES[0];
+    fields.title.value = fallback;
+  }
+
+  render();
+};
+
 const updateRerollUi = () => {
   const unlimited = hasUnlimitedStatAccess();
 
   if (rerollBadge) {
-    rerollBadge.textContent = unlimited ? 'Rerolls infinis' : `${remainingStatRerolls}/${DEFAULT_STAT_REROLLS} rerolls`;
+    rerollBadge.textContent = unlimited ? 'Rerolls infinis' : `${remainingStatRerolls}/${getRerollDisplayValueForRoles(currentUserRoles)} rerolls`;
   }
 
   if (rerollStatusText) {
     if (!currentUser) {
       rerollStatusText.textContent = 'Connecte-toi pour voir ton nombre de rerolls restants.';
     } else if (unlimited) {
-      rerollStatusText.textContent = 'Compte VIP/Admin : rerolls illimités et modification manuelle des stats activée.';
+      rerollStatusText.textContent = 'Compte privilégié : rerolls illimités et modification manuelle des stats activée.';
     } else {
       rerollStatusText.textContent = `Il te reste ${remainingStatRerolls} reroll${remainingStatRerolls > 1 ? 's' : ''} disponible${remainingStatRerolls > 1 ? 's' : ''}.`;
     }
@@ -239,7 +266,7 @@ const render = () => {
   output.cost.textContent = getCost(rank);
   output.edition.textContent = fields.edition.value;
   output.name.textContent = fields.name.value;
-  output.title.textContent = fields.title.value;
+  output.title.textContent = TITLE_LABELS[normalizeCardTitle(fields.title.value)] || fields.title.value;
   output.average.textContent = Number.isInteger(average) ? String(average) : average.toFixed(1);
   output.abilities.textContent = fields.abilities.value;
   output.rank.textContent = rank;
@@ -290,7 +317,8 @@ const ensureProfileRerollCount = async (uid) => {
   const profileRef = ref(db, `profiles/${uid}`);
   const profileSnapshot = await get(profileRef);
   const profileData = profileSnapshot.exists() ? profileSnapshot.val() || {} : {};
-  const normalized = normalizeRemainingStatRerolls(profileData.remainingStatRerolls);
+  const profileRoles = currentUserRoles.length > 0 ? currentUserRoles : await getProfileRoles(uid);
+  const normalized = normalizeRemainingStatRerolls(profileData.remainingStatRerolls, profileRoles);
 
   remainingStatRerolls = normalized;
 
@@ -309,14 +337,14 @@ const consumeStoredReroll = async () => {
 
   const rerollRef = ref(db, `profiles/${currentUser.uid}/remainingStatRerolls`);
   const result = await runTransaction(rerollRef, (currentValue) => {
-    const normalized = normalizeRemainingStatRerolls(currentValue);
+    const normalized = normalizeRemainingStatRerolls(currentValue, currentUserRoles);
     if (normalized <= 0) return;
     return normalized - 1;
   });
 
   if (!result.committed) return false;
 
-  remainingStatRerolls = normalizeRemainingStatRerolls(result.snapshot.val());
+  remainingStatRerolls = normalizeRemainingStatRerolls(result.snapshot.val(), currentUserRoles);
   updateRerollUi();
   return true;
 };
@@ -340,8 +368,8 @@ const refreshProfile = async (uid) => {
   const profileSnapshot = await get(ref(db, `profiles/${uid}`));
   currentNickname = profileSnapshot.exists() ? normalizeText(profileSnapshot.val().nickname || '') : '';
   remainingStatRerolls = profileSnapshot.exists()
-    ? normalizeRemainingStatRerolls(profileSnapshot.val().remainingStatRerolls)
-    : DEFAULT_STAT_REROLLS;
+    ? normalizeRemainingStatRerolls(profileSnapshot.val().remainingStatRerolls, currentUserRoles)
+    : getRerollDisplayValueForRoles(currentUserRoles);
   updateRerollUi();
 };
 
@@ -452,8 +480,8 @@ const hasPendingVerification = async (uid) => {
   return Object.values(snapshot.val()).some((entry) => entry.status === 'pending');
 };
 
-const canSubmitCard = async (uid, isVip) => {
-  if (isVip) return true;
+const canSubmitCard = async (uid, roles) => {
+  if (getMaxPendingSubmissionsForRoles(roles) === Number.POSITIVE_INFINITY) return true;
   return !(await hasPendingVerification(uid));
 };
 
@@ -650,13 +678,21 @@ submitCardBtn.addEventListener('click', async () => {
     return;
   }
 
-  if (!titleOptions.has(fields.title.value)) {
+  const selectedTitle = normalizeCardTitle(fields.title.value);
+  const allowedTitles = getAllowedCardTitlesForRoles(currentUserRoles);
+
+  if (!titleOptions.has(selectedTitle)) {
     alert('Rôle invalide.');
     return;
   }
 
-  if (!(await canSubmitCard(currentUser.uid, currentUserIsVip))) {
-    alert('Compte standard : une seule carte en attente autorisée. Attends la validation ou passe VIP pour envoyer sans limite.');
+  if (!allowedTitles.includes(selectedTitle)) {
+    alert(`Ton rôle actuel ne permet pas de créer une carte "${TITLE_LABELS[selectedTitle] || selectedTitle}".`);
+    return;
+  }
+
+  if (!(await canSubmitCard(currentUser.uid, currentUserRoles))) {
+    alert('Compte African Army : une seule carte en attente autorisée. Attends la validation ou obtiens un rôle supérieur pour envoyer sans limite.');
     return;
   }
 
@@ -677,7 +713,7 @@ submitCardBtn.addEventListener('click', async () => {
       cardSnapshot: payload
     });
 
-    alert('Capture de carte envoyée en attente de vérification admin.');
+    alert('Capture de carte envoyée en attente de vérification.');
   } catch (error) {
     console.error('Erreur lors de la soumission :', error);
     alert(toFriendlySubmissionError(error));
@@ -706,22 +742,22 @@ await initCommon({
 
     if (!user) {
       currentNickname = '';
-      currentUserIsVip = false;
-      currentUserIsAdmin = false;
+      currentUserRoles = ['african army'];
       remainingStatRerolls = DEFAULT_STAT_REROLLS;
       verificationStatusText.textContent = 'Connecte-toi pour voir le statut de ta carte.';
       if (verificationUnsubscribe) {
         verificationUnsubscribe();
         verificationUnsubscribe = null;
       }
+      syncAvailableTitles();
       updateRerollUi();
       return;
     }
 
+    currentUserRoles = await getProfileRoles(user.uid);
+    syncAvailableTitles();
     await refreshProfile(user.uid);
     watchVerificationStatus(user.uid);
-    currentUserIsAdmin = await checkAdmin(user.uid);
-    currentUserIsVip = await checkVip(user.uid);
     await ensureProfileRerollCount(user.uid);
     syncManualStatInputs();
     updateRerollUi();
@@ -740,5 +776,6 @@ setRenderStatus('Moteur export : SVG natif prêt.', false);
 if (!restoredDraft) {
   await rollStats({ consumeReroll: false });
 }
+syncAvailableTitles();
 render();
 saveDraft();

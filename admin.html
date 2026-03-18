@@ -103,20 +103,23 @@
                   <p class="eyebrow">Accès</p>
                   <h3 id="roleManagerTitle">Gestion des droits</h3>
                 </div>
-                <span class="section-pill">Admin / VIP</span>
+                <span class="section-pill">Rôles AFC</span>
               </div>
-              <p class="subtitle">Cherche un profil par nickname pour activer le bon rôle directement dessus.</p>
+              <p class="subtitle">Cherche un profil par nickname puis attribue-lui ses rôles. Le rôle <strong>african army</strong> reste appliqué par défaut.</p>
               <form id="roleForm" class="role-form">
                 <label>Nickname
                   <input id="roleNickname" type="text" placeholder="Pseudo AFC" required />
                 </label>
-                <label>Rôle
-                  <select id="roleType" required>
-                    <option value="admin">Admin</option>
-                    <option value="vip">VIP</option>
-                  </select>
-                </label>
-                <button id="roleSubmit" type="submit">Mettre à jour le rôle</button>
+                <fieldset class="role-options">
+                  <legend>Rôles supplémentaires</legend>
+                  <label><input type="checkbox" name="roleOption" value="vip" /> VIP</label>
+                  <label><input type="checkbox" name="roleOption" value="streamers" /> Streamers</label>
+                  <label><input type="checkbox" name="roleOption" value="staff afc" /> Staff AFC</label>
+                  <label><input type="checkbox" name="roleOption" value="creator" /> Créateur</label>
+                  <label><input type="checkbox" name="roleOption" value="admin" /> Admin</label>
+                  <label><input type="checkbox" name="roleOption" value="african king" /> African King</label>
+                </fieldset>
+                <button id="roleSubmit" type="submit">Mettre à jour les rôles</button>
               </form>
               <p id="roleFeedback" class="hint" aria-live="polite"></p>
             </section>

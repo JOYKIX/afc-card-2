@@ -1,11 +1,12 @@
 import {
   auth,
-  checkAdmin,
-  checkVip,
+  canAccessAdmin,
   clearAuthCache,
   consumeRedirect,
+  getRoleBadge,
   loadAuthCache,
   normalizeNickname,
+  normalizeRoles,
   onAuthStateChanged,
   performGoogleSignIn,
   saveAuthCache,
@@ -43,21 +44,17 @@ const setAuthUi = (session = null) => {
     return;
   }
 
-  if (session.isAdmin) {
-    roleBadge.hidden = false;
-    roleBadge.textContent = 'ADMIN';
-    roleBadge.className = 'role-badge role-admin';
+  const badge = getRoleBadge(session.roles || []);
+  if (!badge) {
+    roleBadge.hidden = true;
+    roleBadge.textContent = '';
+    roleBadge.className = 'role-badge';
     return;
   }
 
-  if (session.isVip) {
-    roleBadge.hidden = false;
-    roleBadge.textContent = 'VIP';
-    roleBadge.className = 'role-badge role-vip';
-    return;
-  }
-
-  roleBadge.hidden = true;
+  roleBadge.hidden = false;
+  roleBadge.textContent = badge.badgeLabel;
+  roleBadge.className = `role-badge ${badge.badgeClass}`;
 };
 
 const redirectToLogin = () => {
@@ -86,8 +83,9 @@ const redirectAfterLogin = () => {
 const initCommon = async ({ onUserChanged, requireAuth = false } = {}) => {
   const cachedSession = loadAuthCache();
   if (cachedSession) {
-    toggleAdminNav(Boolean(cachedSession.isAdmin));
-    setAuthUi(cachedSession);
+    const cachedRoles = normalizeRoles(cachedSession.roles, cachedSession);
+    toggleAdminNav(canAccessAdmin(cachedRoles));
+    setAuthUi({ ...cachedSession, roles: cachedRoles });
   }
 
   try {
@@ -126,24 +124,22 @@ const initCommon = async ({ onUserChanged, requireAuth = false } = {}) => {
 
     const profile = await syncProfileOnLogin(user);
     const nickname = normalizeNickname(profile?.nickname || '');
-    const isAdmin = await checkAdmin(user.uid);
-    const isVip = await checkVip(user.uid);
+    const roles = normalizeRoles(profile?.roles || []);
     const session = {
       uid: user.uid,
       email: (user.email || '').trim().toLowerCase(),
       googleName: user.displayName || '',
       nickname,
-      isAdmin,
-      isVip
+      roles
     };
 
     saveAuthCache(session);
-    toggleAdminNav(isAdmin);
+    toggleAdminNav(canAccessAdmin(roles));
     setAuthUi(session);
 
     if (onUserChanged) {
       await onUserChanged(user, {
-        profile,
+        profile: { ...profile, roles },
         session,
         redirectAfterLogin,
         redirectToLogin
