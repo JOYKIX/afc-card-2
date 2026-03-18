@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=block');
+
 :root {
   --bg-0: #06030b;
   --bg-1: #120617;
@@ -68,7 +70,7 @@ body {
   margin: 0;
   min-height: 100vh;
   color: var(--text);
-  font-family: Inter, 'Segoe UI', Roboto, system-ui, sans-serif;
+  font-family: 'Inter', 'Segoe UI', Roboto, system-ui, sans-serif;
   background:
     radial-gradient(circle at 14% 18%, rgba(255, 61, 122, 0.2), transparent 24%),
     radial-gradient(circle at 85% 12%, rgba(83, 235, 255, 0.16), transparent 23%),
@@ -653,6 +655,8 @@ button.danger {
   padding: 1rem;
   overflow-x: auto;
   overflow-y: hidden;
+  justify-items: center;
+  align-items: start;
   border-radius: calc(var(--radius-lg) - 8px);
   background:
     radial-gradient(circle at top, rgba(255, 255, 255, 0.08), transparent 34%),
