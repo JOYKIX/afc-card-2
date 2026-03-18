@@ -818,12 +818,12 @@ button.danger {
   aspect-ratio: 5 / 7;
   border-radius: 38px;
   border: 2px solid var(--edge);
-  padding: 1.05rem;
+  padding: 0.95rem;
   position: relative;
   overflow: hidden;
   display: grid;
-  grid-template-rows: auto minmax(286px, 1.24fr) minmax(208px, 0.86fr);
-  gap: 0.72rem;
+  grid-template-rows: auto minmax(300px, 1.36fr) minmax(176px, 0.68fr);
+  gap: 0.64rem;
   box-shadow:
     0 42px 84px rgba(0, 0, 0, 0.62),
     0 0 0 1px rgba(255, 255, 255, 0.16),
@@ -966,8 +966,8 @@ button.danger {
 
 .card-header {
   display: grid;
-  grid-template-columns: 74px minmax(0, 1fr) 74px;
-  gap: 0.7rem;
+  grid-template-columns: 68px minmax(0, 1fr) 68px;
+  gap: 0.6rem;
   align-items: center;
   z-index: 1;
 }
@@ -977,16 +977,16 @@ button.danger {
   display: grid;
   justify-items: center;
   align-content: center;
-  gap: 0.28rem;
+  gap: 0.22rem;
 }
 
 .meta-left span,
 .meta-right span {
   display: grid;
   place-items: center;
-  width: 74px;
-  height: 74px;
-  border-radius: 22px;
+  width: 68px;
+  height: 68px;
+  border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent 34%),
@@ -995,7 +995,7 @@ button.danger {
     inset 0 1px 0 rgba(255, 255, 255, 0.12),
     0 10px 24px rgba(0, 0, 0, 0.2);
   font-weight: 900;
-  font-size: 1.8rem;
+  font-size: 1.7rem;
   line-height: 1;
   letter-spacing: 0.01em;
 }
@@ -1004,7 +1004,7 @@ button.danger {
 .meta-right small {
   text-align: center;
   color: rgba(255, 241, 247, 0.92);
-  font-size: 0.76rem;
+  font-size: 0.72rem;
   line-height: 1.1;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -1012,7 +1012,7 @@ button.danger {
 }
 
 .meta-right small strong {
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
 .identity {
@@ -1020,8 +1020,8 @@ button.danger {
 }
 
 .identity--hero {
-  padding: 0.75rem 0.9rem 0.8rem;
-  border-radius: 22px;
+  padding: 0.62rem 0.8rem 0.66rem;
+  border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.14);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 34%),
@@ -1034,7 +1034,7 @@ button.danger {
   align-items: center;
   justify-content: center;
   gap: 0.45rem;
-  margin-bottom: 0.45rem;
+  margin-bottom: 0.32rem;
 }
 
 .section-label {
@@ -1061,25 +1061,25 @@ button.danger {
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: rgba(255, 255, 255, 0.07);
   color: #fff3d2;
-  font-size: 0.68rem;
+  font-size: 0.64rem;
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  padding: 0.34rem 0.58rem;
+  padding: 0.28rem 0.54rem;
 }
 
 .identity h3 {
   margin: 0;
-  font-size: 1.88rem;
+  font-size: 1.72rem;
   line-height: 1.02;
   letter-spacing: -0.045em;
   text-shadow: 0 10px 28px rgba(0, 0, 0, 0.34);
 }
 
 .identity p {
-  margin: 0.3rem 0 0;
+  margin: 0.2rem 0 0;
   color: rgba(255, 239, 246, 0.92);
-  font-size: 0.98rem;
+  font-size: 0.92rem;
   font-weight: 640;
 }
 
@@ -1090,8 +1090,8 @@ button.danger {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.09), transparent 18%),
     linear-gradient(180deg, rgba(8, 4, 15, 0.54), rgba(8, 4, 15, 0.4));
-  padding: 0.7rem;
-  min-height: 286px;
+  padding: 0.62rem;
+  min-height: 300px;
   z-index: 1;
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.05),
@@ -1134,8 +1134,8 @@ button.danger {
 
 .edition-chip {
   position: absolute;
-  top: 0.95rem;
-  right: 0.95rem;
+  top: 0.82rem;
+  right: 0.82rem;
   z-index: 2;
   display: inline-flex;
   align-items: center;
@@ -1146,18 +1146,18 @@ button.danger {
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   color: rgba(255, 243, 248, 0.9);
-  font-size: 0.68rem;
+  font-size: 0.64rem;
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  padding: 0.35rem 0.7rem;
+  padding: 0.32rem 0.66rem;
 }
 
 .card-body {
   z-index: 1;
   display: grid;
-  grid-template-rows: minmax(128px, auto) minmax(130px, 1fr);
-  gap: 0.72rem;
+  grid-template-rows: minmax(144px, 1fr) auto;
+  gap: 0.62rem;
   min-height: 0;
 }
 
@@ -1169,9 +1169,9 @@ button.danger {
 .skills {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  gap: 0.6rem;
-  min-height: 128px;
-  padding: 0.95rem 1rem 1rem;
+  gap: 0.5rem;
+  min-height: 144px;
+  padding: 0.9rem 0.95rem 0.95rem;
   border-radius: 22px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 28%),
@@ -1192,65 +1192,66 @@ button.danger {
 .modal-abilities {
   white-space: pre-wrap;
   color: #fff4fd;
-  line-height: 1.42;
-  font-size: 0.93rem;
+  line-height: 1.38;
+  font-size: 0.9rem;
   margin: 0;
   text-align: left;
-  min-height: 4.2em;
-  max-height: 5.6em;
+  min-height: 5.2em;
+  max-height: 6.9em;
   overflow: hidden;
 }
 
 .stats {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.72rem;
-  min-height: 130px;
+  gap: 0.62rem;
+  min-height: 96px;
 }
 
 .stat-card {
   position: relative;
-  display: grid;
-  justify-items: center;
-  align-content: center;
-  gap: 0.45rem;
-  min-height: 130px;
+  display: flex;
+  align-items: center;
+  min-height: 96px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 28%),
     linear-gradient(180deg, rgba(8, 4, 16, 0.7), rgba(8, 4, 16, 0.46));
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 20px;
-  padding: 0.75rem 0.55rem 0.7rem;
+  padding: 0.8rem 0.9rem;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
   overflow: hidden;
 }
 
 .stat-card__glow {
   position: absolute;
-  inset: auto 15% 14% 15%;
-  height: 34%;
+  inset: auto 12% 10% 12%;
+  height: 42%;
   border-radius: 999px;
   filter: blur(26px);
   opacity: 0.45;
   pointer-events: none;
 }
 
+.stat-card__row {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+}
+
 .stats strong {
   display: grid;
   place-items: center;
-  width: 3.1rem;
-  height: 3.1rem;
+  flex: 0 0 auto;
+  width: 2.9rem;
+  height: 2.9rem;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.07);
-  font-size: 1.35rem;
-}
-
-.stat-card small {
-  font-size: 0.74rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: rgba(255, 243, 248, 0.82);
-  font-weight: 800;
+  font-size: 1.2rem;
 }
 
 .stat-icon {
@@ -1268,8 +1269,10 @@ button.danger {
   fill: currentColor;
 }
 
-.stat-card span:last-child {
-  font-size: 2.42rem;
+.stat-value {
+  position: relative;
+  z-index: 1;
+  font-size: 2.28rem;
   font-weight: 900;
   line-height: 1.02;
 }
