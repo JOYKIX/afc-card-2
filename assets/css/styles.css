@@ -29,8 +29,6 @@
   --radius-md: 20px;
   --radius-sm: 16px;
   --content-width: 1440px;
-  --dashboard-topbar-offset: 156px;
-  --dashboard-topbar-offset-mobile: 272px;
 }
 
 * {
@@ -194,8 +192,7 @@ button {
 }
 
 .topbar {
-  position: sticky;
-  top: 0;
+  position: static;
   z-index: 20;
   padding: 1rem 1.2rem;
   border-radius: var(--radius-lg);
@@ -1191,22 +1188,18 @@ button.danger {
   width: min(calc(100% - 2rem), 1500px);
   display: grid;
   gap: 1rem;
-  padding: calc(var(--dashboard-topbar-offset) + 0.75rem) 0 2rem;
+  padding: 1.1rem 0 2rem;
 }
 
 .topbar--dashboard {
-  position: fixed;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(calc(100% - 2rem), 1500px);
-  z-index: 1000;
+  position: static;
+  width: 100%;
   display: grid;
   grid-template-columns: minmax(220px, auto) minmax(0, 1fr) minmax(280px, auto);
   align-items: center;
   gap: 1rem;
   padding: 1rem 1.2rem;
-  border-radius: 0 0 28px 28px;
+  border-radius: 28px;
 }
 
 .topbar__brand {
@@ -1354,11 +1347,11 @@ button.danger {
 @media (max-width: 960px) {
   .app-shell--dashboard {
     width: min(calc(100% - 1rem), 1500px);
-    padding-top: calc(var(--dashboard-topbar-offset-mobile) + 0.75rem);
+    padding-top: 1rem;
   }
 
   .topbar--dashboard {
-    width: min(calc(100% - 1rem), 1500px);
+    width: 100%;
     padding: 1rem 0.75rem;
   }
 
