@@ -15,27 +15,77 @@ import {
   syncProfileOnLogin
 } from './firebase.js';
 
-const authStatus = document.getElementById('authStatus');
-const googleLoginBtn = document.getElementById('googleLogin');
-const logoutBtn = document.getElementById('logout');
-const profileLink = document.getElementById('profileLink');
-const adminNavLinks = Array.from(document.querySelectorAll('[data-admin-link="true"]'));
+const state = {
+  shellBound: false,
+  shellController: null,
+  redirectPromise: null,
+  authUnsubscribe: null,
+  authReady: false,
+  currentUser: null,
+  currentContext: null,
+  currentHandler: null,
+  currentRequireAuth: false,
+  currentHandlerToken: null
+};
 
-const roleBadge = document.createElement('span');
-roleBadge.id = 'userRoleBadge';
-roleBadge.className = 'role-badge';
-roleBadge.hidden = true;
-authStatus?.insertAdjacentElement('afterend', roleBadge);
+const getShellElements = () => {
+  const authStatus = document.getElementById('authStatus');
+  const googleLoginBtn = document.getElementById('googleLogin');
+  const logoutBtn = document.getElementById('logout');
+  const profileLink = document.getElementById('profileLink');
+  const authActions = authStatus?.closest('.auth-actions') || authStatus?.parentElement || null;
+  const adminNavLinks = Array.from(document.querySelectorAll('[data-admin-link="true"]'));
 
-const authNotice = document.createElement('p');
-authNotice.id = 'authNotice';
-authNotice.className = 'auth-notice';
-authNotice.hidden = true;
-(authStatus?.closest('.auth-actions') || authStatus?.parentElement)?.appendChild(authNotice);
+  let roleBadge = document.getElementById('userRoleBadge');
+  if (!roleBadge && authStatus) {
+    roleBadge = document.createElement('span');
+    roleBadge.id = 'userRoleBadge';
+    roleBadge.className = 'role-badge';
+    roleBadge.hidden = true;
+    authStatus.insertAdjacentElement('afterend', roleBadge);
+  }
+
+  let authNotice = document.getElementById('authNotice');
+  if (!authNotice && authActions) {
+    authNotice = document.createElement('p');
+    authNotice.id = 'authNotice';
+    authNotice.className = 'auth-notice';
+    authNotice.hidden = true;
+    authActions.appendChild(authNotice);
+  }
+
+  return {
+    adminNavLinks,
+    authActions,
+    authNotice,
+    authStatus,
+    googleLoginBtn,
+    logoutBtn,
+    profileLink,
+    roleBadge
+  };
+};
 
 const getDisplayIdentity = (session = {}) => normalizeNickname(session.nickname || '') || session.googleName || session.email || 'Non connecté';
 
+const navigateTo = (target, { replace = false } = {}) => {
+  if (typeof window === 'undefined') return;
+
+  if (window.__appRouter?.navigate) {
+    window.__appRouter.navigate(target, { replace });
+    return;
+  }
+
+  if (replace) {
+    window.location.replace(target);
+    return;
+  }
+
+  window.location.href = target;
+};
+
 const setAuthNotice = (message = '', level = 'info') => {
+  const { authNotice } = getShellElements();
   if (!authNotice) return;
 
   const normalizedMessage = String(message || '').trim();
@@ -45,6 +95,7 @@ const setAuthNotice = (message = '', level = 'info') => {
 };
 
 const toggleAdminNav = (visible) => {
+  const { adminNavLinks } = getShellElements();
   adminNavLinks.forEach((link) => {
     link.hidden = !visible;
   });
@@ -57,12 +108,22 @@ const setButtonVisibility = (element, visible) => {
 };
 
 const setAuthUi = (session = null) => {
+  const {
+    authStatus,
+    googleLoginBtn,
+    logoutBtn,
+    profileLink,
+    roleBadge
+  } = getShellElements();
+
   const isConnected = Boolean(session);
 
   if (authStatus) authStatus.textContent = isConnected ? getDisplayIdentity(session) : 'Non connecté';
   setButtonVisibility(googleLoginBtn, !isConnected);
   setButtonVisibility(logoutBtn, isConnected);
   setButtonVisibility(profileLink, isConnected);
+
+  if (!roleBadge) return;
 
   if (!isConnected) {
     roleBadge.hidden = true;
@@ -84,14 +145,19 @@ const setAuthUi = (session = null) => {
   roleBadge.className = `role-badge ${badge.badgeClass}`;
 };
 
+const getCurrentPage = () => {
+  if (typeof window === 'undefined') return 'index.html';
+  return window.location.pathname.split('/').pop() || 'index.html';
+};
+
 const redirectToLogin = () => {
   if (typeof window === 'undefined') return;
 
-  const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+  const currentPage = getCurrentPage();
   if (currentPage === 'login.html') return;
 
   const next = `${currentPage}${window.location.search || ''}${window.location.hash || ''}`;
-  window.location.href = `login.html?next=${encodeURIComponent(next)}`;
+  navigateTo(`login.html?next=${encodeURIComponent(next)}`);
 };
 
 const getRedirectTarget = () => {
@@ -103,11 +169,80 @@ const getRedirectTarget = () => {
 };
 
 const redirectAfterLogin = () => {
-  if (typeof window === 'undefined') return;
-  window.location.href = getRedirectTarget();
+  navigateTo(getRedirectTarget(), { replace: true });
 };
 
-const initCommon = async ({ onUserChanged, requireAuth = false } = {}) => {
+const notifyCurrentHandler = async () => {
+  if (!state.currentHandler) {
+    if (!state.currentUser && state.currentRequireAuth) redirectToLogin();
+    return;
+  }
+
+  await state.currentHandler(state.currentUser, state.currentContext);
+
+  if (!state.currentUser && state.currentRequireAuth) {
+    redirectToLogin();
+  }
+};
+
+const syncUserSession = async (user) => {
+  const runtimeState = getAuthRuntimeState();
+
+  if (!user) {
+    clearAuthCache();
+    toggleAdminNav(false);
+    setAuthUi(null);
+    setAuthNotice(runtimeState.notice || '', runtimeState.level);
+    state.currentUser = null;
+    state.currentContext = null;
+    await notifyCurrentHandler();
+    return;
+  }
+
+  try {
+    const profile = await syncProfileOnLogin(user);
+    const nickname = normalizeNickname(profile?.nickname || '');
+    const roles = normalizeRoles(profile?.roles || []);
+    const session = {
+      uid: user.uid,
+      email: (user.email || '').trim().toLowerCase(),
+      googleName: user.displayName || '',
+      nickname,
+      roles
+    };
+
+    saveAuthCache(session);
+    toggleAdminNav(canAccessAdmin(roles));
+    setAuthUi(session);
+    setAuthNotice(runtimeState.notice || '', runtimeState.level);
+
+    state.currentUser = user;
+    state.currentContext = {
+      profile: { ...profile, roles },
+      redirectAfterLogin,
+      redirectToLogin,
+      session
+    };
+    await notifyCurrentHandler();
+  } catch (error) {
+    console.error('Erreur de synchronisation de session :', error);
+    clearAuthCache();
+    toggleAdminNav(false);
+    setAuthUi(null);
+    setAuthNotice('Connexion Google établie, mais la synchronisation Firebase a échoué. Vérifie la connexion réseau puis recharge la page.', 'error');
+
+    state.currentUser = user;
+    state.currentContext = {
+      profile: null,
+      redirectAfterLogin,
+      redirectToLogin,
+      session: null
+    };
+    await notifyCurrentHandler();
+  }
+};
+
+const ensureAuthBootstrap = async () => {
   const runtimeState = getAuthRuntimeState();
   if (runtimeState.notice) {
     setAuthNotice(runtimeState.notice, runtimeState.level);
@@ -119,94 +254,85 @@ const initCommon = async ({ onUserChanged, requireAuth = false } = {}) => {
     toggleAdminNav(canAccessAdmin(cachedRoles));
     setAuthUi({ ...cachedSession, roles: cachedRoles });
   } else {
+    toggleAdminNav(false);
     setAuthUi(null);
   }
 
-  try {
-    await consumeRedirect();
-  } catch (error) {
-    setAuthNotice(error.message, 'error');
-    alert(error.message);
-  }
-
-  googleLoginBtn?.addEventListener('click', async () => {
-    googleLoginBtn.disabled = true;
-    try {
-      await performGoogleSignIn();
-    } catch (error) {
+  if (!state.redirectPromise) {
+    state.redirectPromise = consumeRedirect().catch((error) => {
       setAuthNotice(error.message, 'error');
       alert(error.message);
-    } finally {
-      if (!googleLoginBtn.hidden) googleLoginBtn.disabled = false;
-    }
-  });
+    });
+  }
 
-  logoutBtn?.addEventListener('click', async () => {
-    if (!auth.currentUser) return;
+  await state.redirectPromise;
 
-    try {
-      await signOut(auth);
-      clearAuthCache();
-      setAuthNotice(runtimeState.notice || '', runtimeState.level);
-    } catch (error) {
-      setAuthNotice('Impossible de fermer la session pour le moment.', 'error');
-      console.error('Erreur de déconnexion :', error);
-    }
-  });
+  if (!state.authUnsubscribe) {
+    state.authUnsubscribe = onAuthStateChanged(auth, async (user) => {
+      state.authReady = true;
+      await syncUserSession(user);
+    });
+  }
+};
 
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      clearAuthCache();
-      toggleAdminNav(false);
-      setAuthUi(null);
+const bindShellActions = () => {
+  if (state.shellBound) return;
 
-      if (onUserChanged) await onUserChanged(null, null);
-      if (requireAuth) redirectToLogin();
+  state.shellController = new AbortController();
+  const { signal } = state.shellController;
+  state.shellBound = true;
+
+  document.addEventListener('click', async (event) => {
+    const loginButton = event.target.closest('#googleLogin');
+    if (loginButton) {
+      loginButton.disabled = true;
+      try {
+        await performGoogleSignIn();
+      } catch (error) {
+        setAuthNotice(error.message, 'error');
+        alert(error.message);
+      } finally {
+        if (!loginButton.hidden) loginButton.disabled = false;
+      }
       return;
     }
 
-    try {
-      const profile = await syncProfileOnLogin(user);
-      const nickname = normalizeNickname(profile?.nickname || '');
-      const roles = normalizeRoles(profile?.roles || []);
-      const session = {
-        uid: user.uid,
-        email: (user.email || '').trim().toLowerCase(),
-        googleName: user.displayName || '',
-        nickname,
-        roles
-      };
+    const logoutButton = event.target.closest('#logout');
+    if (logoutButton) {
+      if (!auth.currentUser) return;
 
-      saveAuthCache(session);
-      toggleAdminNav(canAccessAdmin(roles));
-      setAuthUi(session);
-      setAuthNotice(runtimeState.notice || '', runtimeState.level);
-
-      if (onUserChanged) {
-        await onUserChanged(user, {
-          profile: { ...profile, roles },
-          session,
-          redirectAfterLogin,
-          redirectToLogin
-        });
-      }
-    } catch (error) {
-      console.error('Erreur de synchronisation de session :', error);
-      clearAuthCache();
-      toggleAdminNav(false);
-      setAuthUi(null);
-      setAuthNotice('Connexion Google établie, mais la synchronisation Firebase a échoué. Vérifie la connexion réseau puis recharge la page.', 'error');
-
-      if (onUserChanged) {
-        await onUserChanged(user, {
-          profile: null,
-          session: null,
-          redirectAfterLogin,
-          redirectToLogin
-        });
+      try {
+        await signOut(auth);
+        clearAuthCache();
+        const runtimeState = getAuthRuntimeState();
+        setAuthNotice(runtimeState.notice || '', runtimeState.level);
+      } catch (error) {
+        setAuthNotice('Impossible de fermer la session pour le moment.', 'error');
+        console.error('Erreur de déconnexion :', error);
       }
     }
-  });
+  }, { signal });
 };
 
-export { getRedirectTarget, initCommon, redirectAfterLogin, redirectToLogin };
+const initCommon = async ({ onUserChanged, requireAuth = false } = {}) => {
+  bindShellActions();
+  state.currentHandler = onUserChanged || null;
+  state.currentRequireAuth = requireAuth;
+  const handlerToken = Symbol('page-handler');
+  state.currentHandlerToken = handlerToken;
+
+  await ensureAuthBootstrap();
+
+  if (state.authReady) {
+    await notifyCurrentHandler();
+  }
+
+  return () => {
+    if (state.currentHandlerToken !== handlerToken) return;
+    state.currentHandler = null;
+    state.currentRequireAuth = false;
+    state.currentHandlerToken = null;
+  };
+};
+
+export { getRedirectTarget, initCommon, navigateTo, redirectAfterLogin, redirectToLogin };

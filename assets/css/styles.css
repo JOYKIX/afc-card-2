@@ -1382,3 +1382,20 @@ button.danger {
     width: 100%;
   }
 }
+
+.app-view {
+  min-height: 100%;
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.app-view.is-leaving {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.app-view.is-entering {
+  opacity: 0;
+  transform: translateY(-12px);
+}

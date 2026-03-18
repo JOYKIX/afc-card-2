@@ -1,164 +1,22 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AFC Card Studio · Admin</title>
-  <link rel="stylesheet" href="assets/css/styles.css" />
+  <script>
+    (function () {
+      var current = new URL(window.location.href);
+      var params = current.searchParams;
+      params.set('page', 'admin.html');
+      var nextUrl = 'index.html?' + params.toString() + (current.hash || '');
+      window.location.replace(nextUrl);
+    }());
+  </script>
 </head>
-
-<body class="page-admin">
-  <div class="bg-orb orb-a"></div>
-  <div class="bg-orb orb-b"></div>
-
-  <div class="app-shell app-shell--dashboard">
-    <header class="topbar topbar--dashboard glass">
-      <div class="brand-wrap topbar__brand">
-        <div>
-          <p class="kicker">AFC Universe</p>
-          <h1>Admin Control</h1>
-        </div>
-      </div>
-
-      <nav class="site-nav" aria-label="Navigation principale">
-        <a class="nav-link" href="index.html">
-          <span class="nav-link__eyebrow">Studio</span>
-          <strong>Créer</strong>
-        </a>
-        <a class="nav-link" href="booster.html">
-          <span class="nav-link__eyebrow">Collection</span>
-          <strong>Booster</strong>
-        </a>
-        <a class="nav-link" href="album.html">
-          <span class="nav-link__eyebrow">Collection</span>
-          <strong>Album</strong>
-        </a>
-        <a class="nav-link active" href="admin.html" data-admin-link="true" hidden>
-          <span class="nav-link__eyebrow">Backoffice</span>
-          <strong>Admin</strong>
-        </a>
-      </nav>
-
-      <section class="auth-actions auth-actions--topbar glass-soft">
-        <p class="eyebrow">Session</p>
-        <span id="authStatus">Vérification...</span>
-        <div class="auth-actions__buttons auth-actions__buttons--inline">
-          <a id="profileLink" class="button-link ghost" href="profile.html">Profil</a>
-          <button id="googleLogin" type="button">Connexion Google</button>
-          <button id="logout" type="button" class="ghost">Déconnexion</button>
-        </div>
-      </section>
-    </header>
-
-    <div class="app-workspace">
-
-      <main class="admin-layout">
-        <section class="panel glass admin-main-panel">
-          <div class="panel-heading">
-            <div>
-              <p class="eyebrow">Centre de contrôle</p>
-              <h2>Validation des cartes</h2>
-            </div>
-            <p class="subtitle">Visualise les cartes en attente, les validations effectuées et les suppressions liées aux refus.</p>
-          </div>
-
-          <div class="status-banner" id="adminNotice">Contrôle des droits...</div>
-
-          <div id="reviewStats" class="review-stats review-stats--hero">
-            <article>
-              <strong id="countPending">0</strong>
-              <span>En vérification</span>
-            </article>
-            <article>
-              <strong id="countApproved">0</strong>
-              <span>Validées</span>
-            </article>
-            <article>
-              <strong id="countRejected">0</strong>
-              <span>Refusées</span>
-            </article>
-          </div>
-
-          <div class="admin-content-grid">
-            <section class="admin-focus glass-soft" aria-labelledby="moderationTitle">
-              <div class="section-head-inline">
-                <div>
-                  <p class="eyebrow">Priorité</p>
-                  <h3 id="moderationTitle">Carte à modérer</h3>
-                </div>
-                <span class="section-pill">File active</span>
-              </div>
-              <section id="tinderReview" class="tinder-review" aria-live="polite"></section>
-            </section>
-
-            <aside class="admin-sidebar">
-              <section class="role-manager glass-soft" aria-labelledby="roleManagerTitle">
-                <div class="section-head-inline">
-                  <div>
-                    <p class="eyebrow">Accès</p>
-                    <h3 id="roleManagerTitle">Gestion des droits</h3>
-                  </div>
-                  <span class="section-pill">Rôles AFC</span>
-                </div>
-                <p class="subtitle">Cherche un profil par nickname puis attribue-lui ses rôles. Le rôle <strong>african army</strong> reste appliqué par défaut.</p>
-                <form id="roleForm" class="role-form">
-                  <label>Nickname
-                    <input id="roleNickname" type="text" placeholder="Pseudo AFC" required />
-                  </label>
-                  <fieldset class="role-options">
-                    <legend>Rôles supplémentaires</legend>
-                    <label><input type="checkbox" name="roleOption" value="vip" /> VIP</label>
-                    <label><input type="checkbox" name="roleOption" value="streamers" /> Streamers</label>
-                    <label><input type="checkbox" name="roleOption" value="staff afc" /> Staff AFC</label>
-                    <label><input type="checkbox" name="roleOption" value="creator" /> Créateur</label>
-                    <label><input type="checkbox" name="roleOption" value="admin" /> Admin</label>
-                    <label><input type="checkbox" name="roleOption" value="african king" /> African King</label>
-                  </fieldset>
-                  <button id="roleSubmit" type="submit">Mettre à jour les rôles</button>
-                </form>
-                <p id="roleFeedback" class="hint" aria-live="polite"></p>
-              </section>
-
-              <section class="admin-tips glass-soft">
-                <p class="eyebrow">Rappel</p>
-                <h3>Bonnes pratiques de modération</h3>
-                <ul class="feature-list">
-                  <li>Valider uniquement les captures complètes et lisibles.</li>
-                  <li>Refuser les visuels incomplets ou non conformes.</li>
-                  <li>Utiliser l’historique pour contrôler les derniers mouvements.</li>
-                </ul>
-              </section>
-            </aside>
-          </div>
-        </section>
-
-        <section class="panel glass admin-history-panel">
-          <div class="section-head-inline section-head-inline--stack-mobile">
-            <div>
-              <p class="eyebrow">Historique</p>
-              <h3 class="section-title">Suivi des vérifications</h3>
-            </div>
-            <div class="toolbar">
-              <label>Statut
-                <select id="statusFilter">
-                  <option value="all">Tous</option>
-                  <option value="pending">pending</option>
-                  <option value="approved">approved</option>
-                </select>
-              </label>
-              <label>Recherche
-                <input id="searchInput" type="search" placeholder="Pseudo, nom, rôle" />
-              </label>
-            </div>
-          </div>
-          <div id="verificationCards" class="pending-list pending-list--dashboard"></div>
-        </section>
-      </main>
-    </div>
-  </div>
-
-  <script type="module" src="assets/js/admin.js"></script>
+<body>
+  <noscript>
+    Cette page nécessite JavaScript. Ouvre <a href="index.html?page=admin.html">le shell principal</a>.
+  </noscript>
 </body>
-
 </html>
