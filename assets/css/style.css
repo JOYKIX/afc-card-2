@@ -330,6 +330,36 @@ button.danger { background: linear-gradient(145deg, #d53f74, #8f2550); border-co
 .rank-SS .holo,
 .rank-S .holo { opacity: .8; }
 
+
+
+.afc-card.is-exporting {
+  animation: none !important;
+  filter: none !important;
+}
+
+.afc-card.is-exporting .holo,
+.afc-card.is-exporting .rank-aura {
+  opacity: .4;
+  animation: none !important;
+}
+
+.afc-card.is-exporting-lite {
+  box-shadow: 0 18px 40px rgba(0,0,0,.45), inset 0 0 20px rgba(255,255,255,.06);
+}
+
+.afc-card.is-exporting-lite .holo,
+.afc-card.is-exporting-lite .rank-aura {
+  display: none;
+}
+
+.afc-card.is-exporting-lite .portrait-shell,
+.afc-card.is-exporting-lite .stats > div,
+.afc-card.is-exporting-lite .meta-left span,
+.afc-card.is-exporting-lite .meta-right span,
+.afc-card.is-exporting-lite .edition-chip {
+  background: rgba(8, 13, 30, .62);
+}
+
 .verification-box, .pending-item, .tinder-card, .role-manager {
   border: 1px solid var(--line);
   border-radius: 14px;
