@@ -8,87 +8,157 @@
   <link rel="stylesheet" href="assets/css/style.css" />
 </head>
 
-<body>
+<body class="page-admin">
   <div class="bg-orb orb-a"></div>
   <div class="bg-orb orb-b"></div>
 
-  <header class="topbar glass">
-    <div class="brand-wrap">
-      <div class="brand-badge" aria-hidden="true">FM</div>
-      <div>
-        <p class="kicker">AFC Universe</p>
-        <h1>Console Admin</h1>
+  <div class="app-shell">
+    <header class="topbar glass">
+      <div class="brand-wrap">
+        <div class="brand-badge" aria-hidden="true">FM</div>
+        <div>
+          <p class="kicker">AFC Universe</p>
+          <h1>Console Admin</h1>
+        </div>
       </div>
-    </div>
 
-    <nav class="site-nav">
-      <a class="nav-link" href="index.html">Créer</a>
-      <a class="nav-link" href="booster.html">Booster</a>
-      <a class="nav-link" href="profile.html">Profil</a>
-      <a class="nav-link active" href="admin.html" data-admin-link="true" hidden>Admin</a>
-    </nav>
+      <nav class="site-nav" aria-label="Navigation principale">
+        <a class="nav-link" href="index.html">Créer</a>
+        <a class="nav-link" href="booster.html">Booster</a>
+        <a class="nav-link" href="profile.html">Profil</a>
+        <a class="nav-link active" href="admin.html" data-admin-link="true" hidden>Admin</a>
+      </nav>
 
-    <div class="auth-actions">
-      <span id="authStatus">Vérification...</span>
-      <button id="googleLogin" type="button">Connexion Google</button>
-      <button id="logout" type="button" class="ghost">Déconnexion</button>
-    </div>
-  </header>
+      <div class="auth-actions">
+        <span id="authStatus">Vérification...</span>
+        <button id="googleLogin" type="button">Connexion Google</button>
+        <button id="logout" type="button" class="ghost">Déconnexion</button>
+      </div>
+    </header>
 
-  <section class="page-banner">
-    <h2>Modération en temps réel</h2>
-    <p>Validation plus fiable : une carte approuvée quitte cardVerification et est déplacée dans cards avec sa capture, son créateur et son rang.</p>
-  </section>
+    <section class="hero-panel glass hero-panel--admin">
+      <div class="hero-copy">
+        <p class="kicker">Modération & pilotage</p>
+        <h2>Refonte complète de la page admin en véritable dashboard de validation.</h2>
+        <p>
+          La console admin a été entièrement restructurée pour séparer le pilotage, la modération en cours, les accès et
+          l’historique. Objectif : aller plus vite, mieux comprendre l’état de la file et réduire les erreurs.
+        </p>
+        <div class="hero-chips">
+          <span>Vue prioritaire</span>
+          <span>Gestion des accès</span>
+          <span>Historique filtrable</span>
+        </div>
+      </div>
 
-  <main class="single-layout">
-    <section class="panel glass">
-      <h2>Validation des cartes</h2>
-      <p class="subtitle">Pilote les validations avec une interface plus claire et une DA cohérente sur tout le studio.</p>
-      <div id="adminNotice" class="hint">Contrôle des droits...</div>
+      <div class="hero-side-card glass-soft">
+        <p class="eyebrow">Workflow</p>
+        <h3>cardVerification → cards</h3>
+        <p>Une carte validée sort de la file d’attente puis rejoint directement la collection finale avec ses métadonnées.</p>
+      </div>
+    </section>
 
-      <section class="role-manager" aria-labelledby="roleManagerTitle">
-        <h3 id="roleManagerTitle" class="section-title">Gestion des accès</h3>
-        <p class="subtitle">Ajoute un compte admin ou VIP via son email.</p>
-        <form id="roleForm" class="role-form">
-          <label>Email
-            <input id="roleEmail" type="email" placeholder="joueur@email.com" required />
-          </label>
-          <label>Rôle
-            <select id="roleType" required>
-              <option value="admin">Admin</option>
-              <option value="vip">VIP</option>
-            </select>
-          </label>
-          <button id="roleSubmit" type="submit">Ajouter l'accès</button>
-        </form>
-        <p id="roleFeedback" class="hint" aria-live="polite"></p>
+    <main class="admin-layout">
+      <section class="panel glass admin-main-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Centre de contrôle</p>
+            <h2>Validation des cartes</h2>
+          </div>
+          <p class="subtitle">Dashboard repensé pour prioriser les décisions, visualiser la charge en temps réel et garder l’historique sous contrôle.</p>
+        </div>
+
+        <div class="status-banner" id="adminNotice">Contrôle des droits...</div>
+
+        <div id="reviewStats" class="review-stats review-stats--hero">
+          <article>
+            <strong id="countPending">0</strong>
+            <span>En vérification</span>
+          </article>
+          <article>
+            <strong id="countApproved">0</strong>
+            <span>Validées</span>
+          </article>
+          <article>
+            <strong id="countRejected">0</strong>
+            <span>Refusées</span>
+          </article>
+        </div>
+
+        <div class="admin-content-grid">
+          <section class="admin-focus glass-soft" aria-labelledby="moderationTitle">
+            <div class="section-head-inline">
+              <div>
+                <p class="eyebrow">Priorité</p>
+                <h3 id="moderationTitle">Carte à modérer</h3>
+              </div>
+              <span class="section-pill">File active</span>
+            </div>
+            <section id="tinderReview" class="tinder-review" aria-live="polite"></section>
+          </section>
+
+          <aside class="admin-sidebar">
+            <section class="role-manager glass-soft" aria-labelledby="roleManagerTitle">
+              <div class="section-head-inline">
+                <div>
+                  <p class="eyebrow">Accès</p>
+                  <h3 id="roleManagerTitle">Gestion des droits</h3>
+                </div>
+                <span class="section-pill">Admin / VIP</span>
+              </div>
+              <p class="subtitle">Ajoute un compte admin ou VIP via son email pour ouvrir plus vite les bons accès.</p>
+              <form id="roleForm" class="role-form">
+                <label>Email
+                  <input id="roleEmail" type="email" placeholder="joueur@email.com" required />
+                </label>
+                <label>Rôle
+                  <select id="roleType" required>
+                    <option value="admin">Admin</option>
+                    <option value="vip">VIP</option>
+                  </select>
+                </label>
+                <button id="roleSubmit" type="submit">Ajouter l'accès</button>
+              </form>
+              <p id="roleFeedback" class="hint" aria-live="polite"></p>
+            </section>
+
+            <section class="admin-tips glass-soft">
+              <p class="eyebrow">Rappel</p>
+              <h3>Bonnes pratiques de modération</h3>
+              <ul class="feature-list">
+                <li>Valider uniquement les captures complètes et lisibles.</li>
+                <li>Refuser les visuels incomplets ou non conformes.</li>
+                <li>Utiliser l’historique pour contrôler les derniers mouvements.</li>
+              </ul>
+            </section>
+          </aside>
+        </div>
       </section>
 
-      <div id="reviewStats" class="review-stats">
-        <article><strong id="countPending">0</strong><span>En vérification</span></article>
-        <article><strong id="countApproved">0</strong><span>Validées</span></article>
-        <article><strong id="countRejected">0</strong><span>Refusées</span></article>
-      </div>
-
-      <section id="tinderReview" class="tinder-review" aria-live="polite"></section>
-
-      <h3 class="section-title">Historique de cardVerification</h3>
-      <div class="toolbar">
-        <label>Statut
-          <select id="statusFilter">
-            <option value="all">Tous</option>
-            <option value="pending">pending</option>
-            <option value="approved">approved</option>
-            <option value="rejected">rejected</option>
-          </select>
-        </label>
-        <label>Recherche
-          <input id="searchInput" type="search" placeholder="Pseudo, nom, rôle" />
-        </label>
-      </div>
-      <div id="verificationCards" class="pending-list"></div>
-    </section>
-  </main>
+      <section class="panel glass admin-history-panel">
+        <div class="section-head-inline section-head-inline--stack-mobile">
+          <div>
+            <p class="eyebrow">Historique</p>
+            <h3 class="section-title">Suivi des vérifications</h3>
+          </div>
+          <div class="toolbar">
+            <label>Statut
+              <select id="statusFilter">
+                <option value="all">Tous</option>
+                <option value="pending">pending</option>
+                <option value="approved">approved</option>
+                <option value="rejected">rejected</option>
+              </select>
+            </label>
+            <label>Recherche
+              <input id="searchInput" type="search" placeholder="Pseudo, nom, rôle" />
+            </label>
+          </div>
+        </div>
+        <div id="verificationCards" class="pending-list pending-list--dashboard"></div>
+      </section>
+    </main>
+  </div>
 
   <script type="module" src="assets/js/admin.js"></script>
 </body>
