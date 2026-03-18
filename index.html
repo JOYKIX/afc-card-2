@@ -138,38 +138,56 @@
 
           <div class="preview-wrap">
             <article class="afc-card rank-D" id="afcCard">
+              <div class="card-spectrum" aria-hidden="true"></div>
+              <div class="card-frame-lines" aria-hidden="true"></div>
               <div class="holo"></div>
               <div class="rank-aura" aria-hidden="true"></div>
               <div class="card-noise" aria-hidden="true"></div>
+
+              <div class="card-corner card-corner--tl" aria-hidden="true"></div>
+              <div class="card-corner card-corner--tr" aria-hidden="true"></div>
+              <div class="card-corner card-corner--bl" aria-hidden="true"></div>
+              <div class="card-corner card-corner--br" aria-hidden="true"></div>
+
               <header class="card-header">
                 <div class="meta-left">
                   <span id="cardCost">2</span>
                 </div>
-                <div class="identity">
-                  <p class="kicker" id="cardTypeTop">équilibré</p>
+
+                <div class="identity identity--hero">
+                  <div class="identity-ribbon">
+                    <span class="type-chip" id="cardTypeTop">équilibré</span>
+                  </div>
                   <h3 id="cardName">Fémi-Mars</h3>
                   <p id="cardTitle">Responsable staff</p>
                 </div>
+
                 <div class="meta-right">
                   <span id="cardRank">C</span>
-                  <small id="cardAverage">32</small>
+                  <small><strong id="cardAverage">32</strong> moy.</small>
                 </div>
               </header>
 
-              <div class="portrait-shell">
+              <section class="portrait-shell">
+                <span class="edition-chip" id="cardEdition">2e édition</span>
+
                 <div class="portrait" id="portrait">
                   <img class="portrait-image" id="portraitImage" alt="" hidden />
+                  <div class="portrait-overlay" aria-hidden="true"></div>
                 </div>
-              </div>
+              </section>
 
               <section class="card-body">
                 <section class="skills">
-                  <div class="section-label">Capacités</div>
+                  <div class="skills-head">
+                    <div class="section-label">Capacités</div>
+                  </div>
                   <p id="cardAbilities"></p>
                 </section>
 
                 <footer class="stats">
                   <div class="stat-card stat-card--attack">
+                    <div class="stat-card__glow" aria-hidden="true"></div>
                     <strong aria-label="Attaque">
                       <span class="stat-icon stat-icon--attack" aria-hidden="true">
                         <svg viewBox="0 -960 960 960" xmlns="http://www.w3.org/2000/svg" focusable="false">
@@ -180,6 +198,7 @@
                     <span id="attack">0</span>
                   </div>
                   <div class="stat-card stat-card--defense">
+                    <div class="stat-card__glow" aria-hidden="true"></div>
                     <strong aria-label="Défense">
                       <span class="stat-icon stat-icon--defense" aria-hidden="true">
                         <svg viewBox="0 -960 960 960" xmlns="http://www.w3.org/2000/svg" focusable="false">
@@ -191,8 +210,6 @@
                   </div>
                 </footer>
               </section>
-
-              <span class="edition-chip" id="cardEdition">2e édition</span>
             </article>
           </div>
         </article>
