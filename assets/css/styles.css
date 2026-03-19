@@ -941,6 +941,12 @@ button.danger {
   gap: 0.8rem;
 }
 
+.portrait-position-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
 .portrait-zoom-controls {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto auto;
@@ -974,6 +980,118 @@ button.danger {
 
 .portrait-position-tools .hint {
   font-size: 0.92rem;
+}
+
+.crop-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+}
+
+.crop-modal[hidden] {
+  display: none;
+}
+
+.crop-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 2, 10, 0.76);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.crop-modal__dialog {
+  position: relative;
+  z-index: 1;
+  width: min(1100px, 100%);
+  max-height: min(92vh, 920px);
+  overflow: auto;
+  padding: 1.2rem;
+}
+
+.crop-modal__header {
+  margin-bottom: 1rem;
+}
+
+.crop-modal__content {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.crop-modal__frame-wrap,
+.crop-modal__sidebar {
+  padding: 1rem;
+}
+
+.crop-modal__frame-wrap {
+  display: grid;
+  place-items: center;
+  background: rgba(11, 7, 18, 0.9);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.crop-frame {
+  --crop-frame-ratio: 0.78;
+  position: relative;
+  width: min(100%, 460px);
+  aspect-ratio: var(--crop-frame-ratio);
+  min-height: 320px;
+  border-radius: 22px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 15% 15%, rgba(255, 255, 255, 0.18), transparent 18%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 26%),
+    linear-gradient(140deg, var(--portrait-grad-1), var(--portrait-grad-2));
+  cursor: grab;
+  touch-action: none;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.crop-frame.is-dragging {
+  cursor: grabbing;
+}
+
+.crop-frame__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 50%;
+  transform: scale(var(--portrait-zoom, 1));
+  transform-origin: center;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.crop-frame__overlay {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 20%),
+    linear-gradient(180deg, rgba(3, 2, 8, 0) 55%, rgba(3, 2, 8, 0.22) 100%);
+  pointer-events: none;
+}
+
+.crop-modal__sidebar {
+  display: grid;
+  gap: 1rem;
+}
+
+.crop-modal__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+body.modal-open {
+  overflow: hidden;
 }
 
 .booster-grid,
@@ -1561,5 +1679,17 @@ button.danger {
 
   .portrait-zoom-value {
     justify-self: stretch;
+  }
+}
+
+
+@media (max-width: 900px) {
+  .crop-modal__content {
+    grid-template-columns: 1fr;
+  }
+
+  .crop-frame {
+    width: min(100%, 380px);
+    min-height: 280px;
   }
 }

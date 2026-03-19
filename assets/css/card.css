@@ -320,14 +320,6 @@
   touch-action: none;
 }
 
-.portrait--adjustable {
-  cursor: grab;
-}
-
-.portrait--adjustable.is-dragging {
-  cursor: grabbing;
-}
-
 .portrait-overlay {
   position: absolute;
   inset: 0;

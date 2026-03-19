@@ -37,19 +37,14 @@
               <div class="section-head-inline section-head-inline--stack-mobile">
                 <div>
                   <p class="eyebrow">Illustration</p>
-                  <h3 id="portraitPositionTitle">Cadre libre</h3>
+                  <h3 id="portraitPositionTitle">Rognage en pop-up</h3>
                 </div>
-                <button type="button" id="resetPortraitPosition" class="ghost">Réinitialiser le cadrage</button>
+                <div class="portrait-position-actions">
+                  <button type="button" id="openPortraitCropModal" class="ghost">Rogner l'image</button>
+                  <button type="button" id="resetPortraitPosition" class="ghost">Réinitialiser</button>
+                </div>
               </div>
-              <div class="portrait-zoom-controls" aria-label="Contrôles de zoom de l'illustration">
-                <button type="button" id="zoomOutPortrait" class="ghost portrait-zoom-button" aria-label="Dézoomer l'illustration">−</button>
-                <label class="portrait-zoom-slider" for="portraitZoomRange">Zoom
-                  <input id="portraitZoomRange" type="range" min="1" max="3" step="0.05" value="1" />
-                </label>
-                <button type="button" id="zoomInPortrait" class="ghost portrait-zoom-button" aria-label="Zoomer l'illustration">+</button>
-                <span id="portraitZoomValue" class="section-pill portrait-zoom-value">100%</span>
-              </div>
-              <p class="hint">Glisse l'illustration dans l'aperçu pour la déplacer librement en X et Y. Utilise aussi le zoom, le dézoom ou la molette pour ajuster précisément le cadrage avant l'export.</p>
+              <p class="hint">Choisis une image puis ouvre la pop-up pour la rogner, zoomer et la placer exactement dans le cadre de l’illustration avant l’export.</p>
             </section>
 
             <label>Capacités
@@ -188,4 +183,44 @@
           </article>
 		  
         </section>
+
+
+      <div class="crop-modal" id="portraitCropModal" hidden>
+        <div class="crop-modal__backdrop" data-close-portrait-modal></div>
+        <div class="crop-modal__dialog glass" role="dialog" aria-modal="true" aria-labelledby="portraitCropModalTitle">
+          <div class="crop-modal__header section-head-inline section-head-inline--stack-mobile">
+            <div>
+              <p class="eyebrow">Illustration</p>
+              <h3 id="portraitCropModalTitle">Rogner et placer l’image</h3>
+            </div>
+            <button type="button" id="closePortraitCropModal" class="ghost">Fermer</button>
+          </div>
+
+          <div class="crop-modal__content">
+            <div class="crop-modal__frame-wrap">
+              <div class="crop-frame" id="portraitCropFrame">
+                <img class="crop-frame__image" id="portraitCropImage" alt="Aperçu du rognage de l’illustration" hidden />
+                <div class="crop-frame__overlay" aria-hidden="true"></div>
+              </div>
+            </div>
+
+            <div class="crop-modal__sidebar glass-soft">
+              <p class="hint">Déplace l’image dans ce cadre pour choisir exactement la zone visible sur la carte.</p>
+              <div class="portrait-zoom-controls" aria-label="Contrôles de zoom de la pop-up d'illustration">
+                <button type="button" id="cropZoomOutPortrait" class="ghost portrait-zoom-button" aria-label="Dézoomer l'illustration">−</button>
+                <label class="portrait-zoom-slider" for="cropPortraitZoomRange">Zoom
+                  <input id="cropPortraitZoomRange" type="range" min="1" max="3" step="0.05" value="1" />
+                </label>
+                <button type="button" id="cropZoomInPortrait" class="ghost portrait-zoom-button" aria-label="Zoomer l'illustration">+</button>
+                <span id="cropPortraitZoomValue" class="section-pill portrait-zoom-value">100%</span>
+              </div>
+              <div class="crop-modal__actions">
+                <button type="button" id="resetPortraitCropModal" class="ghost">Recentrer</button>
+                <button type="button" id="cancelPortraitCropModal" class="ghost">Annuler</button>
+                <button type="button" id="applyPortraitCropModal">Appliquer le cadrage</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       </main>

@@ -41,10 +41,18 @@ let imageInput;
 let portrait;
 let portraitImage;
 let resetPortraitPositionBtn;
-let portraitZoomRange;
-let zoomInPortraitBtn;
-let zoomOutPortraitBtn;
-let portraitZoomValue;
+let openPortraitCropModalBtn;
+let portraitCropModal;
+let closePortraitCropModalBtn;
+let cancelPortraitCropModalBtn;
+let applyPortraitCropModalBtn;
+let resetPortraitCropModalBtn;
+let portraitCropFrame;
+let portraitCropImage;
+let cropPortraitZoomRange;
+let cropZoomInPortraitBtn;
+let cropZoomOutPortraitBtn;
+let cropPortraitZoomValue;
 let verificationStatusText;
 let renderEngineStatus;
 let cardElement;
@@ -77,7 +85,8 @@ let portraitDataUrl = '';
 let portraitPosition = { x: 50, y: 50 };
 let portraitZoom = 1;
 let portraitNaturalSize = { width: 0, height: 0 };
-let portraitDragState = null;
+let portraitCropState = null;
+let portraitCropDragState = null;
 let verificationUnsubscribe = null;
 
 const getAverage = () => (attack + defense) / 2;
@@ -169,9 +178,14 @@ const syncManualStatInputs = () => {
   if (manualDefenseInput) manualDefenseInput.value = String(defense);
 };
 
-const syncPortraitZoomUi = () => {
-  if (portraitZoomRange) portraitZoomRange.value = String(clampPortraitZoom(portraitZoom));
-  if (portraitZoomValue) portraitZoomValue.textContent = formatPortraitZoomValue(portraitZoom);
+const syncPortraitActionUi = () => {
+  if (openPortraitCropModalBtn) openPortraitCropModalBtn.disabled = !portraitDataUrl;
+};
+
+const syncCropZoomUi = () => {
+  if (!portraitCropState) return;
+  if (cropPortraitZoomRange) cropPortraitZoomRange.value = String(clampPortraitZoom(portraitCropState.zoom));
+  if (cropPortraitZoomValue) cropPortraitZoomValue.textContent = formatPortraitZoomValue(portraitCropState.zoom);
 };
 
 const applyPortraitImage = () => {
@@ -182,14 +196,83 @@ const applyPortraitImage = () => {
   portrait.style.backgroundImage = portraitDataUrl ? `url('${portraitDataUrl}')` : '';
   portrait.style.backgroundPosition = `${safeX}% ${safeY}%`;
   portrait.style.setProperty('--portrait-zoom', String(safeZoom));
-  portrait.classList.toggle('portrait--adjustable', Boolean(portraitDataUrl));
-  syncPortraitZoomUi();
+  syncPortraitActionUi();
 
   if (!portraitImage) return;
 
   portraitImage.src = portraitDataUrl || '';
   portraitImage.hidden = !portraitDataUrl;
   portraitImage.style.objectPosition = `${safeX}% ${safeY}%`;
+};
+
+const syncPortraitCropFrameRatio = () => {
+  if (!portraitCropFrame) return;
+  const bounds = portrait?.getBoundingClientRect?.();
+  const width = Math.max(1, Math.round(bounds?.width || 234));
+  const height = Math.max(1, Math.round(bounds?.height || 280));
+  portraitCropFrame.style.setProperty('--crop-frame-ratio', `${width} / ${height}`);
+};
+
+const applyPortraitCropPreview = () => {
+  if (!portraitCropFrame || !portraitCropImage) return;
+
+  const safeX = clampPercent(portraitCropState?.position?.x ?? 50);
+  const safeY = clampPercent(portraitCropState?.position?.y ?? 50);
+  const safeZoom = clampPortraitZoom(portraitCropState?.zoom ?? 1);
+  const dataUrl = portraitCropState?.dataUrl || '';
+
+  portraitCropFrame.style.setProperty('--portrait-zoom', String(safeZoom));
+  portraitCropImage.src = dataUrl;
+  portraitCropImage.hidden = !dataUrl;
+  portraitCropImage.style.objectPosition = `${safeX}% ${safeY}%`;
+  syncCropZoomUi();
+};
+
+const createPortraitCropState = ({ dataUrl = portraitDataUrl, position = portraitPosition, zoom = portraitZoom, naturalSize = portraitNaturalSize } = {}) => ({
+  dataUrl,
+  position: {
+    x: clampPercent(position?.x ?? 50),
+    y: clampPercent(position?.y ?? 50)
+  },
+  zoom: clampPortraitZoom(zoom),
+  naturalSize: {
+    width: Math.max(0, Number(naturalSize?.width) || 0),
+    height: Math.max(0, Number(naturalSize?.height) || 0)
+  }
+});
+
+const closePortraitCropModal = () => {
+  portraitCropModal.hidden = true;
+  portraitCropDragState = null;
+  portraitCropFrame?.classList.remove('is-dragging');
+  document.body.classList.remove('modal-open');
+};
+
+const openPortraitCropModal = (options = {}) => {
+  const nextDataUrl = options.dataUrl ?? portraitDataUrl;
+  if (!nextDataUrl) return;
+
+  portraitCropState = createPortraitCropState({
+    dataUrl: nextDataUrl,
+    position: options.position ?? (options.reset ? { x: 50, y: 50 } : portraitPosition),
+    zoom: options.zoom ?? (options.reset ? 1 : portraitZoom),
+    naturalSize: options.naturalSize ?? (options.reset ? { width: 0, height: 0 } : portraitNaturalSize)
+  });
+
+  syncPortraitCropFrameRatio();
+  applyPortraitCropPreview();
+  portraitCropModal.hidden = false;
+  document.body.classList.add('modal-open');
+};
+
+const commitPortraitCrop = () => {
+  if (!portraitCropState?.dataUrl) return;
+  portraitDataUrl = portraitCropState.dataUrl;
+  portraitPosition = { ...portraitCropState.position };
+  portraitZoom = clampPortraitZoom(portraitCropState.zoom);
+  portraitNaturalSize = { ...portraitCropState.naturalSize };
+  applyPortraitImage();
+  saveDraft();
 };
 
 const resetPortraitPosition = () => {
@@ -199,78 +282,85 @@ const resetPortraitPosition = () => {
   saveDraft();
 };
 
-const setPortraitZoom = (value, { preserveDraft = false } = {}) => {
-  portraitZoom = clampPortraitZoom(value);
-  applyPortraitImage();
-  if (preserveDraft) saveDraft();
+const resetPortraitCropState = () => {
+  if (!portraitCropState) return;
+  portraitCropState.position = { x: 50, y: 50 };
+  portraitCropState.zoom = 1;
+  applyPortraitCropPreview();
 };
 
-const adjustPortraitZoom = (delta) => {
-  setPortraitZoom(portraitZoom + delta, { preserveDraft: true });
+const setCropPortraitZoom = (value) => {
+  if (!portraitCropState) return;
+  portraitCropState.zoom = clampPortraitZoom(value);
+  applyPortraitCropPreview();
 };
 
-const getPortraitOverflow = () => {
-  if (!portraitImage || !portraitNaturalSize.width || !portraitNaturalSize.height) {
+const adjustCropPortraitZoom = (delta) => {
+  if (!portraitCropState) return;
+  setCropPortraitZoom(portraitCropState.zoom + delta);
+};
+
+const getPortraitCropOverflow = () => {
+  if (!portraitCropFrame || !portraitCropState?.naturalSize?.width || !portraitCropState?.naturalSize?.height) {
     return { overflowX: 0, overflowY: 0 };
   }
 
-  const bounds = portrait.getBoundingClientRect();
-  const baseScale = Math.max(bounds.width / portraitNaturalSize.width, bounds.height / portraitNaturalSize.height);
-  const scale = baseScale * clampPortraitZoom(portraitZoom);
+  const bounds = portraitCropFrame.getBoundingClientRect();
+  const baseScale = Math.max(bounds.width / portraitCropState.naturalSize.width, bounds.height / portraitCropState.naturalSize.height);
+  const scale = baseScale * clampPortraitZoom(portraitCropState.zoom);
 
   return {
-    overflowX: Math.max(0, (portraitNaturalSize.width * scale) - bounds.width),
-    overflowY: Math.max(0, (portraitNaturalSize.height * scale) - bounds.height)
+    overflowX: Math.max(0, (portraitCropState.naturalSize.width * scale) - bounds.width),
+    overflowY: Math.max(0, (portraitCropState.naturalSize.height * scale) - bounds.height)
   };
 };
 
-const startPortraitDrag = (event) => {
-  if (!portraitDataUrl) return;
+const startPortraitCropDrag = (event) => {
+  if (!portraitCropState?.dataUrl) return;
 
   const pointer = event.touches?.[0] || event;
-  const { overflowX, overflowY } = getPortraitOverflow();
+  const { overflowX, overflowY } = getPortraitCropOverflow();
 
-  portraitDragState = {
+  portraitCropDragState = {
     startX: pointer.clientX,
     startY: pointer.clientY,
-    originX: portraitPosition.x,
-    originY: portraitPosition.y,
+    originX: portraitCropState.position.x,
+    originY: portraitCropState.position.y,
     overflowX,
     overflowY
   };
 
-  portrait.classList.add('is-dragging');
+  portraitCropFrame.classList.add('is-dragging');
 };
 
-const movePortrait = (event) => {
-  if (!portraitDragState) return;
+const movePortraitCrop = (event) => {
+  if (!portraitCropDragState || !portraitCropState) return;
 
   const pointer = event.touches?.[0] || event;
-  const deltaX = pointer.clientX - portraitDragState.startX;
-  const deltaY = pointer.clientY - portraitDragState.startY;
+  const deltaX = pointer.clientX - portraitCropDragState.startX;
+  const deltaY = pointer.clientY - portraitCropDragState.startY;
 
-  portraitPosition = {
-    x: portraitDragState.overflowX > 0 ? clampPercent(portraitDragState.originX - ((deltaX / portraitDragState.overflowX) * 100)) : 50,
-    y: portraitDragState.overflowY > 0 ? clampPercent(portraitDragState.originY - ((deltaY / portraitDragState.overflowY) * 100)) : 50
+  portraitCropState.position = {
+    x: portraitCropDragState.overflowX > 0 ? clampPercent(portraitCropDragState.originX - ((deltaX / portraitCropDragState.overflowX) * 100)) : 50,
+    y: portraitCropDragState.overflowY > 0 ? clampPercent(portraitCropDragState.originY - ((deltaY / portraitCropDragState.overflowY) * 100)) : 50
   };
 
-  applyPortraitImage();
+  applyPortraitCropPreview();
   if (event.cancelable) event.preventDefault();
 };
 
-const stopPortraitDrag = () => {
-  if (!portraitDragState) return;
-  portraitDragState = null;
-  portrait.classList.remove('is-dragging');
-  saveDraft();
+const stopPortraitCropDrag = () => {
+  if (!portraitCropDragState) return;
+  portraitCropDragState = null;
+  portraitCropFrame?.classList.remove('is-dragging');
 };
 
-const handlePortraitWheel = (event) => {
-  if (!portraitDataUrl) return;
+const handlePortraitCropWheel = (event) => {
+  if (!portraitCropState?.dataUrl) return;
   if (event.cancelable) event.preventDefault();
 
   const step = event.deltaY < 0 ? 0.1 : -0.1;
-  adjustPortraitZoom(step);
+  adjustCropPortraitZoom(step);
 };
 
 const syncAvailableTitles = () => {
@@ -731,10 +821,18 @@ const bindDomReferences = () => {
   portrait = document.getElementById('portrait');
   portraitImage = document.getElementById('portraitImage');
   resetPortraitPositionBtn = document.getElementById('resetPortraitPosition');
-  portraitZoomRange = document.getElementById('portraitZoomRange');
-  zoomInPortraitBtn = document.getElementById('zoomInPortrait');
-  zoomOutPortraitBtn = document.getElementById('zoomOutPortrait');
-  portraitZoomValue = document.getElementById('portraitZoomValue');
+  openPortraitCropModalBtn = document.getElementById('openPortraitCropModal');
+  portraitCropModal = document.getElementById('portraitCropModal');
+  closePortraitCropModalBtn = document.getElementById('closePortraitCropModal');
+  cancelPortraitCropModalBtn = document.getElementById('cancelPortraitCropModal');
+  applyPortraitCropModalBtn = document.getElementById('applyPortraitCropModal');
+  resetPortraitCropModalBtn = document.getElementById('resetPortraitCropModal');
+  portraitCropFrame = document.getElementById('portraitCropFrame');
+  portraitCropImage = document.getElementById('portraitCropImage');
+  cropPortraitZoomRange = document.getElementById('cropPortraitZoomRange');
+  cropZoomInPortraitBtn = document.getElementById('cropZoomInPortrait');
+  cropZoomOutPortraitBtn = document.getElementById('cropZoomOutPortrait');
+  cropPortraitZoomValue = document.getElementById('cropPortraitZoomValue');
   verificationStatusText = document.getElementById('verificationStatusText');
   renderEngineStatus = document.getElementById('renderEngineStatus');
   cardElement = document.getElementById('afcCard');
@@ -795,14 +893,16 @@ export const initCreatePage = async () => {
 
     const reader = new FileReader();
     reader.onload = (readerEvent) => {
-      portraitDataUrl = readerEvent.target?.result || '';
-      portraitNaturalSize = { width: 0, height: 0 };
-      portraitPosition = { x: 50, y: 50 };
-      portraitZoom = 1;
-      applyPortraitImage();
-      saveDraft();
+      const nextPortraitDataUrl = readerEvent.target?.result || '';
+      if (!nextPortraitDataUrl) return;
+      openPortraitCropModal({
+        dataUrl: nextPortraitDataUrl,
+        reset: true,
+        naturalSize: { width: 0, height: 0 }
+      });
     };
     reader.readAsDataURL(file);
+    event.target.value = '';
   }, { signal });
 
   submitCardBtn.addEventListener('click', async () => {
@@ -880,14 +980,24 @@ export const initCreatePage = async () => {
   }, { signal });
 
   resetPortraitPositionBtn?.addEventListener('click', resetPortraitPosition, { signal });
-  portraitZoomRange?.addEventListener('input', (event) => {
-    setPortraitZoom(event.target.value, { preserveDraft: true });
+  openPortraitCropModalBtn?.addEventListener('click', () => {
+    openPortraitCropModal();
   }, { signal });
-  zoomInPortraitBtn?.addEventListener('click', () => {
-    adjustPortraitZoom(0.1);
+  closePortraitCropModalBtn?.addEventListener('click', closePortraitCropModal, { signal });
+  cancelPortraitCropModalBtn?.addEventListener('click', closePortraitCropModal, { signal });
+  applyPortraitCropModalBtn?.addEventListener('click', () => {
+    commitPortraitCrop();
+    closePortraitCropModal();
   }, { signal });
-  zoomOutPortraitBtn?.addEventListener('click', () => {
-    adjustPortraitZoom(-0.1);
+  resetPortraitCropModalBtn?.addEventListener('click', resetPortraitCropState, { signal });
+  cropPortraitZoomRange?.addEventListener('input', (event) => {
+    setCropPortraitZoom(event.target.value);
+  }, { signal });
+  cropZoomInPortraitBtn?.addEventListener('click', () => {
+    adjustCropPortraitZoom(0.1);
+  }, { signal });
+  cropZoomOutPortraitBtn?.addEventListener('click', () => {
+    adjustCropPortraitZoom(-0.1);
   }, { signal });
 
   portraitImage?.addEventListener('load', () => {
@@ -898,15 +1008,36 @@ export const initCreatePage = async () => {
     applyPortraitImage();
   }, { signal });
 
-  portrait.addEventListener('pointerdown', (event) => {
-    if (event.pointerType === 'mouse' && event.button !== 0) return;
-    startPortraitDrag(event);
+  portraitCropImage?.addEventListener('load', () => {
+    if (!portraitCropState) return;
+    portraitCropState.naturalSize = {
+      width: portraitCropImage.naturalWidth || 0,
+      height: portraitCropImage.naturalHeight || 0
+    };
+    applyPortraitCropPreview();
   }, { signal });
-  portrait.addEventListener('wheel', handlePortraitWheel, { passive: false, signal });
 
-  window.addEventListener('pointermove', movePortrait, { passive: false, signal });
-  window.addEventListener('pointerup', stopPortraitDrag, { signal });
-  window.addEventListener('pointercancel', stopPortraitDrag, { signal });
+  portraitCropModal?.addEventListener('click', (event) => {
+    if (event.target instanceof HTMLElement && event.target.hasAttribute('data-close-portrait-modal')) {
+      closePortraitCropModal();
+    }
+  }, { signal });
+
+  portraitCropFrame?.addEventListener('pointerdown', (event) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    startPortraitCropDrag(event);
+  }, { signal });
+  portraitCropFrame?.addEventListener('wheel', handlePortraitCropWheel, { passive: false, signal });
+
+  window.addEventListener('pointermove', movePortraitCrop, { passive: false, signal });
+  window.addEventListener('pointerup', stopPortraitCropDrag, { signal });
+  window.addEventListener('pointercancel', stopPortraitCropDrag, { signal });
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && portraitCropModal && !portraitCropModal.hidden) {
+      closePortraitCropModal();
+    }
+  }, { signal });
+  window.addEventListener('resize', syncPortraitCropFrameRatio, { signal });
 
   const cleanupCommon = await initCommon({
     requireAuth: true,
@@ -957,7 +1088,7 @@ Stream Ban : Met hors combat la carte adverse. Peut être utilisé deux fois.`;
   return () => {
     cleanupCommon?.();
     abortController.abort();
-    stopPortraitDrag();
+    stopPortraitCropDrag();
     if (verificationUnsubscribe) {
       verificationUnsubscribe();
       verificationUnsubscribe = null;
