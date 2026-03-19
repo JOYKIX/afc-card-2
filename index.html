@@ -14,9 +14,9 @@
   <div class="bg-orb orb-b"></div>
   <div class="bg-grid" aria-hidden="true"></div>
 
-  <div class="app-shell app-shell--dashboard">
-    <header class="topbar topbar--dashboard glass">
-      <div class="topbar__brand-block">
+  <div class="app-shell app-shell--command">
+    <aside class="command-sidebar glass" aria-label="Navigation principale AFC Card Studio">
+      <div class="command-sidebar__brand">
         <div class="brand-wrap topbar__brand">
           <div class="topbar__brand-copy">
             <h1>AFC Card Studio</h1>
@@ -25,8 +25,8 @@
         </div>
       </div>
 
-      <div class="topbar__nav-block glass-soft">
-        <nav class="site-nav" aria-label="Navigation principale">
+      <div class="command-sidebar__nav glass-soft">
+        <nav class="site-nav site-nav--command" aria-label="Navigation principale">
           <a class="nav-link nav-link--studio" href="./?page=creator" data-route="creator">
             <span class="nav-link__content">
               <strong>Créer</strong>
@@ -55,33 +55,44 @@
         </nav>
       </div>
 
-      <section class="auth-actions auth-actions--topbar glass-soft">
+      <section class="auth-actions auth-actions--sidebar glass-soft">
         <div class="auth-identity">
           <div class="auth-identity__copy">
             <span id="authStatus">Chargement…</span>
           </div>
         </div>
 
-        <div class="auth-actions__buttons auth-actions__buttons--inline">
+        <div class="auth-actions__buttons auth-actions__buttons--stacked">
           <button id="googleLogin" type="button">Connexion Google</button>
           <button id="logout" type="button" class="ghost">Déconnexion</button>
         </div>
       </section>
-    </header>
+    </aside>
 
-    <div id="appWorkspace" class="app-workspace">
-      <div class="workspace-frame glass-soft" aria-hidden="true">
-        <span></span>
-        <span></span>
-        <span></span>
+    <section class="command-stage">
+      <header class="topbar topbar--command glass-soft">
+        <div class="topbar__headline">
+          <div class="topbar__headline-copy">
+            <h2>AFC Card Studio</h2>
+            <p class="topbar__subtitle">Crée, ouvre, collectionne.</p>
+          </div>
+        </div>
+      </header>
+
+      <div id="appWorkspace" class="app-workspace app-workspace--command">
+        <div class="workspace-frame workspace-frame--command glass-soft" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+        <div id="app" class="app-view app-view--command" aria-live="polite"></div>
       </div>
-      <div id="app" class="app-view" aria-live="polite"></div>
-    </div>
+    </section>
   </div>
 
   <template id="loginViewTemplate">
-    <main class="login-layout login-layout--revamp">
-      <section class="panel glass login-panel">
+    <main class="login-layout login-layout--revamp login-layout--command">
+      <section class="panel glass login-panel login-panel--command">
         <div class="login-shell login-shell--solo">
           <article class="glass-soft login-card login-card--featured login-card--solo">
             <div class="panel-heading panel-heading--compact">
