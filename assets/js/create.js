@@ -82,6 +82,7 @@ let remainingStatRerolls = DEFAULT_STAT_REROLLS;
 let attack = 0;
 let defense = 0;
 let portraitDataUrl = '';
+let portraitSourceDataUrl = '';
 let portraitPosition = { x: 50, y: 50 };
 let portraitZoom = 1;
 let portraitNaturalSize = { width: 0, height: 0 };
@@ -110,6 +111,7 @@ const saveDraft = () => {
       attack,
       defense,
       portraitDataUrl,
+      portraitSourceDataUrl,
       portraitPosition,
       portraitZoom,
       savedAt: Date.now()
@@ -119,7 +121,7 @@ const saveDraft = () => {
   }
 };
 
-const restoreDraft = () => {
+const restoreDraft = async () => {
   try {
     const raw = window.localStorage.getItem(CARD_DRAFT_STORAGE_KEY);
     if (!raw) return false;
@@ -132,6 +134,7 @@ const restoreDraft = () => {
     fields.edition.value = draft.edition || fields.edition.value;
     fields.abilities.value = draft.abilities || '';
     portraitDataUrl = draft.portraitDataUrl || '';
+    portraitSourceDataUrl = draft.portraitSourceDataUrl || draft.portraitDataUrl || '';
     portraitPosition = {
       x: Number.isFinite(Number(draft?.portraitPosition?.x)) ? Number(draft.portraitPosition.x) : 50,
       y: Number.isFinite(Number(draft?.portraitPosition?.y)) ? Number(draft.portraitPosition.y) : 50
@@ -139,6 +142,19 @@ const restoreDraft = () => {
     portraitZoom = Number.isFinite(Number(draft?.portraitZoom)) ? Math.min(3, Math.max(1, Number(draft.portraitZoom))) : 1;
 
     applyPortraitImage();
+
+    if (portraitSourceDataUrl && portraitPosition && portraitZoom) {
+      try {
+        portraitDataUrl = await renderPortraitCropAsset({
+          dataUrl: portraitSourceDataUrl,
+          position: portraitPosition,
+          zoom: portraitZoom
+        });
+        applyPortraitImage();
+      } catch (error) {
+        console.warn('Impossible de recalculer le portrait du brouillon :', error);
+      }
+    }
 
     if (draft.attack != null || draft.defense != null) {
       setStats({
@@ -179,7 +195,7 @@ const syncManualStatInputs = () => {
 };
 
 const syncPortraitActionUi = () => {
-  if (openPortraitCropModalBtn) openPortraitCropModalBtn.disabled = !portraitDataUrl;
+  if (openPortraitCropModalBtn) openPortraitCropModalBtn.disabled = !(portraitSourceDataUrl || portraitDataUrl);
 };
 
 const syncCropZoomUi = () => {
@@ -189,20 +205,82 @@ const syncCropZoomUi = () => {
 };
 
 const applyPortraitImage = () => {
-  const safeX = clampPercent(portraitPosition.x);
-  const safeY = clampPercent(portraitPosition.y);
-  const safeZoom = clampPortraitZoom(portraitZoom);
-
-  portrait.style.backgroundImage = portraitDataUrl ? `url('${portraitDataUrl}')` : '';
-  portrait.style.backgroundPosition = `${safeX}% ${safeY}%`;
-  portrait.style.setProperty('--portrait-zoom', String(safeZoom));
+  portrait.style.backgroundImage = '';
+  portrait.style.backgroundPosition = '50% 50%';
+  portrait.style.setProperty('--portrait-zoom', '1');
   syncPortraitActionUi();
 
   if (!portraitImage) return;
 
   portraitImage.src = portraitDataUrl || '';
   portraitImage.hidden = !portraitDataUrl;
-  portraitImage.style.objectPosition = `${safeX}% ${safeY}%`;
+  portraitImage.style.objectPosition = '50% 50%';
+};
+
+const loadImageElement = (dataUrl) => new Promise((resolve, reject) => {
+  const image = new Image();
+  image.onload = () => resolve(image);
+  image.onerror = () => reject(new Error('portrait-image-load-failed'));
+  image.src = dataUrl;
+});
+
+const getPortraitFrameSize = () => {
+  const bounds = portrait?.getBoundingClientRect?.();
+  const width = Math.max(1, Math.round(bounds?.width || 234));
+  const height = Math.max(1, Math.round(bounds?.height || 280));
+
+  return { width, height };
+};
+
+const renderPortraitCropAsset = async ({
+  dataUrl,
+  position = { x: 50, y: 50 },
+  zoom = 1
+} = {}) => {
+  if (!dataUrl) return '';
+
+  const image = await loadImageElement(dataUrl);
+  const { width: frameWidth, height: frameHeight } = getPortraitFrameSize();
+  const safeX = clampPercent(position?.x ?? 50);
+  const safeY = clampPercent(position?.y ?? 50);
+  const safeZoom = clampPortraitZoom(zoom);
+  const baseScale = Math.max(frameWidth / image.naturalWidth, frameHeight / image.naturalHeight);
+  const scale = baseScale * safeZoom;
+  const drawnWidth = image.naturalWidth * scale;
+  const drawnHeight = image.naturalHeight * scale;
+  const offsetX = (frameWidth - drawnWidth) * (safeX / 100);
+  const offsetY = (frameHeight - drawnHeight) * (safeY / 100);
+  const cropWidth = Math.min(image.naturalWidth, frameWidth / scale);
+  const cropHeight = Math.min(image.naturalHeight, frameHeight / scale);
+  const maxSourceX = Math.max(0, image.naturalWidth - cropWidth);
+  const maxSourceY = Math.max(0, image.naturalHeight - cropHeight);
+  const sourceX = Math.min(maxSourceX, Math.max(0, -offsetX / scale));
+  const sourceY = Math.min(maxSourceY, Math.max(0, -offsetY / scale));
+  const outputWidth = Math.max(1, frameWidth * 3);
+  const outputHeight = Math.max(1, frameHeight * 3);
+  const canvas = document.createElement('canvas');
+
+  canvas.width = outputWidth;
+  canvas.height = outputHeight;
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('canvas-context-unavailable');
+
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(
+    image,
+    sourceX,
+    sourceY,
+    cropWidth,
+    cropHeight,
+    0,
+    0,
+    outputWidth,
+    outputHeight
+  );
+
+  return canvas.toDataURL('image/jpeg', 0.94);
 };
 
 const syncPortraitCropFrameRatio = () => {
@@ -228,7 +306,7 @@ const applyPortraitCropPreview = () => {
   syncCropZoomUi();
 };
 
-const createPortraitCropState = ({ dataUrl = portraitDataUrl, position = portraitPosition, zoom = portraitZoom, naturalSize = portraitNaturalSize } = {}) => ({
+const createPortraitCropState = ({ dataUrl = portraitSourceDataUrl || portraitDataUrl, position = portraitPosition, zoom = portraitZoom, naturalSize = portraitNaturalSize } = {}) => ({
   dataUrl,
   position: {
     x: clampPercent(position?.x ?? 50),
@@ -249,7 +327,7 @@ const closePortraitCropModal = () => {
 };
 
 const openPortraitCropModal = (options = {}) => {
-  const nextDataUrl = options.dataUrl ?? portraitDataUrl;
+  const nextDataUrl = options.dataUrl ?? portraitSourceDataUrl ?? portraitDataUrl;
   if (!nextDataUrl) return;
 
   portraitCropState = createPortraitCropState({
@@ -265,19 +343,39 @@ const openPortraitCropModal = (options = {}) => {
   document.body.classList.add('modal-open');
 };
 
-const commitPortraitCrop = () => {
+const commitPortraitCrop = async () => {
   if (!portraitCropState?.dataUrl) return;
-  portraitDataUrl = portraitCropState.dataUrl;
+
+  portraitSourceDataUrl = portraitCropState.dataUrl;
   portraitPosition = { ...portraitCropState.position };
   portraitZoom = clampPortraitZoom(portraitCropState.zoom);
   portraitNaturalSize = { ...portraitCropState.naturalSize };
+  portraitDataUrl = await renderPortraitCropAsset({
+    dataUrl: portraitSourceDataUrl,
+    position: portraitPosition,
+    zoom: portraitZoom
+  });
   applyPortraitImage();
   saveDraft();
 };
 
-const resetPortraitPosition = () => {
+const resetPortraitPosition = async () => {
+  if (!portraitSourceDataUrl) {
+    portraitPosition = { x: 50, y: 50 };
+    portraitZoom = 1;
+    portraitDataUrl = '';
+    applyPortraitImage();
+    saveDraft();
+    return;
+  }
+
   portraitPosition = { x: 50, y: 50 };
   portraitZoom = 1;
+  portraitDataUrl = await renderPortraitCropAsset({
+    dataUrl: portraitSourceDataUrl,
+    position: portraitPosition,
+    zoom: portraitZoom
+  });
   applyPortraitImage();
   saveDraft();
 };
@@ -884,9 +982,11 @@ export const initCreatePage = async () => {
       alert('Format refusé. Utilise JPG/JPEG, PNG ou WEBP.');
       event.target.value = '';
       portraitDataUrl = '';
+      portraitSourceDataUrl = '';
       portraitNaturalSize = { width: 0, height: 0 };
       portraitZoom = 1;
-      resetPortraitPosition();
+      portraitPosition = { x: 50, y: 50 };
+      applyPortraitImage();
       saveDraft();
       return;
     }
@@ -979,15 +1079,30 @@ export const initCreatePage = async () => {
     }
   }, { signal });
 
-  resetPortraitPositionBtn?.addEventListener('click', resetPortraitPosition, { signal });
+  resetPortraitPositionBtn?.addEventListener('click', async () => {
+    try {
+      await resetPortraitPosition();
+    } catch (error) {
+      console.error('Réinitialisation du portrait impossible :', error);
+      alert('Impossible de réinitialiser le cadrage pour le moment.');
+    }
+  }, { signal });
   openPortraitCropModalBtn?.addEventListener('click', () => {
     openPortraitCropModal();
   }, { signal });
   closePortraitCropModalBtn?.addEventListener('click', closePortraitCropModal, { signal });
   cancelPortraitCropModalBtn?.addEventListener('click', closePortraitCropModal, { signal });
-  applyPortraitCropModalBtn?.addEventListener('click', () => {
-    commitPortraitCrop();
-    closePortraitCropModal();
+  applyPortraitCropModalBtn?.addEventListener('click', async () => {
+    try {
+      applyPortraitCropModalBtn.disabled = true;
+      await commitPortraitCrop();
+      closePortraitCropModal();
+    } catch (error) {
+      console.error('Application du rognage impossible :', error);
+      alert('Impossible d’appliquer ce cadrage pour le moment.');
+    } finally {
+      applyPortraitCropModalBtn.disabled = false;
+    }
   }, { signal });
   resetPortraitCropModalBtn?.addEventListener('click', resetPortraitCropState, { signal });
   cropPortraitZoomRange?.addEventListener('input', (event) => {
@@ -1068,7 +1183,7 @@ export const initCreatePage = async () => {
     }
   });
 
-  const restoredDraft = restoreDraft();
+  const restoredDraft = await restoreDraft();
   applyPortraitImage();
 
   if (!restoredDraft && !fields.abilities.value.trim()) {
