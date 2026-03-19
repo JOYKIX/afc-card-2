@@ -3,23 +3,23 @@ import { initCommon } from './common.js';
 import { BOOSTER_COST, loadProfileAlbum, saveAlbumDrops } from './lib/album-storage.js';
 import { buildCardCatalogStats, getCardWeight, getDropRates, getDuplicateSellValue, loadApprovedCards } from './lib/cards-catalog.js';
 
-const pickWeightedCard = (cards) => {
-  const totalWeight = cards.reduce((sum, card) => sum + getCardWeight(card), 0);
+const pickWeightedCard = (cards, catalogStats) => {
+  const totalWeight = cards.reduce((sum, card) => sum + getCardWeight(card, catalogStats), 0);
   if (totalWeight <= 0) return cards[0];
 
   let threshold = Math.random() * totalWeight;
   for (const card of cards) {
-    threshold -= getCardWeight(card);
+    threshold -= getCardWeight(card, catalogStats);
     if (threshold <= 0) return card;
   }
 
   return cards[cards.length - 1];
 };
 
-const buildBooster = (cards, size = 5) => {
+const buildBooster = (cards, size = 5, catalogStats = buildCardCatalogStats(cards)) => {
   if (cards.length === 0) return [];
   if (cards.length === 1) return Array.from({ length: size }, () => cards[0]);
-  return Array.from({ length: size }, () => pickWeightedCard(cards));
+  return Array.from({ length: size }, () => pickWeightedCard(cards, catalogStats));
 };
 
 export const initBoosterPage = async () => {
@@ -131,7 +131,7 @@ export const initBoosterPage = async () => {
       }
 
       const catalogStats = buildCardCatalogStats(cards);
-      const pulls = buildBooster(cards, 5).map((card) => ({
+      const pulls = buildBooster(cards, 5, catalogStats).map((card) => ({
         ...card,
         sellValue: getDuplicateSellValue(card, catalogStats)
       }));
