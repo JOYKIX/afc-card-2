@@ -28,6 +28,7 @@ import {
 import { initCommon } from './common.js';
 
 const CARD_DRAFT_STORAGE_KEY = 'afc-card-draft-v2';
+const DEFAULT_USER_ROLES = ['african army'];
 
 let fields = {};
 
@@ -77,7 +78,7 @@ const RANK_RANGES = [
 
 let currentUser = null;
 let currentNickname = '';
-let currentUserRoles = ['african army'];
+let currentUserRoles = [...DEFAULT_USER_ROLES];
 let remainingStatRerolls = DEFAULT_STAT_REROLLS;
 let attack = 0;
 let defense = 0;
@@ -1020,7 +1021,11 @@ export const initCreatePage = async () => {
 
     if (!currentNickname) {
       alert('Configure ton pseudo sur la page Profil avant de soumettre une carte.');
-      window.__appRouter?.navigate?.('profile');
+      if (window.__appRouter?.getUrlForRoute && window.__appRouter?.navigate) {
+        window.__appRouter.navigate(window.__appRouter.getUrlForRoute('profile'));
+      } else {
+        window.location.assign('./?page=profile');
+      }
       return;
     }
 
@@ -1163,7 +1168,7 @@ export const initCreatePage = async () => {
 
       if (!user) {
         currentNickname = '';
-        currentUserRoles = ['african army'];
+        currentUserRoles = [...DEFAULT_USER_ROLES];
         remainingStatRerolls = DEFAULT_STAT_REROLLS;
         verificationStatusText.textContent = 'Connecte-toi pour voir le statut de ta carte.';
         if (verificationUnsubscribe) {

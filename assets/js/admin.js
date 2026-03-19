@@ -47,7 +47,6 @@ let verificationById = {};
 let pendingQueue = [];
 let unsubs = [];
 let moderationInFlight = false;
-let deletedRejectedCount = 0;
 
 const getHighestAssignedCardNumber = (records = {}) => Object.values(records).reduce((max, record) => {
   const cardNumber = normalizeCardNumber(record?.cardNumber ?? record?.cardId);
@@ -95,7 +94,7 @@ const refreshStats = () => {
 
   countPending.textContent = String(verificationEntries.filter((entry) => entry.status === 'pending').length);
   countApproved.textContent = String(approvedCards.length);
-  countRejected.textContent = String(deletedRejectedCount);
+  countRejected.textContent = String(verificationEntries.filter((entry) => entry.status === 'rejected').length);
 };
 
 const buildPendingQueue = () => {
@@ -248,9 +247,12 @@ const moderateCurrentCard = async (status) => {
       await moveApprovedCardToCollection(current, now);
     } else {
       await resetOwnerRerollsOnRejection(current.entry.ownerUid || current.card.ownerUid);
-      await remove(ref(db, `cardVerification/${current.verificationId}`));
-      deletedRejectedCount += 1;
-      refreshStats();
+      await update(ref(db, `cardVerification/${current.verificationId}`), {
+        status: 'rejected',
+        updatedAt: now,
+        moderatedAt: now,
+        moderatedBy: currentUser.uid
+      });
     }
   } catch (error) {
     console.error('Erreur de modération :', error);
@@ -272,7 +274,6 @@ const resetAdminScreen = () => {
   verificationById = {};
   pendingQueue = [];
   moderationInFlight = false;
-  deletedRejectedCount = 0;
   refreshStats();
   tinderReview.innerHTML = '';
   verificationCards.innerHTML = '';

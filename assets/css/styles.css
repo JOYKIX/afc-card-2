@@ -3514,3 +3514,76 @@ button.danger {
     padding: 0.7rem 0.8rem;
   }
 }
+
+/* Layout stabilization and final responsive pass */
+.topbar--dashboard {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr) minmax(240px, auto);
+  align-items: stretch;
+}
+
+.topbar__brand-block,
+.topbar__nav-block,
+.auth-actions--topbar,
+.auth-menu,
+.auth-actions__buttons--inline,
+.pending-list,
+.tinder-review,
+.booster-stage,
+.album-binder__shell,
+.panel,
+.glass,
+.glass-soft {
+  min-width: 0;
+}
+
+.topbar__brand {
+  height: 100%;
+  padding: 0.9rem 1rem;
+  border-radius: 22px;
+}
+
+.site-nav {
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  grid-auto-rows: minmax(56px, auto);
+}
+
+.nav-link {
+  min-height: 100%;
+}
+
+.auth-actions--topbar {
+  align-self: stretch;
+}
+
+.auth-notice {
+  padding: 0 0.25rem;
+}
+
+.app-workspace {
+  padding-top: 1rem;
+}
+
+.album-binder__controls,
+.toolbar--revamp,
+.actions--editor {
+  flex-wrap: wrap;
+}
+
+@media (max-width: 1280px) {
+  .topbar--dashboard {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar__brand,
+  .topbar__nav-block,
+  .auth-actions--topbar {
+    width: 100%;
+  }
+}
+
+@media (max-width: 700px) {
+  .site-nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

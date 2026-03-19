@@ -167,7 +167,8 @@ const setAuthUi = (session = null) => {
 
   navLinks.forEach((link) => {
     if (link.dataset.route === 'login') return;
-    link.hidden = !isConnected && link.dataset.adminLink !== 'true';
+    if (link.dataset.adminLink === 'true') return;
+    link.hidden = !isConnected;
   });
 
   if (!roleBadge) return;

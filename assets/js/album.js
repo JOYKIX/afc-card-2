@@ -56,6 +56,13 @@ export const initAlbumPage = async () => {
   let totalPages = 1;
   let pageTurnTimer = null;
 
+  const handleAlbumError = (error, message = 'Impossible de charger l’album.') => {
+    console.error('Erreur album :', error);
+    renderEmpty(message);
+    setHint(message, true);
+    if (albumCount) albumCount.textContent = '0 / 0 carte';
+  };
+
   const setHint = (message, isError = false) => {
     if (!albumHint) return;
     albumHint.textContent = message;
@@ -226,14 +233,18 @@ export const initAlbumPage = async () => {
         return;
       }
 
-      const catalog = await loadApprovedCards();
-      const album = await loadAlbum(user.uid, catalog);
-      const slots = buildAlbumSlots(catalog, album.entries);
-      renderAlbum(slots, {
-        ownedCount: album.uniqueCount,
-        totalCount: catalog.length,
-        source: album.source
-      });
+      try {
+        const catalog = await loadApprovedCards();
+        const album = await loadAlbum(user.uid, catalog);
+        const slots = buildAlbumSlots(catalog, album.entries);
+        renderAlbum(slots, {
+          ownedCount: album.uniqueCount,
+          totalCount: catalog.length,
+          source: album.source
+        });
+      } catch (error) {
+        handleAlbumError(error);
+      }
     }
   });
 
