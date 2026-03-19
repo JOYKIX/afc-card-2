@@ -6,7 +6,7 @@ Refonte complète en **multi-pages** pour améliorer la prise en main :
 - `creator.html` + `assets/js/create.js` : création de carte et preview live.
 - `profile.html` + `assets/js/profile.js` : gestion du pseudo joueur.
 - `admin.html` + `assets/js/admin.js` : modération des cartes en attente.
-- `booster.html` + `assets/js/booster.js` : ouverture d’un booster de 5 cartes depuis `cards` avec pondération par rareté.
+- `booster.html` + `assets/js/booster.js` : ouverture d’un booster de 5 cartes depuis `cards` avec pondération par rareté et revente des doublons normalisée pour stabiliser l’économie.
 - `assets/js/common.js` : logique partagée d'interface/auth.
 - `assets/js/firebase.js` : façade de compatibilité qui ré-exporte les services communs.
 - `assets/js/lib/firebase-sdk.js` : imports Firebase Web SDK centralisés (v12.10.0).
