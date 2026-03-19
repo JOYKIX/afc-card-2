@@ -1,13 +1,34 @@
 import { claimNickname, db, get, normalizeNickname, ref, update, updateCachedNickname } from './firebase.js';
 import { initCommon } from './common.js';
+import { DAILY_LOGIN_REWARD, INITIAL_COINS, loadProfileAlbum } from './lib/album-storage.js';
 
 export const initProfilePage = async () => {
   const nicknameInput = document.getElementById('nickname');
   const saveProfileBtn = document.getElementById('saveProfile');
   const profileHint = document.getElementById('profileHint');
+  const profileCoins = document.getElementById('profileCoins');
+  const profileDaily = document.getElementById('profileDaily');
+  const profileDrops = document.getElementById('profileDrops');
 
   let currentUser = null;
   let currentProfile = {};
+
+  const updateEconomyWidgets = async (uid) => {
+    if (!uid) {
+      if (profileCoins) profileCoins.textContent = `${INITIAL_COINS} coins`;
+      if (profileDaily) profileDaily.textContent = `+${DAILY_LOGIN_REWARD} coins / jour`;
+      if (profileDrops) profileDrops.textContent = '0 carte drop';
+      return;
+    }
+
+    const profileAlbum = await loadProfileAlbum(uid);
+    if (profileCoins) profileCoins.textContent = `${profileAlbum.coins} coin${profileAlbum.coins > 1 ? 's' : ''}`;
+    if (profileDaily) profileDaily.textContent = `Connexion du jour : +${DAILY_LOGIN_REWARD} coins`;
+    if (profileDrops) {
+      const uniqueDrops = new Set(profileAlbum.droppedCardIds).size;
+      profileDrops.textContent = `${uniqueDrops} carte${uniqueDrops > 1 ? 's' : ''} unique${uniqueDrops > 1 ? 's' : ''}`;
+    }
+  };
 
   const refreshProfile = async (uid) => {
     try {
@@ -16,12 +37,14 @@ export const initProfilePage = async () => {
 
       if (!profileSnapshot.exists()) {
         nicknameInput.value = '';
+        await updateEconomyWidgets(uid);
         profileHint.textContent = 'Aucun pseudo enregistré pour le moment.';
         return;
       }
 
       nicknameInput.value = currentProfile.nickname || '';
-      profileHint.textContent = 'Ton pseudo est prêt à être modifié.';
+      await updateEconomyWidgets(uid);
+      profileHint.textContent = 'Ton pseudo et ton portefeuille sont prêts à être modifiés/consultés.';
     } catch (error) {
       console.error('Erreur chargement profil :', error);
       currentProfile = {};
@@ -63,6 +86,7 @@ export const initProfilePage = async () => {
       };
 
       updateCachedNickname(claim.nickname);
+      await updateEconomyWidgets(currentUser.uid);
       profileHint.textContent = `Pseudo "${claim.nickname}" enregistré.`;
     } catch (error) {
       if (error.message === 'nickname-already-taken') {
@@ -84,6 +108,7 @@ export const initProfilePage = async () => {
       if (!user) {
         currentProfile = {};
         nicknameInput.value = '';
+        await updateEconomyWidgets('');
         profileHint.textContent = 'Connecte-toi avec Google pour démarrer.';
         return;
       }

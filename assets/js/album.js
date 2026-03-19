@@ -1,6 +1,7 @@
 import { escapeHtml, formatCardNumber, normalizeCardNumber } from './firebase.js';
 import { initCommon } from './common.js';
 import { loadAlbum } from './lib/album-storage.js';
+import { loadApprovedCards } from './lib/cards-catalog.js';
 
 export const initAlbumPage = async () => {
   const albumGrid = document.getElementById('albumGrid');
@@ -17,12 +18,14 @@ export const initAlbumPage = async () => {
     albumGrid.innerHTML = `<article class="album-empty"><p>${escapeHtml(message)}</p></article>`;
   };
 
-  const renderAlbum = (entries = []) => {
-    if (albumCount) albumCount.textContent = `${entries.length} carte${entries.length > 1 ? 's' : ''}`;
+  const renderAlbum = (entries = [], { ownedCount = 0, totalCount = 0, source = 'database' } = {}) => {
+    if (albumCount) {
+      albumCount.textContent = `${ownedCount} / ${totalCount} carte${totalCount > 1 ? 's' : ''}`;
+    }
 
     if (!entries.length) {
-      renderEmpty('Aucun drop enregistré pour le moment. Ouvre un booster pour remplir ton album.');
-      setHint('Ton album est encore vide.');
+      renderEmpty('Aucune carte enregistrée pour le moment. Ouvre un booster pour remplir ton album.');
+      setHint('Ton album est encore vide. Les cartes tirées sont maintenant sauvegardées sur ton profil en base.');
       return;
     }
 
@@ -38,14 +41,15 @@ export const initAlbumPage = async () => {
               <strong>${escapeHtml(card.cardName || card.name || card.creatorName)}</strong>
               <small>${escapeHtml(formatCardNumber(cardNumber, 'Sans numéro'))} · ${escapeHtml(card.creatorName)} · rang ${escapeHtml(card.rank)}</small>
             </div>
-            <span class="album-card__count">Drop x${escapeHtml(String(card.dropCount))}</span>
+            <span class="album-card__count">Doublons x${escapeHtml(String(Math.max(0, (card.dropCount || 1) - 1)))}</span>
           </div>
         </article>
       `;
     }).join('');
 
     const newest = entries[0];
-    setHint(`Dernier drop enregistré : ${newest.cardName || newest.name || newest.creatorName} · rang ${newest.rank}.`);
+    const sourceMessage = source === 'local' ? ' Affichage de secours depuis le cache local.' : '';
+    setHint(`Album complété à ${ownedCount} / ${totalCount}. Dernière nouvelle carte visible : ${newest.cardName || newest.name || newest.creatorName} · rang ${newest.rank}.${sourceMessage}`);
   };
 
   const cleanupCommon = await initCommon({
@@ -54,11 +58,17 @@ export const initAlbumPage = async () => {
       if (!user) {
         renderEmpty('Connecte-toi pour consulter ton album.');
         setHint("Connexion requise pour afficher l'album.", true);
-        if (albumCount) albumCount.textContent = '0 carte';
+        if (albumCount) albumCount.textContent = '0 / 0 carte';
         return;
       }
 
-      renderAlbum(loadAlbum(user.uid));
+      const catalog = await loadApprovedCards();
+      const album = await loadAlbum(user.uid, catalog);
+      renderAlbum(album.entries, {
+        ownedCount: album.uniqueCount,
+        totalCount: catalog.length,
+        source: album.source
+      });
     }
   });
 

@@ -681,18 +681,18 @@ const formatVerificationText = (record) => {
   if (!summary) return 'Aucune carte envoyée pour le moment.';
 
   if (summary.status === 'pending') {
-    return `En vérification : capture ${summary.rank} envoyée par ${summary.displayName}.`;
+    return `En vérification : carte ${summary.rank} envoyée par ${summary.displayName}.`;
   }
 
   if (summary.status === 'approved') {
-    return `Validée : carte ${formatCardNumber(summary.cardNumber)} · capture ${summary.rank} de ${summary.displayName} disponible dans les boosters.`;
+    return `Validée : carte ${formatCardNumber(summary.cardNumber)} · carte ${summary.rank} de ${summary.displayName} disponible dans les boosters.`;
   }
 
   if (summary.status === 'rejected') {
-    return `Refusée : capture ${summary.rank} de ${summary.displayName}. Tu peux en envoyer une nouvelle.`;
+    return `Refusée : carte ${summary.rank} de ${summary.displayName}. Tu peux en envoyer une nouvelle.`;
   }
 
-  return `Statut inconnu pour la capture ${summary.rank} de ${summary.displayName}.`;
+  return `Statut inconnu pour la carte ${summary.rank} de ${summary.displayName}.`;
 };
 
 const sortByRecency = (items = []) => [...items].sort((a, b) => (b.updatedAt || b.submittedAt || b.createdAt || 0) - (a.updatedAt || a.submittedAt || a.createdAt || 0));
@@ -1059,7 +1059,7 @@ export const initCreatePage = async () => {
         cardSnapshot: payload
       });
 
-      alert('Capture de carte envoyée en attente de vérification.');
+      alert('Carte envoyée en attente de vérification.');
     } catch (error) {
       console.error('Erreur lors de la soumission :', error);
       alert(toFriendlySubmissionError(error));
