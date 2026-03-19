@@ -1,35 +1,37 @@
-import { db, escapeHtml, formatCardNumber, get, normalizeCardNumber, normalizeRank, ref } from './firebase.js';
+import { escapeHtml, formatCardNumber } from './firebase.js';
 import { initCommon } from './common.js';
-import { saveAlbumDrops } from './lib/album-storage.js';
+import { BOOSTER_COST, loadProfileAlbum, saveAlbumDrops } from './lib/album-storage.js';
+import { getCardWeight, getDropRates, getDuplicateSellValue, loadApprovedCards } from './lib/cards-catalog.js';
 
-const rarityWeights = {
-  D: 24,
-  C: 16,
-  B: 10,
-  A: 6,
-  S: 3,
-  Ω: 0.75
+const pickWeightedCard = (cards) => {
+  const totalWeight = cards.reduce((sum, card) => sum + getCardWeight(card), 0);
+  if (totalWeight <= 0) return cards[0];
+
+  let threshold = Math.random() * totalWeight;
+  for (const card of cards) {
+    threshold -= getCardWeight(card);
+    if (threshold <= 0) return card;
+  }
+
+  return cards[cards.length - 1];
 };
 
-const normalizeCardRecord = ([id, record]) => ({
-  id,
-  cardNumber: normalizeCardNumber(record?.cardNumber ?? record?.cardId),
-  uniqueId: normalizeCardNumber(record?.cardNumber ?? record?.cardId) || id,
-  name: record?.name || record?.cardName || '',
-  cardName: record?.cardName || record?.name || '',
-  rank: normalizeRank(record?.rank || record?.rarity),
-  creatorName: record?.creatorName || record?.createdBy || record?.ownerNickname || 'Créateur inconnu',
-  cardCapture: record?.cardCapture || record?.cardImage || record?.image || '',
-  createdAt: record?.createdAt || record?.submittedAt || 0
-});
-
-const getCardWeight = (card) => rarityWeights[card.rank] ?? rarityWeights.D;
+const buildBooster = (cards, size = 5) => {
+  if (cards.length === 0) return [];
+  if (cards.length === 1) return Array.from({ length: size }, () => cards[0]);
+  return Array.from({ length: size }, () => pickWeightedCard(cards));
+};
 
 export const initBoosterPage = async () => {
   const openBoosterBtn = document.getElementById('openBooster');
   const boosterHint = document.getElementById('boosterHint');
   const boosterGrid = document.getElementById('boosterGrid');
+  const boosterCoins = document.getElementById('boosterCoins');
+  const dailyRewardStatus = document.getElementById('dailyRewardStatus');
+  const catalogCount = document.getElementById('catalogCount');
+  const dropRateList = document.getElementById('dropRateList');
   let currentUser = null;
+  let currentCoins = 50;
 
   const setHint = (message, isError = false) => {
     if (!boosterHint) return;
@@ -41,10 +43,38 @@ export const initBoosterPage = async () => {
     boosterGrid.innerHTML = `<article class="booster-capture"><div class="booster-capture__frame"><div class="booster-placeholder">${escapeHtml(message)}</div></div></article>`;
   };
 
-  const renderBooster = (cards) => {
+  const setCoins = (coins) => {
+    currentCoins = Math.max(0, Number(coins) || 0);
+    if (boosterCoins) {
+      boosterCoins.textContent = `${currentCoins} coin${currentCoins > 1 ? 's' : ''}`;
+    }
+    if (openBoosterBtn) {
+      openBoosterBtn.disabled = currentCoins < BOOSTER_COST;
+    }
+  };
+
+  const renderDropRates = (cards) => {
+    if (!dropRateList) return;
+
+    const rates = getDropRates(cards);
+    const visibleRates = rates.filter((entry) => entry.count > 0);
+    dropRateList.innerHTML = visibleRates.length
+      ? visibleRates
+          .map((entry) => `<li><strong>${entry.rank}</strong> · ${entry.chance.toFixed(1)}% de chance · ${entry.count} carte${entry.count > 1 ? 's' : ''} dispo · doublon revendu ${entry.sellValue} coins</li>`)
+          .join('')
+      : '<li>Aucune carte validée pour calculer le taux de drop.</li>';
+
+    if (catalogCount) {
+      catalogCount.textContent = `${cards.length} carte${cards.length > 1 ? 's' : ''} validée${cards.length > 1 ? 's' : ''}`;
+    }
+  };
+
+  const renderBooster = (cards, soldDuplicates = []) => {
     boosterGrid.innerHTML = '';
+    const soldIds = new Set(soldDuplicates.map((card) => String(card.uniqueId)));
 
     cards.forEach((card, index) => {
+      const isDuplicate = soldIds.has(String(card.uniqueId));
       const item = document.createElement('article');
       item.className = `booster-capture rank-${card.rank}`;
       item.innerHTML = `
@@ -53,81 +83,90 @@ export const initBoosterPage = async () => {
         </div>
         <div class="booster-capture__meta">
           <strong>#${index + 1} · ${escapeHtml(card.cardName || card.name || card.creatorName)}</strong>
-          <small>Carte ${escapeHtml(formatCardNumber(card.cardNumber, 'Sans numéro'))} · ${escapeHtml(card.creatorName)} · capture validée</small>
+          <small>Carte ${escapeHtml(formatCardNumber(card.cardNumber, 'Sans numéro'))} · ${escapeHtml(card.creatorName)} · ${isDuplicate ? 'doublon revendu automatiquement' : 'ajoutée à ton album'}</small>
         </div>
-        <div class="booster-capture__rank">${escapeHtml(card.rank)}</div>
+        <div class="booster-capture__rank">${escapeHtml(card.rank)}${isDuplicate ? ` · +${escapeHtml(String(card.sellValue))}` : ''}</div>
       `;
       boosterGrid.appendChild(item);
     });
   };
 
-  const pickWeightedCard = (cards) => {
-    const totalWeight = cards.reduce((sum, card) => sum + getCardWeight(card), 0);
-    if (totalWeight <= 0) return cards[0];
-
-    let threshold = Math.random() * totalWeight;
-    for (const card of cards) {
-      threshold -= getCardWeight(card);
-      if (threshold <= 0) return card;
+  const refreshProfileStats = async () => {
+    if (!currentUser) {
+      setCoins(50);
+      if (dailyRewardStatus) dailyRewardStatus.textContent = 'Connecte-toi pour recevoir tes 50 coins quotidiens.';
+      return;
     }
 
-    return cards[cards.length - 1];
-  };
-
-  const buildBooster = (cards, size = 5) => {
-    if (cards.length === 0) return [];
-    if (cards.length === 1) return Array.from({ length: size }, () => cards[0]);
-    return Array.from({ length: size }, () => pickWeightedCard(cards));
-  };
-
-  const loadApprovedCards = async () => {
-    const snapshot = await get(ref(db, 'cards'));
-    if (!snapshot.exists()) return [];
-
-    return Object.entries(snapshot.val())
-      .map(normalizeCardRecord)
-      .filter((card) => Boolean(card.cardCapture))
-      .sort((a, b) => {
-        if (a.cardNumber && b.cardNumber) return a.cardNumber - b.cardNumber;
-        if (a.cardNumber) return -1;
-        if (b.cardNumber) return 1;
-        return (a.createdAt || 0) - (b.createdAt || 0);
-      });
+    const profileAlbum = await loadProfileAlbum(currentUser.uid);
+    setCoins(profileAlbum.coins);
+    if (dailyRewardStatus) {
+      dailyRewardStatus.textContent = 'La connexion du jour crédite automatiquement 50 coins si elle n’a pas encore été comptée aujourd’hui.';
+    }
   };
 
   const openBooster = async () => {
+    if (!currentUser) {
+      setHint('Connecte-toi pour ouvrir un booster et créditer tes coins.', true);
+      return;
+    }
+
+    if (currentCoins < BOOSTER_COST) {
+      setHint(`Il te faut ${BOOSTER_COST} coins pour ouvrir un booster. Solde actuel : ${currentCoins} coins.`, true);
+      return;
+    }
+
     openBoosterBtn.disabled = true;
-    setHint('Ouverture du booster… préparation des captures validées.');
+    setHint(`Ouverture du booster… ${BOOSTER_COST} coins vont être consommés.`);
 
     try {
       const cards = await loadApprovedCards();
+      renderDropRates(cards);
 
       if (cards.length === 0) {
-        renderPlaceholder('Aucune capture validée disponible pour le moment.');
+        renderPlaceholder('Aucune carte validée disponible pour le moment.');
         setHint('Ajoute ou valide au moins une carte pour ouvrir un booster.', true);
+        openBoosterBtn.disabled = false;
         return;
       }
 
-      const pulls = buildBooster(cards, 5);
-      renderBooster(pulls);
+      const pulls = buildBooster(cards, 5).map((card) => ({
+        ...card,
+        sellValue: getDuplicateSellValue(card)
+      }));
 
-      if (currentUser) {
-        saveAlbumDrops(currentUser.uid, pulls);
+      const outcome = await saveAlbumDrops(currentUser.uid, pulls, { boosterCost: BOOSTER_COST });
+
+      if (!outcome.ok && outcome.reason === 'insufficient-coins') {
+        setCoins(outcome.balance);
+        renderPlaceholder('Pas assez de coins pour ouvrir ce booster.');
+        setHint(`Booster refusé : il faut ${BOOSTER_COST} coins, mais ton solde est de ${outcome.balance} coins.`, true);
+        return;
       }
 
+      renderBooster(pulls, outcome.soldDuplicates);
+      setCoins(outcome.balance);
+
+      const duplicateCount = outcome.soldDuplicates.length;
       const uniqueCards = new Set(pulls.map((card) => card.uniqueId)).size;
+      const resaleSummary = duplicateCount > 0
+        ? ` ${duplicateCount} doublon(s) revendu(s) pour ${outcome.duplicateCoins} coins.`
+        : '';
+
       if (cards.length === 1) {
-        setHint('Une seule carte est disponible : le booster affiche donc 5 fois la même capture. Elle a bien été ajoutée à ton album.');
+        setHint(`Une seule carte est disponible : le booster affiche donc 5 fois la même carte.${resaleSummary} Solde restant : ${outcome.balance} coins.`);
         return;
       }
 
-      setHint(`${pulls.length} cartes tirées aléatoirement, avec un drop pondéré par la rareté (${uniqueCards} carte(s) distincte(s)). Elles sont maintenant visibles dans l'onglet Album.`);
+      setHint(`${pulls.length} cartes tirées (${uniqueCards} carte(s) distincte(s) dans le booster). ${outcome.keptCards.length} nouvelle(s) carte(s) ajoutée(s) à ton album.${resaleSummary} Solde restant : ${outcome.balance} coins.`);
     } catch (error) {
       console.error('Erreur lors de l’ouverture du booster :', error);
-      renderPlaceholder('Impossible de charger les captures pour le moment.');
+      renderPlaceholder('Impossible de charger les cartes pour le moment.');
       setHint('Impossible d’ouvrir le booster pour le moment. Réessaie dans quelques secondes.', true);
     } finally {
-      openBoosterBtn.disabled = false;
+      if (currentCoins >= BOOSTER_COST) {
+        openBoosterBtn.disabled = false;
+      }
     }
   };
 
@@ -137,10 +176,14 @@ export const initBoosterPage = async () => {
     requireAuth: true,
     onUserChanged: async (user) => {
       currentUser = user;
+      const cards = await loadApprovedCards();
+      renderDropRates(cards);
+      await refreshProfileStats();
     }
   });
 
-  setHint('Prêt à découvrir ton tirage. Chaque drop est aussi ajouté à ton album.');
+  renderPlaceholder('Ouvre un booster pour découvrir 5 cartes.');
+  setHint(`Prêt à découvrir ton tirage. Chaque booster coûte ${BOOSTER_COST} coins.`);
 
   return () => {
     cleanupCommon?.();

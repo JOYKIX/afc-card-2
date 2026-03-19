@@ -107,7 +107,7 @@ const buildPendingQueue = () => {
 };
 
 const renderPreviewImage = (card, altText) => {
-  if (!card.cardCapture) return '<div class="booster-placeholder">Aucune capture fournie</div>';
+  if (!card.cardCapture) return '<div class="booster-placeholder">Aucune carte fournie</div>';
   return `<img src="${escapeHtml(card.cardCapture)}" alt="${escapeHtml(altText)}">`;
 };
 
@@ -124,9 +124,9 @@ const renderTinderCard = () => {
 
   tinderReview.innerHTML = `
     <article class="tinder-card rank-${escapeHtml(card.rank)}">
-      <div class="tinder-image">${renderPreviewImage(card, `Capture ${card.rank} de ${card.creatorName}`)}</div>
+      <div class="tinder-image">${renderPreviewImage(card, `Carte ${card.rank} de ${card.creatorName}`)}</div>
       <div class="tinder-body">
-        <h3>Carte ${escapeHtml(formatCardNumber(card.cardNumber))} · Capture ${escapeHtml(card.rank)}</h3>
+        <h3>Carte ${escapeHtml(formatCardNumber(card.cardNumber))} · Rang ${escapeHtml(card.rank)}</h3>
         <p>Créateur : ${escapeHtml(card.creatorName)}</p>
         <p>Soumise le ${new Date(entry.submittedAt || card.createdAt || Date.now()).toLocaleString('fr-FR')}</p>
         <p>Numéro prévu à la validation : <strong>${escapeHtml(formatCardNumber(nextCardNumber))}</strong></p>
@@ -169,9 +169,9 @@ const renderVerificationSection = () => {
     const item = document.createElement('article');
     item.className = 'pending-item pending-item--visual';
     item.innerHTML = `
-      <div class="pending-thumb">${renderPreviewImage(card, `Capture ${card.rank} de ${card.creatorName}`)}</div>
+      <div class="pending-thumb">${renderPreviewImage(card, `Carte ${card.rank} de ${card.creatorName}`)}</div>
       <div>
-        <h3>Carte ${escapeHtml(formatCardNumber(card.cardNumber))} · Capture ${escapeHtml(card.rank)}</h3>
+        <h3>Carte ${escapeHtml(formatCardNumber(card.cardNumber))} · Rang ${escapeHtml(card.rank)}</h3>
         <p>Créateur : ${escapeHtml(card.creatorName)}</p>
         <p>Statut <strong>${escapeHtml(entry.status || 'pending')}</strong></p>
       </div>

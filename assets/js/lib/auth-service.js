@@ -3,6 +3,7 @@ import { DEPLOYED_HOSTS } from './firebase-config.js';
 import { auth, authRuntimeState, db, provider } from './firebase-core.js';
 import { nicknameToKey, normalizeEmail, normalizeNickname } from './format.js';
 import { canAccessAdmin, normalizeRemainingStatRerolls, normalizeRoles, userHasRole } from './roles.js';
+import { DAILY_LOGIN_REWARD, INITIAL_COINS, PROFILE_DROPPED_CARD_IDS_KEY, getTodayKey, normalizeDroppedCardIds, normalizeProfileCoins } from './album-storage.js';
 import {
   browserSessionPersistence,
   get,
@@ -225,6 +226,18 @@ const syncProfileOnLogin = async (user) => {
     }
   }
 
+  const todayKey = getTodayKey();
+  const hasCoins = Number.isFinite(Number(existingProfile.coins));
+  const existingCoins = normalizeProfileCoins(existingProfile.coins, INITIAL_COINS);
+  const lastDailyRewardDate = String(existingProfile.lastDailyRewardDate || '').trim();
+  const droppedCardIds = normalizeDroppedCardIds(existingProfile[PROFILE_DROPPED_CARD_IDS_KEY]);
+  const shouldGrantDailyReward = hasCoins && lastDailyRewardDate !== todayKey;
+  const nextCoins = !hasCoins
+    ? INITIAL_COINS
+    : shouldGrantDailyReward
+      ? existingCoins + DAILY_LOGIN_REWARD
+      : existingCoins;
+
   const nextProfile = {
     nickname,
     nicknameKey,
@@ -232,6 +245,9 @@ const syncProfileOnLogin = async (user) => {
     roles,
     admin: null,
     vip: null,
+    coins: nextCoins,
+    lastDailyRewardDate: (!hasCoins || shouldGrantDailyReward || !lastDailyRewardDate) ? todayKey : lastDailyRewardDate,
+    droppedCardIds,
     remainingStatRerolls: normalizeRemainingStatRerolls(existingProfile.remainingStatRerolls, roles),
     createdAt: existingProfile.createdAt || timestamp,
     updatedAt: timestamp,
