@@ -1,64 +1,73 @@
-<main class="single-layout">
-        <section class="panel glass panel--booster">
-          <div class="panel-heading panel-heading--spread">
-            <div>
-              <p class="eyebrow">Ouverture</p>
-              <h2>Booster de 5 cartes</h2>
-            </div>
-            <div class="hero-chips">
-              <span id="catalogCount">0 carte validée</span>
-              <span id="boosterCoins">50 coins</span>
-            </div>
-          </div>
-          <div class="hero-stats">
-            <article class="glass-soft">
-              <strong>50 coins</strong>
-              <span>Prix d’un booster</span>
-            </article>
-            <article class="glass-soft">
-              <strong>+50 / jour</strong>
-              <span id="dailyRewardStatus">Connecte-toi pour recevoir tes coins quotidiens.</span>
-            </article>
-            <article class="glass-soft">
-              <strong>Taux de drop</strong>
-              <span>Chaque rareté garde désormais une chance minimale de drop.</span>
-            </article>
-          </div>
-          <div class="profile-card glass-soft">
-            <p class="eyebrow">Répartition actuelle</p>
-            <ul id="dropRateList" class="feature-list">
-              <li>Chargement des taux de drop…</li>
-            </ul>
-          </div>
-          <div class="panel-heading panel-heading--spread">
-            <p id="boosterHint" class="hint">Prêt à découvrir ton tirage.</p>
-            <button id="openBooster" type="button">Ouvrir un booster</button>
-          </div>
-          <section class="booster-stage" id="boosterStage">
-            <div class="booster-pack" id="boosterPack" aria-hidden="true">
-              <div class="booster-pack__glow"></div>
-              <div class="booster-pack__shell">
-                <span class="booster-pack__brand">AFC</span>
-                <span class="booster-pack__count">x5</span>
-              </div>
-              <div class="booster-pack__burst"></div>
-            </div>
-            <section id="boosterGrid" class="booster-grid"></section>
-          </section>
-        </section>
-      </main>
-
-      <div class="card-viewer" id="boosterViewer" hidden>
-        <div class="card-viewer__backdrop" data-close-booster-viewer></div>
-        <div class="card-viewer__dialog glass" role="dialog" aria-modal="true" aria-labelledby="boosterViewerTitle">
-          <button type="button" class="card-viewer__close ghost" id="closeBoosterViewer">Fermer</button>
-          <div class="card-viewer__media rank-C" id="boosterViewerMedia">
-            <img id="boosterViewerImage" alt="" />
-          </div>
-          <div class="card-viewer__meta">
-            <p class="eyebrow" id="boosterViewerRank">Rang</p>
-            <h3 id="boosterViewerTitle">Carte</h3>
-            <p id="boosterViewerSubtitle" class="subtitle"></p>
-          </div>
-        </div>
+<main class="single-layout single-layout--booster-revamp">
+  <section class="panel glass panel--booster panel--booster-revamp">
+    <div class="panel-heading panel-heading--spread panel-heading--booster">
+      <div>
+        <p class="eyebrow">Ouverture</p>
+        <h2>Booster de 5 cartes</h2>
       </div>
+      <div class="hero-chips hero-chips--stacked">
+        <span id="catalogCount">0 carte validée</span>
+        <span id="boosterCoins">50 coins</span>
+      </div>
+    </div>
+
+    <div class="booster-dashboard">
+      <aside class="booster-sidebar">
+        <div class="hero-stats hero-stats--booster">
+          <article class="glass-soft">
+            <strong>50 coins</strong>
+            <span>Prix d’un booster</span>
+          </article>
+          <article class="glass-soft">
+            <strong>+50 / jour</strong>
+            <span id="dailyRewardStatus">Connecte-toi pour recevoir tes coins quotidiens.</span>
+          </article>
+          <article class="glass-soft">
+            <strong>Taux de drop</strong>
+            <span>Chaque rareté garde désormais une chance minimale de drop.</span>
+          </article>
+        </div>
+
+        <div class="profile-card glass-soft booster-rates-card">
+          <p class="eyebrow">Répartition actuelle</p>
+          <ul id="dropRateList" class="feature-list">
+            <li>Chargement des taux de drop…</li>
+          </ul>
+        </div>
+      </aside>
+
+      <section class="booster-main-stage">
+        <div class="panel-heading panel-heading--spread panel-heading--compact-mobile">
+          <p id="boosterHint" class="hint">Prêt à découvrir ton tirage.</p>
+          <button id="openBooster" type="button">Ouvrir un booster</button>
+        </div>
+        <section class="booster-stage booster-stage--revamp" id="boosterStage">
+          <div class="booster-pack" id="boosterPack" aria-hidden="true">
+            <div class="booster-pack__glow"></div>
+            <div class="booster-pack__shell">
+              <span class="booster-pack__brand">AFC</span>
+              <span class="booster-pack__count">x5</span>
+            </div>
+            <div class="booster-pack__burst"></div>
+          </div>
+          <section id="boosterGrid" class="booster-grid booster-grid--revamp"></section>
+        </section>
+      </section>
+    </div>
+  </section>
+</main>
+
+<div class="card-viewer" id="boosterViewer" hidden>
+  <div class="card-viewer__backdrop" data-close-booster-viewer></div>
+  <div class="card-viewer__dialog glass" role="dialog" aria-modal="true" aria-labelledby="boosterViewerTitle">
+    <button type="button" class="card-viewer__close ghost" id="closeBoosterViewer">Fermer</button>
+    <div class="card-viewer__media rank-C" id="boosterViewerMedia">
+      <img id="boosterViewerImage" alt="" />
+    </div>
+    <div class="card-viewer__meta">
+      <p class="eyebrow" id="boosterViewerRank">Rang</p>
+      <h3 id="boosterViewerTitle">Carte</h3>
+      <p id="boosterViewerSubtitle" class="subtitle"></p>
+    </div>
+  </div>
+</div>

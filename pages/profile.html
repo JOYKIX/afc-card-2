@@ -1,46 +1,46 @@
-<main class="single-layout single-layout--narrow">
-        <section class="panel glass profile-panel">
-          <div class="panel-heading">
-            <div>
-              <p class="eyebrow">Compte</p>
-              <h2>Personnalise ton profil</h2>
-            </div>
-            <p class="subtitle">Renseigne ton pseudo AFC pour associer automatiquement tes cartes, validations, drops et coins à ton compte.</p>
-          </div>
+<main class="single-layout single-layout--narrow single-layout--profile-revamp">
+  <section class="panel glass profile-panel profile-panel--revamp">
+    <div class="panel-heading panel-heading--spread">
+      <div>
+        <p class="eyebrow">Compte</p>
+        <h2>Personnalise ton profil</h2>
+      </div>
+      <p class="subtitle">Renseigne ton pseudo AFC pour associer automatiquement tes cartes, validations, drops et coins à ton compte.</p>
+    </div>
 
-          <div class="hero-stats">
-            <article class="glass-soft">
-              <strong id="profileCoins">50 coins</strong>
-              <span>Solde actuel</span>
-            </article>
-            <article class="glass-soft">
-              <strong id="profileDaily">+50 coins / jour</strong>
-              <span>Récompense de connexion</span>
-            </article>
-            <article class="glass-soft">
-              <strong id="profileDrops">0 carte drop</strong>
-              <span>Cartes uniques possédées</span>
-            </article>
-          </div>
+    <div class="hero-stats hero-stats--profile">
+      <article class="glass-soft">
+        <strong id="profileCoins">50 coins</strong>
+        <span>Solde actuel</span>
+      </article>
+      <article class="glass-soft">
+        <strong id="profileDaily">+50 coins / jour</strong>
+        <span>Récompense de connexion</span>
+      </article>
+      <article class="glass-soft">
+        <strong id="profileDrops">0 carte drop</strong>
+        <span>Cartes uniques possédées</span>
+      </article>
+    </div>
 
-          <div class="profile-layout">
-            <div class="profile-card glass-soft">
-              <p class="eyebrow">Astuce</p>
-              <h3>Un pseudo clair = un profil propre</h3>
-              <ul class="feature-list">
-                <li>Ton pseudo s’actualise directement sur ton profil.</li>
-                <li>Les cartes gardent le bon nom joueur plus facilement.</li>
-                <li>Ton album et tes coins restent liés à ton compte Firebase.</li>
-              </ul>
-            </div>
+    <div class="profile-layout profile-layout--revamp">
+      <div class="profile-form-wrap profile-form-wrap--primary glass-soft">
+        <label>Pseudo
+          <input id="nickname" type="text" maxlength="24" placeholder="Ton pseudo AFC" />
+        </label>
+        <button id="saveProfile" type="button">Enregistrer le pseudo</button>
+        <p id="profileHint" class="hint">Connecte-toi avec Google pour démarrer.</p>
+      </div>
 
-            <div class="profile-form-wrap">
-              <label>Pseudo
-                <input id="nickname" type="text" maxlength="24" placeholder="Ton pseudo AFC" />
-              </label>
-              <button id="saveProfile" type="button">Enregistrer le pseudo</button>
-              <p id="profileHint" class="hint">Connecte-toi avec Google pour démarrer.</p>
-            </div>
-          </div>
-        </section>
-      </main>
+      <div class="profile-card glass-soft profile-card--aside">
+        <p class="eyebrow">Astuce</p>
+        <h3>Un pseudo clair = un profil propre</h3>
+        <ul class="feature-list">
+          <li>Ton pseudo s’actualise directement sur ton profil.</li>
+          <li>Les cartes gardent le bon nom joueur plus facilement.</li>
+          <li>Ton album et tes coins restent liés à ton compte Firebase.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</main>
