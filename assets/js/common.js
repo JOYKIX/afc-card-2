@@ -25,8 +25,7 @@ const state = {
   currentContext: null,
   currentHandler: null,
   currentRequireAuth: false,
-  currentHandlerToken: null,
-  authMenuOpen: false
+  currentHandlerToken: null
 };
 
 const emitAuthChanged = () => {
@@ -38,9 +37,7 @@ const getShellElements = () => {
   const authStatus = document.getElementById('authStatus');
   const googleLoginBtn = document.getElementById('googleLogin');
   const logoutBtn = document.getElementById('logout');
-  const authMenu = document.querySelector('[data-auth-menu]');
-  const authMenuTrigger = document.getElementById('authMenuTrigger');
-  const authMenuPanel = document.getElementById('authMenuPanel');
+  const profileLink = document.getElementById('profileLink');
   const authActions = authStatus?.closest('.auth-actions') || authStatus?.parentElement || null;
   const navLinks = Array.from(document.querySelectorAll('.site-nav [data-route]'));
   const adminNavLinks = navLinks.filter((link) => link.dataset.adminLink === 'true');
@@ -58,14 +55,12 @@ const getShellElements = () => {
   return {
     adminNavLinks,
     authActions,
-    authMenu,
-    authMenuPanel,
-    authMenuTrigger,
     authNotice,
     authStatus,
     googleLoginBtn,
     logoutBtn,
     navLinks,
+    profileLink,
     roleBadge
   };
 };
@@ -117,44 +112,13 @@ const setButtonVisibility = (element, visible) => {
   if ('disabled' in element) element.disabled = !visible;
 };
 
-const closeAuthMenu = () => {
-  const { authMenu, authMenuPanel, authMenuTrigger } = getShellElements();
-  state.authMenuOpen = false;
-  if (authMenu) authMenu.dataset.open = 'false';
-  if (authMenuPanel) authMenuPanel.hidden = true;
-  if (authMenuPanel) authMenuPanel.setAttribute('aria-hidden', 'true');
-  if (authMenuTrigger) authMenuTrigger.setAttribute('aria-expanded', 'false');
-};
-
-const openAuthMenu = () => {
-  const { authMenu, authMenuPanel, authMenuTrigger } = getShellElements();
-  state.authMenuOpen = true;
-  if (authMenu) authMenu.dataset.open = 'true';
-  if (authMenuPanel) authMenuPanel.hidden = false;
-  if (authMenuPanel) authMenuPanel.setAttribute('aria-hidden', 'false');
-  if (authMenuTrigger) authMenuTrigger.setAttribute('aria-expanded', 'true');
-  authMenuPanel?.querySelector('.auth-menu__item')?.focus?.();
-};
-
-const toggleAuthMenu = (force) => {
-  const { authMenuPanel } = getShellElements();
-  const shouldOpen = typeof force === 'boolean' ? force : Boolean(authMenuPanel?.hidden);
-
-  if (shouldOpen) {
-    openAuthMenu();
-    return;
-  }
-
-  closeAuthMenu();
-};
-
 const setAuthUi = (session = null) => {
   const {
-    authMenu,
     authStatus,
-    authMenuTrigger,
     googleLoginBtn,
+    logoutBtn,
     navLinks,
+    profileLink,
     roleBadge
   } = getShellElements();
 
@@ -163,12 +127,11 @@ const setAuthUi = (session = null) => {
   if (authStatus) authStatus.textContent = isConnected ? getDisplayIdentity(session) : 'Mon compte';
 
   setButtonVisibility(googleLoginBtn, !isConnected);
+  setButtonVisibility(logoutBtn, isConnected);
 
-  if (authMenuTrigger) authMenuTrigger.hidden = !isConnected;
-  if (authMenu) authMenu.hidden = !isConnected;
-
-  if (!isConnected) {
-    closeAuthMenu();
+  if (profileLink) {
+    profileLink.hidden = !isConnected;
+    profileLink.setAttribute('aria-disabled', String(!isConnected));
   }
 
   navLinks.forEach((link) => {
@@ -387,27 +350,9 @@ const bindShellActions = () => {
       return;
     }
 
-    const menuTrigger = event.target.closest('#authMenuTrigger');
-    if (menuTrigger) {
-      event.preventDefault();
-      toggleAuthMenu();
-      return;
-    }
-
-    const profileMenuItem = event.target.closest('#authMenuPanel [data-route="profile"]');
-    if (profileMenuItem) {
-      closeAuthMenu();
-      return;
-    }
-
-    const clickedInsideMenu = event.target.closest('[data-auth-menu]');
-    if (!clickedInsideMenu) {
-      closeAuthMenu();
-    }
 
     const logoutButton = event.target.closest('#logout');
     if (logoutButton) {
-      closeAuthMenu();
       try {
         if (auth.currentUser) {
           await signOut(auth);
@@ -424,31 +369,6 @@ const bindShellActions = () => {
     }
   }, { signal });
 
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') {
-      closeAuthMenu();
-      return;
-    }
-
-    if (event.key === 'Enter' || event.key === ' ') {
-      const menuTrigger = event.target.closest?.('#authMenuTrigger');
-      if (menuTrigger) {
-        event.preventDefault();
-        toggleAuthMenu();
-      }
-    }
-  }, { signal });
-
-  document.addEventListener('focusin', (event) => {
-    if (!state.authMenuOpen) return;
-    const focusedInsideMenu = event.target.closest?.('[data-auth-menu]');
-    if (!focusedInsideMenu) {
-      closeAuthMenu();
-    }
-  }, { signal });
-
-  window.addEventListener('resize', closeAuthMenu, { signal });
-  window.addEventListener('scroll', closeAuthMenu, { signal, passive: true });
 };
 
 const initCommon = async ({ onUserChanged, requireAuth = false } = {}) => {

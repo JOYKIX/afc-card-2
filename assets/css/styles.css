@@ -3376,18 +3376,15 @@ button.danger {
 
 .auth-actions__buttons--inline {
   display: flex;
+  gap: 0.5rem;
 }
 
 .auth-actions__buttons--inline button {
   min-width: 140px;
 }
 
-.auth-menu {
-  position: relative;
-}
-
-.auth-menu__trigger {
-  width: 100%;
+.auth-profile-link {
+  min-width: 0;
   min-height: 56px;
   padding: 0.7rem 0.9rem;
   border-radius: var(--ds-radius-lg, 18px);
@@ -3395,74 +3392,33 @@ button.danger {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.85rem;
   text-align: left;
+  text-decoration: none;
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
 }
 
-.auth-menu__identity {
+.auth-profile-link:hover,
+.auth-profile-link:focus-visible,
+.auth-profile-link.active {
+  transform: translateY(-2px);
+  border-color: rgba(129, 237, 255, 0.22);
+  background: linear-gradient(160deg, rgba(255, 79, 146, 0.14), rgba(83, 235, 255, 0.08));
+  box-shadow: 0 14px 28px rgba(255, 61, 122, 0.14);
+}
+
+.auth-profile-link__identity {
   min-width: 0;
   display: grid;
   gap: 0.3rem;
 }
 
-.auth-menu__identity #authStatus {
+.auth-profile-link__identity #authStatus {
   display: block;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 0.95rem;
-}
-
-.auth-menu__chevron {
-  font-size: 0.95rem;
-  color: var(--ds-text-soft, rgba(252, 246, 255, 0.74));
-  transition: transform var(--ds-transition, 180ms ease);
-}
-
-.auth-menu[data-open='true'] .auth-menu__chevron {
-  transform: rotate(180deg);
-}
-
-.auth-menu__panel {
-  position: absolute;
-  top: calc(100% + 0.45rem);
-  right: 0;
-  z-index: 40;
-  min-width: 200px;
-  padding: 0.45rem;
-  border-radius: var(--ds-radius-lg, 18px);
-  border: 1px solid var(--ds-border, rgba(255, 255, 255, 0.08));
-  background: rgba(14, 10, 22, 0.98);
-  backdrop-filter: blur(18px);
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
-  display: grid;
-  gap: 0.3rem;
-}
-
-.auth-menu__item {
-  width: 100%;
-  min-height: 46px;
-  padding: 0.8rem 0.9rem;
-  border: 0;
-  border-radius: 14px;
-  background: transparent;
-  color: var(--ds-text, #fcf6ff);
-  text-decoration: none;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-}
-
-.auth-menu__item:hover,
-.auth-menu__item:focus-visible,
-.auth-menu__item.active {
-  background: linear-gradient(160deg, rgba(255, 79, 146, 0.14), rgba(83, 235, 255, 0.08));
-}
-
-.auth-menu__item--button {
-  cursor: pointer;
 }
 
 .auth-notice {
@@ -3484,15 +3440,9 @@ button.danger {
     min-width: 0;
   }
 
-  .auth-menu__trigger,
+  .auth-profile-link,
   .auth-actions__buttons--inline button {
     width: 100%;
-  }
-
-  .auth-menu__panel {
-    left: 0;
-    right: 0;
-    min-width: 0;
   }
 }
 
@@ -3527,7 +3477,7 @@ button.danger {
 .topbar__brand-block,
 .topbar__nav-block,
 .auth-actions--topbar,
-.auth-menu,
+.auth-profile-link,
 .auth-actions__buttons--inline,
 .pending-list,
 .tinder-review,
@@ -3565,17 +3515,9 @@ button.danger {
   padding: 0 0.25rem;
 }
 
-.auth-menu {
+.auth-profile-link {
   position: relative;
   z-index: 40;
-}
-
-.auth-menu__trigger {
-  cursor: pointer;
-}
-
-.auth-menu__panel {
-  z-index: 80;
 }
 
 .app-workspace {

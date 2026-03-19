@@ -51,29 +51,16 @@
       </div>
 
       <section class="auth-actions auth-actions--topbar glass-soft">
-        <div class="auth-menu" data-auth-menu>
-          <button
-            id="authMenuTrigger"
-            class="auth-menu__trigger"
-            type="button"
-            aria-haspopup="menu"
-            aria-expanded="false"
-          >
-            <span class="auth-menu__identity">
-              <span id="authStatus">Chargement…</span>
-              <span id="userRoleBadge" class="role-badge" hidden></span>
-            </span>
-            <span class="auth-menu__chevron" aria-hidden="true">▾</span>
-          </button>
-
-          <div id="authMenuPanel" class="auth-menu__panel" role="menu" aria-hidden="true" hidden>
-            <a class="auth-menu__item" href="./?page=profile" data-route="profile" role="menuitem">Profil</a>
-            <button id="logout" type="button" class="auth-menu__item auth-menu__item--button" role="menuitem">Déconnexion</button>
-          </div>
-        </div>
+        <a id="profileLink" class="auth-profile-link" href="./?page=profile" data-route="profile" hidden>
+          <span class="auth-profile-link__identity">
+            <span id="authStatus">Chargement…</span>
+            <span id="userRoleBadge" class="role-badge" hidden></span>
+          </span>
+        </a>
 
         <div class="auth-actions__buttons auth-actions__buttons--inline">
           <button id="googleLogin" type="button">Connexion</button>
+          <button id="logout" type="button" hidden>Déconnexion</button>
         </div>
       </section>
     </header>
