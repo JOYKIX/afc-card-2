@@ -25,7 +25,8 @@ const state = {
   currentContext: null,
   currentHandler: null,
   currentRequireAuth: false,
-  currentHandlerToken: null
+  currentHandlerToken: null,
+  authMenuOpen: false
 };
 
 const emitAuthChanged = () => {
@@ -118,16 +119,21 @@ const setButtonVisibility = (element, visible) => {
 
 const closeAuthMenu = () => {
   const { authMenu, authMenuPanel, authMenuTrigger } = getShellElements();
+  state.authMenuOpen = false;
   if (authMenu) authMenu.dataset.open = 'false';
   if (authMenuPanel) authMenuPanel.hidden = true;
+  if (authMenuPanel) authMenuPanel.setAttribute('aria-hidden', 'true');
   if (authMenuTrigger) authMenuTrigger.setAttribute('aria-expanded', 'false');
 };
 
 const openAuthMenu = () => {
   const { authMenu, authMenuPanel, authMenuTrigger } = getShellElements();
+  state.authMenuOpen = true;
   if (authMenu) authMenu.dataset.open = 'true';
   if (authMenuPanel) authMenuPanel.hidden = false;
+  if (authMenuPanel) authMenuPanel.setAttribute('aria-hidden', 'false');
   if (authMenuTrigger) authMenuTrigger.setAttribute('aria-expanded', 'true');
+  authMenuPanel?.querySelector('.auth-menu__item')?.focus?.();
 };
 
 const toggleAuthMenu = (force) => {
@@ -421,8 +427,28 @@ const bindShellActions = () => {
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
       closeAuthMenu();
+      return;
+    }
+
+    if (event.key === 'Enter' || event.key === ' ') {
+      const menuTrigger = event.target.closest?.('#authMenuTrigger');
+      if (menuTrigger) {
+        event.preventDefault();
+        toggleAuthMenu();
+      }
     }
   }, { signal });
+
+  document.addEventListener('focusin', (event) => {
+    if (!state.authMenuOpen) return;
+    const focusedInsideMenu = event.target.closest?.('[data-auth-menu]');
+    if (!focusedInsideMenu) {
+      closeAuthMenu();
+    }
+  }, { signal });
+
+  window.addEventListener('resize', closeAuthMenu, { signal });
+  window.addEventListener('scroll', closeAuthMenu, { signal, passive: true });
 };
 
 const initCommon = async ({ onUserChanged, requireAuth = false } = {}) => {
