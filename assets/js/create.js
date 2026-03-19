@@ -880,6 +880,8 @@ const buildCardPayload = async () => {
     ownerNickname: currentNickname,
     creatorName: currentNickname,
     createdBy: currentNickname,
+    name: normalizeText(fields.name.value),
+    cardName: normalizeText(fields.name.value),
     rank,
     rarity: rank,
     cardCapture,

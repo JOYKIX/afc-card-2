@@ -15,6 +15,8 @@ const normalizeCardRecord = ([id, record]) => ({
   id,
   cardNumber: normalizeCardNumber(record?.cardNumber ?? record?.cardId),
   uniqueId: normalizeCardNumber(record?.cardNumber ?? record?.cardId) || id,
+  name: record?.name || record?.cardName || '',
+  cardName: record?.cardName || record?.name || '',
   rank: normalizeRank(record?.rank || record?.rarity),
   creatorName: record?.creatorName || record?.createdBy || record?.ownerNickname || 'Créateur inconnu',
   cardCapture: record?.cardCapture || record?.cardImage || record?.image || '',
@@ -50,8 +52,8 @@ export const initBoosterPage = async () => {
           <img src="${escapeHtml(card.cardCapture)}" alt="${escapeHtml(`Carte ${card.rank} de ${card.creatorName}`)}">
         </div>
         <div class="booster-capture__meta">
-          <strong>#${index + 1} · ${escapeHtml(card.creatorName)}</strong>
-          <small>Carte ${escapeHtml(formatCardNumber(card.cardNumber, 'Sans numéro'))} · capture validée</small>
+          <strong>#${index + 1} · ${escapeHtml(card.cardName || card.name || card.creatorName)}</strong>
+          <small>Carte ${escapeHtml(formatCardNumber(card.cardNumber, 'Sans numéro'))} · ${escapeHtml(card.creatorName)} · capture validée</small>
         </div>
         <div class="booster-capture__rank">${escapeHtml(card.rank)}</div>
       `;

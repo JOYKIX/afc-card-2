@@ -35,8 +35,8 @@ export const initAlbumPage = async () => {
           </div>
           <div class="album-card__meta">
             <div>
-              <strong>${escapeHtml(card.creatorName)}</strong>
-              <small>${escapeHtml(formatCardNumber(cardNumber, 'Sans numéro'))} · rang ${escapeHtml(card.rank)}</small>
+              <strong>${escapeHtml(card.cardName || card.name || card.creatorName)}</strong>
+              <small>${escapeHtml(formatCardNumber(cardNumber, 'Sans numéro'))} · ${escapeHtml(card.creatorName)} · rang ${escapeHtml(card.rank)}</small>
             </div>
             <span class="album-card__count">Drop x${escapeHtml(String(card.dropCount))}</span>
           </div>
@@ -45,7 +45,7 @@ export const initAlbumPage = async () => {
     }).join('');
 
     const newest = entries[0];
-    setHint(`Dernier drop enregistré : ${newest.creatorName} · rang ${newest.rank}.`);
+    setHint(`Dernier drop enregistré : ${newest.cardName || newest.name || newest.creatorName} · rang ${newest.rank}.`);
   };
 
   const cleanupCommon = await initCommon({
