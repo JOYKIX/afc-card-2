@@ -1,76 +1,68 @@
 .afc-card {
   --card-width: 530px;
   --card-height: 742px;
-  --shell-radius: 36px;
-  --panel-radius: 26px;
-  --panel-border: rgba(255, 255, 255, 0.16);
-  --panel-bg: rgba(7, 12, 24, 0.48);
-  --panel-shadow: 0 24px 44px rgba(3, 6, 18, 0.34);
-  --text-main: #f8fbff;
-  --text-soft: rgba(238, 246, 255, 0.76);
-  --text-muted: rgba(226, 234, 248, 0.58);
+  --shell-radius: 34px;
+  --panel-radius: 22px;
+  --text-main: #f7fbff;
+  --text-soft: rgba(232, 241, 255, 0.76);
+  --text-muted: rgba(212, 226, 246, 0.54);
+  --panel-border: rgba(255, 255, 255, 0.12);
+  --panel-bg: rgba(7, 12, 24, 0.64);
+  --panel-shadow: 0 24px 60px rgba(0, 0, 0, 0.36);
   width: var(--card-width);
   min-width: var(--card-width);
   max-width: var(--card-width);
   height: var(--card-height);
   min-height: var(--card-height);
   max-height: var(--card-height);
-  aspect-ratio: auto;
   position: relative;
   overflow: hidden;
   display: grid;
-  grid-template-rows: auto minmax(308px, 1.42fr) minmax(192px, 1fr);
+  grid-template-rows: auto minmax(326px, 1.35fr) minmax(186px, 1fr);
   gap: 14px;
-  padding: 18px;
+  padding: 22px;
   border-radius: var(--shell-radius);
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   flex: 0 0 var(--card-width);
   justify-self: center;
   align-self: start;
-  font-family: 'Inter', sans-serif;
-  font-size: 16px;
-  font-weight: 400;
-  line-height: 1;
-  letter-spacing: normal;
-  text-size-adjust: none;
-  -webkit-text-size-adjust: none;
-  font-synthesis: none;
-  font-kerning: none;
-  font-variant-ligatures: none;
-  font-feature-settings: 'kern' 0, 'liga' 0, 'clig' 0, 'calt' 0;
-  text-rendering: geometricPrecision;
   color: var(--text-main);
+  font-family: 'Inter', sans-serif;
   background:
-    radial-gradient(120% 120% at 50% -10%, rgba(255, 255, 255, 0.3), transparent 34%),
-    radial-gradient(80% 80% at 14% 14%, rgba(255, 255, 255, 0.14), transparent 38%),
-    radial-gradient(100% 90% at 100% 0%, rgba(255, 255, 255, 0.12), transparent 45%),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.16), transparent 30%),
-    linear-gradient(160deg, var(--card-grad-1) 0%, var(--card-grad-2) 52%, var(--card-grad-3) 100%);
+    radial-gradient(circle at 50% -10%, rgba(255, 255, 255, 0.24), transparent 30%),
+    radial-gradient(circle at 85% 20%, color-mix(in srgb, var(--edge) 18%, transparent), transparent 28%),
+    radial-gradient(circle at 15% 80%, color-mix(in srgb, var(--glow) 55%, transparent), transparent 26%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 18%),
+    linear-gradient(145deg, var(--card-grad-1) 0%, var(--card-grad-2) 42%, var(--card-grad-3) 100%);
   box-shadow:
-    0 36px 72px rgba(5, 10, 24, 0.42),
-    inset 0 1px 0 rgba(255, 255, 255, 0.24),
-    inset 0 -30px 50px rgba(255, 255, 255, 0.03);
+    0 30px 80px rgba(0, 0, 0, 0.44),
+    0 0 0 1px rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -24px 50px rgba(0, 0, 0, 0.2);
 }
 
 .afc-card::before,
 .afc-card::after {
   content: '';
   position: absolute;
-  inset: 0;
   pointer-events: none;
 }
 
 .afc-card::before {
-  inset: 10px;
-  border-radius: calc(var(--shell-radius) - 10px);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  opacity: 0.9;
+  inset: 12px;
+  border-radius: calc(var(--shell-radius) - 8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  clip-path: polygon(0 26px, 26px 0, calc(100% - 88px) 0, 100% 0, 100% calc(100% - 26px), calc(100% - 26px) 100%, 88px 100%, 0 100%, 0 88px);
+  opacity: 0.96;
 }
 
 .afc-card::after {
-  inset: 22px;
-  border-radius: calc(var(--shell-radius) - 20px);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 16%, transparent 84%, rgba(255, 255, 255, 0.05));
+  inset: 0;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent 18%),
+    linear-gradient(315deg, rgba(255, 255, 255, 0.07), transparent 18%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 30%, rgba(0, 0, 0, 0.18));
+  mix-blend-mode: screen;
   opacity: 0.65;
 }
 
@@ -86,76 +78,76 @@
 
 .card-spectrum {
   background:
-    radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.16), transparent 0 22%),
-    conic-gradient(from 210deg at 50% 50%, transparent 0deg, rgba(255, 255, 255, 0.18) 22deg, transparent 58deg, rgba(255, 255, 255, 0.08) 118deg, transparent 174deg, rgba(255, 255, 255, 0.12) 236deg, transparent 282deg, rgba(255, 255, 255, 0.18) 330deg, transparent 360deg);
+    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.26), transparent 0 22%),
+    conic-gradient(from 180deg at 50% 50%, transparent 0deg, rgba(255, 255, 255, 0.12) 36deg, transparent 80deg, rgba(255, 255, 255, 0.08) 142deg, transparent 210deg, rgba(255, 255, 255, 0.12) 282deg, transparent 360deg);
+  opacity: 0.3;
   mix-blend-mode: screen;
-  opacity: 0.22;
 }
 
 .card-frame-lines {
-  inset: 14px;
-  border-radius: calc(var(--shell-radius) - 14px);
+  inset: 18px;
+  border-radius: 26px;
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.12), transparent 10%, transparent 90%, rgba(255, 255, 255, 0.12)),
-    linear-gradient(rgba(255, 255, 255, 0.1), transparent 10%, transparent 90%, rgba(255, 255, 255, 0.08));
+    linear-gradient(90deg, rgba(255, 255, 255, 0.18), transparent 10%, transparent 90%, rgba(255, 255, 255, 0.18)),
+    linear-gradient(rgba(255, 255, 255, 0.16), transparent 10%, transparent 90%, rgba(255, 255, 255, 0.1));
   mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  padding: 1px;
   -webkit-mask-composite: xor;
   mask-composite: exclude;
-  opacity: 0.5;
+  padding: 1px;
+  opacity: 0.54;
 }
 
 .rank-aura {
   background:
-    radial-gradient(55% 30% at 50% 0%, var(--shine), transparent 74%),
-    radial-gradient(40% 24% at 12% 100%, color-mix(in srgb, var(--glow) 66%, transparent), transparent 72%),
-    radial-gradient(40% 24% at 88% 100%, color-mix(in srgb, var(--glow) 52%, transparent), transparent 74%);
-  opacity: 0.88;
+    radial-gradient(60% 40% at 50% 0%, var(--shine), transparent 74%),
+    radial-gradient(42% 24% at 12% 100%, color-mix(in srgb, var(--glow) 66%, transparent), transparent 75%),
+    radial-gradient(42% 24% at 88% 100%, color-mix(in srgb, var(--glow) 48%, transparent), transparent 75%);
+  opacity: 0.9;
 }
 
 .holo {
   background:
-    linear-gradient(120deg, transparent 10%, rgba(255, 255, 255, 0.12) 22%, transparent 34%),
-    linear-gradient(300deg, transparent 34%, rgba(255, 255, 255, 0.06) 50%, transparent 68%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 26%, rgba(255, 255, 255, 0.03));
+    linear-gradient(118deg, transparent 14%, rgba(255, 255, 255, 0.18) 28%, transparent 44%),
+    linear-gradient(300deg, transparent 34%, rgba(255, 255, 255, 0.09) 52%, transparent 70%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 24%, rgba(255, 255, 255, 0.03));
+  opacity: 0.66;
   mix-blend-mode: screen;
-  opacity: 0.58;
 }
 
 .card-noise {
   opacity: 0.09;
   background-image:
-    radial-gradient(rgba(255, 255, 255, 0.16) 0.7px, transparent 0.7px),
-    radial-gradient(rgba(255, 255, 255, 0.06) 0.7px, transparent 0.7px);
-  background-position: 0 0, 11px 11px;
-  background-size: 22px 22px;
+    radial-gradient(rgba(255, 255, 255, 0.18) 0.7px, transparent 0.7px),
+    radial-gradient(rgba(255, 255, 255, 0.05) 0.8px, transparent 0.8px);
+  background-size: 21px 21px, 13px 13px;
+  background-position: 0 0, 10px 10px;
   mix-blend-mode: soft-light;
 }
 
 .card-corner {
   position: absolute;
-  width: 92px;
-  height: 92px;
-  opacity: 0.44;
+  width: 108px;
+  height: 108px;
+  opacity: 0.58;
 }
 
 .card-corner::before,
 .card-corner::after {
   content: '';
   position: absolute;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.36), transparent);
-  border-radius: 999px;
+  background: linear-gradient(90deg, var(--edge), transparent 82%);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--edge) 32%, transparent);
 }
 
 .card-corner::before {
-  width: 46px;
-  height: 1px;
+  width: 62px;
+  height: 2px;
 }
 
 .card-corner::after {
-  width: 1px;
-  height: 46px;
+  width: 2px;
+  height: 62px;
 }
 
 .card-corner--tl,
@@ -210,46 +202,68 @@
 
 .card-header {
   display: grid;
-  grid-template-columns: 84px minmax(0, 1fr) 84px;
+  grid-template-columns: 94px minmax(0, 1fr) 94px;
   gap: 14px;
   align-items: stretch;
+}
+
+.meta-left,
+.meta-right,
+.identity--hero,
+.skills,
+.stat-card {
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 
 .meta-left,
 .meta-right {
   display: grid;
   justify-items: center;
-  align-content: center;
-  gap: 8px;
-  padding: 10px 8px 12px;
+  align-content: space-between;
+  gap: 12px;
+  padding: 14px 10px;
   border-radius: 24px;
   border: 1px solid var(--panel-border);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 28%),
-    linear-gradient(180deg, rgba(9, 15, 30, 0.82), rgba(8, 10, 22, 0.6));
+    linear-gradient(180deg, rgba(10, 16, 32, 0.88), rgba(7, 10, 22, 0.7));
   box-shadow: var(--panel-shadow);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+}
+
+.meta-left::before,
+.meta-right::before,
+.identity--hero::before,
+.skills::before,
+.stat-card::before,
+.portrait-shell::before {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  pointer-events: none;
 }
 
 .meta-left span,
 .meta-right span {
   display: grid;
   place-items: center;
-  width: 56px;
-  height: 56px;
-  border-radius: 18px;
+  width: 62px;
+  height: 62px;
+  border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.14);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.04) 32%, rgba(7, 12, 24, 0.28)),
-    rgba(8, 10, 24, 0.68);
+    radial-gradient(circle at 50% 22%, rgba(255, 255, 255, 0.18), transparent 36%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.04) 34%, rgba(7, 12, 24, 0.34)),
+    rgba(8, 10, 24, 0.8);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.16),
-    0 16px 30px rgba(5, 8, 20, 0.28);
-  font-weight: 900;
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 14px 28px rgba(0, 0, 0, 0.26),
+    0 0 0 1px color-mix(in srgb, var(--edge) 16%, transparent);
   font-size: 30px;
-  line-height: 1;
-  letter-spacing: 0.3px;
+  font-weight: 900;
+  letter-spacing: 0.4px;
 }
 
 .meta-left small,
@@ -257,7 +271,7 @@
   text-align: center;
   color: var(--text-soft);
   font-size: 10px;
-  line-height: 1.1;
+  line-height: 1.2;
   letter-spacing: 1.8px;
   text-transform: uppercase;
   font-weight: 800;
@@ -266,9 +280,9 @@
 .meta-right small strong {
   display: block;
   color: var(--text-main);
-  font-size: 20px;
+  font-size: 22px;
   line-height: 1;
-  letter-spacing: -0.4px;
+  letter-spacing: -0.5px;
 }
 
 .identity {
@@ -278,17 +292,15 @@
 .identity--hero {
   display: grid;
   align-content: center;
-  min-height: 108px;
+  min-height: 110px;
   padding: 16px 18px 18px;
-  border-radius: 28px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
   background:
-    radial-gradient(90% 100% at 50% 0%, rgba(255, 255, 255, 0.12), transparent 48%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 32%),
-    linear-gradient(180deg, rgba(10, 16, 32, 0.8), rgba(7, 11, 24, 0.56));
+    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.14), transparent 42%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 30%),
+    linear-gradient(180deg, rgba(10, 16, 32, 0.88), rgba(8, 12, 24, 0.64));
   box-shadow: var(--panel-shadow);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
 }
 
 .identity-ribbon {
@@ -296,7 +308,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .section-label,
@@ -305,99 +317,100 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  min-height: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   color: var(--text-main);
   text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 1.8px;
   font-weight: 800;
 }
 
 .section-label,
 .type-chip {
-  min-height: 30px;
   padding: 0 14px;
-  font-size: 10px;
-  letter-spacing: 1.9px;
+}
+
+.section-label {
+  border-radius: 12px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--edge) 18%, transparent), rgba(255, 255, 255, 0.08));
 }
 
 .type-chip {
+  position: relative;
+  border-radius: 999px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.04)),
-    rgba(8, 12, 26, 0.4);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
-  color: color-mix(in srgb, var(--text-main) 86%, #ffe7a3 14%);
+    linear-gradient(90deg, color-mix(in srgb, var(--edge) 28%, transparent), rgba(255, 255, 255, 0.06) 48%, transparent),
+    rgba(9, 14, 28, 0.54);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .identity h3 {
   margin: 0;
-  font-size: 33px;
-  line-height: 0.96;
-  letter-spacing: -1.6px;
+  font-size: 34px;
+  line-height: 0.95;
+  letter-spacing: -1.8px;
   text-wrap: balance;
-  text-shadow: 0 12px 32px rgba(4, 8, 20, 0.45);
+  text-transform: uppercase;
+  text-shadow: 0 12px 28px rgba(0, 0, 0, 0.36);
 }
 
 .identity p {
-  margin: 8px 0 0;
+  margin: 10px 0 0;
   color: var(--text-soft);
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1.3;
-  letter-spacing: 0.15px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
 }
 
 .portrait-shell {
   overflow: hidden;
-  border-radius: 30px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 14px;
+  height: 326px;
+  min-height: 326px;
+  max-height: 326px;
+  border-radius: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent 16%),
-    linear-gradient(180deg, rgba(8, 12, 26, 0.9), rgba(8, 10, 20, 0.54));
-  padding: 12px;
-  height: 308px;
-  min-height: 308px;
-  max-height: 308px;
+    linear-gradient(180deg, rgba(6, 10, 20, 0.86), rgba(6, 10, 20, 0.54));
   box-shadow: var(--panel-shadow);
-}
-
-.portrait-shell::before {
-  content: '';
-  position: absolute;
-  inset: 12px;
-  border-radius: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  pointer-events: none;
 }
 
 .portrait {
   position: relative;
-  min-height: 100%;
+  width: 100%;
   height: 100%;
-  border-radius: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background:
-    radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.22), transparent 0 18%),
-    radial-gradient(circle at 80% 10%, rgba(255, 255, 255, 0.12), transparent 0 22%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 24%),
-    linear-gradient(145deg, var(--portrait-grad-1), var(--portrait-grad-2));
-  background-position: center;
-  background-size: cover;
-  background-repeat: no-repeat;
+  min-height: 100%;
   display: grid;
   place-items: center;
   overflow: hidden;
-  touch-action: none;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  clip-path: polygon(0 20px, 20px 0, calc(100% - 20px) 0, 100% 20px, 100% calc(100% - 36px), calc(100% - 36px) 100%, 0 100%);
+  background:
+    radial-gradient(circle at 20% 18%, rgba(255, 255, 255, 0.18), transparent 0 20%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 24%),
+    linear-gradient(145deg, var(--portrait-grad-1), var(--portrait-grad-2));
+}
+
+.portrait::before {
+  content: '';
+  position: absolute;
+  inset: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  clip-path: inherit;
+  pointer-events: none;
 }
 
 .portrait::after {
   content: '';
   position: absolute;
   inset: auto 0 0;
-  height: 44%;
-  background: linear-gradient(180deg, rgba(5, 8, 18, 0), rgba(5, 8, 18, 0.52));
+  height: 48%;
+  background: linear-gradient(180deg, rgba(6, 10, 18, 0), rgba(6, 10, 18, 0.76));
   pointer-events: none;
 }
 
@@ -405,9 +418,8 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.18), transparent 34%),
-    linear-gradient(125deg, transparent 35%, rgba(255, 255, 255, 0.12) 48%, transparent 60%);
-  pointer-events: none;
+    linear-gradient(135deg, transparent 34%, rgba(255, 255, 255, 0.14) 48%, transparent 61%),
+    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.14), transparent 34%);
 }
 
 .portrait-image {
@@ -423,24 +435,22 @@
 
 .edition-chip {
   position: absolute;
-  top: 24px;
-  right: 24px;
+  top: 22px;
+  right: 22px;
   z-index: 2;
-  min-height: 34px;
   padding: 0 14px;
-  font-size: 10px;
-  letter-spacing: 1.8px;
+  border-radius: 12px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.04)),
-    rgba(7, 11, 24, 0.48);
-  box-shadow: 0 14px 28px rgba(5, 8, 20, 0.26);
+    linear-gradient(90deg, rgba(5, 10, 20, 0.82), rgba(5, 10, 20, 0.56)),
+    rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
 }
 
 .card-body {
   z-index: 1;
   display: grid;
-  grid-template-rows: minmax(132px, 1fr) auto;
-  gap: 12px;
+  grid-template-rows: minmax(122px, 1fr) auto;
+  gap: 14px;
   min-height: 0;
 }
 
@@ -453,18 +463,25 @@
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   gap: 12px;
-  min-height: 132px;
+  min-height: 122px;
   padding: 18px;
-  border-radius: var(--panel-radius);
-  background:
-    radial-gradient(90% 120% at 100% 0%, rgba(255, 255, 255, 0.08), transparent 36%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 26%),
-    var(--panel-bg);
+  border-radius: 26px;
   border: 1px solid var(--panel-border);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 24%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent 22%),
+    var(--panel-bg);
   box-shadow: var(--panel-shadow);
-  overflow: hidden;
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+}
+
+.skills::after {
+  content: '';
+  position: absolute;
+  inset: auto 18px 18px;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--edge) 34%, transparent), transparent 74%);
+  opacity: 0.8;
 }
 
 .skills-head {
@@ -476,60 +493,51 @@
 
 #cardAbilities,
 .modal-abilities {
+  margin: 0;
+  min-height: 64px;
+  max-height: 102px;
+  overflow: hidden;
   white-space: pre-wrap;
   color: var(--text-main);
-  line-height: 1.48;
   font-size: 14px;
-  margin: 0;
-  text-align: left;
-  min-height: 72px;
-  max-height: 102px;
-  letter-spacing: 0;
   font-weight: 500;
-  overflow: hidden;
+  line-height: 1.5;
+  text-align: left;
 }
 
 .stats {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  min-height: 104px;
+  gap: 14px;
+  min-height: 108px;
 }
 
 .stat-card {
-  position: relative;
   display: flex;
   align-items: center;
-  min-height: 104px;
+  min-height: 108px;
+  padding: 16px 18px;
   border-radius: 24px;
-  padding: 14px 16px;
   border: 1px solid var(--panel-border);
-  background:
-    radial-gradient(100% 100% at 100% 0%, rgba(255, 255, 255, 0.1), transparent 44%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 26%),
-    rgba(8, 12, 24, 0.56);
-  box-shadow: var(--panel-shadow);
   overflow: hidden;
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  box-shadow: var(--panel-shadow);
 }
 
 .stat-card::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 40%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 34%);
   pointer-events: none;
 }
 
 .stat-card__glow {
   position: absolute;
-  inset: auto 14% 10% 14%;
+  inset: auto 14% 8% 14%;
   height: 46%;
   border-radius: 999px;
-  filter: blur(28px);
-  opacity: 0.5;
-  pointer-events: none;
+  filter: blur(30px);
+  opacity: 0.64;
 }
 
 .stat-card__row {
@@ -545,18 +553,15 @@
 .stats strong {
   display: grid;
   place-items: center;
-  flex: 0 0 auto;
-  width: 52px;
-  height: 52px;
+  width: 54px;
+  height: 54px;
   border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.04) 34%),
-    rgba(255, 255, 255, 0.06);
-  font-size: 20px;
-  font-weight: 800;
-  line-height: 1;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+    radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.18), transparent 38%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.04) 34%),
+    rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
 }
 
 .stat-icon {
@@ -577,18 +582,17 @@
 .stat-value {
   position: relative;
   z-index: 1;
-  font-size: 38px;
+  font-size: 40px;
   font-weight: 900;
   line-height: 1;
-  letter-spacing: -1px;
-  text-shadow: 0 10px 24px rgba(5, 8, 20, 0.3);
+  letter-spacing: -1.4px;
+  text-shadow: 0 12px 24px rgba(0, 0, 0, 0.28);
 }
 
 .stat-card--attack {
   background:
-    radial-gradient(120% 120% at 100% 0%, rgba(255, 106, 138, 0.16), transparent 44%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 26%),
-    rgba(25, 10, 20, 0.58);
+    radial-gradient(circle at 100% 0%, rgba(255, 106, 138, 0.18), transparent 42%),
+    linear-gradient(135deg, rgba(86, 18, 40, 0.9), rgba(31, 8, 16, 0.82));
 }
 
 .stat-card--attack strong {
@@ -599,14 +603,13 @@
 }
 
 .stat-card--attack .stat-card__glow {
-  background: rgba(255, 97, 141, 0.6);
+  background: rgba(255, 86, 131, 0.72);
 }
 
 .stat-card--defense {
   background:
-    radial-gradient(120% 120% at 0% 0%, rgba(104, 230, 255, 0.14), transparent 44%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 26%),
-    rgba(8, 18, 28, 0.58);
+    radial-gradient(circle at 0% 0%, rgba(104, 230, 255, 0.18), transparent 42%),
+    linear-gradient(135deg, rgba(8, 34, 52, 0.9), rgba(6, 16, 28, 0.82));
 }
 
 .stat-card--defense strong {
@@ -617,78 +620,78 @@
 }
 
 .stat-card--defense .stat-card__glow {
-  background: rgba(83, 235, 255, 0.5);
+  background: rgba(83, 235, 255, 0.64);
 }
 
 .rank-D {
-  --card-grad-1: #94a3b8;
-  --card-grad-2: #1e293b;
-  --card-grad-3: #0f172a;
-  --edge: #e2e8f0;
-  --glow: rgba(191, 209, 231, 0.34);
-  --shine: rgba(240, 247, 255, 0.24);
-  --portrait-grad-1: rgba(164, 178, 201, 0.48);
-  --portrait-grad-2: rgba(15, 23, 42, 0.94);
+  --card-grad-1: #7c8aa4;
+  --card-grad-2: #263349;
+  --card-grad-3: #0d1522;
+  --edge: #d8e4f7;
+  --glow: rgba(186, 206, 233, 0.44);
+  --shine: rgba(239, 246, 255, 0.26);
+  --portrait-grad-1: rgba(159, 177, 203, 0.52);
+  --portrait-grad-2: rgba(13, 21, 34, 0.98);
 }
 
 .rank-C {
-  --card-grad-1: #22c55e;
-  --card-grad-2: #14532d;
-  --card-grad-3: #03130b;
-  --edge: #86efac;
-  --glow: rgba(134, 239, 172, 0.4);
-  --shine: rgba(187, 247, 208, 0.28);
-  --portrait-grad-1: rgba(74, 222, 128, 0.42);
-  --portrait-grad-2: rgba(2, 23, 11, 0.94);
+  --card-grad-1: #29c86d;
+  --card-grad-2: #18583b;
+  --card-grad-3: #04170e;
+  --edge: #9ff2bc;
+  --glow: rgba(118, 247, 171, 0.42);
+  --shine: rgba(209, 250, 223, 0.26);
+  --portrait-grad-1: rgba(84, 228, 132, 0.44);
+  --portrait-grad-2: rgba(4, 23, 14, 0.96);
 }
 
 .rank-B {
-  --card-grad-1: #3b82f6;
-  --card-grad-2: #1d4ed8;
-  --card-grad-3: #0f172a;
-  --edge: #93c5fd;
-  --glow: rgba(147, 197, 253, 0.42);
-  --shine: rgba(191, 219, 254, 0.28);
-  --portrait-grad-1: rgba(96, 165, 250, 0.42);
-  --portrait-grad-2: rgba(15, 23, 42, 0.94);
+  --card-grad-1: #4d8dff;
+  --card-grad-2: #2446ba;
+  --card-grad-3: #09152d;
+  --edge: #afd0ff;
+  --glow: rgba(131, 180, 255, 0.46);
+  --shine: rgba(196, 221, 255, 0.28);
+  --portrait-grad-1: rgba(102, 156, 255, 0.44);
+  --portrait-grad-2: rgba(8, 21, 45, 0.96);
 }
 
 .rank-A {
-  --card-grad-1: #a855f7;
-  --card-grad-2: #581c87;
-  --card-grad-3: #1f1239;
-  --edge: #d8b4fe;
-  --glow: rgba(196, 181, 253, 0.48);
-  --shine: rgba(221, 214, 254, 0.3);
-  --portrait-grad-1: rgba(167, 139, 250, 0.44);
-  --portrait-grad-2: rgba(30, 10, 67, 0.94);
+  --card-grad-1: #b16cff;
+  --card-grad-2: #5a22b7;
+  --card-grad-3: #170826;
+  --edge: #e1c1ff;
+  --glow: rgba(207, 152, 255, 0.46);
+  --shine: rgba(241, 219, 255, 0.28);
+  --portrait-grad-1: rgba(180, 112, 255, 0.46);
+  --portrait-grad-2: rgba(23, 8, 38, 0.96);
 }
 
 .rank-S {
-  --card-grad-1: #fb7185;
-  --card-grad-2: #881337;
-  --card-grad-3: #2d0b17;
-  --edge: #fda4af;
-  --glow: rgba(253, 164, 175, 0.5);
-  --shine: rgba(254, 205, 211, 0.3);
-  --portrait-grad-1: rgba(252, 129, 129, 0.42);
-  --portrait-grad-2: rgba(34, 6, 6, 0.94);
+  --card-grad-1: #ff6c87;
+  --card-grad-2: #8c1736;
+  --card-grad-3: #24050e;
+  --edge: #ffb7c3;
+  --glow: rgba(255, 129, 156, 0.5);
+  --shine: rgba(255, 218, 225, 0.3);
+  --portrait-grad-1: rgba(255, 120, 146, 0.48);
+  --portrait-grad-2: rgba(36, 5, 14, 0.96);
 }
 
 .rank-Ω {
-  --card-grad-1: #fde047;
-  --card-grad-2: #a16207;
-  --card-grad-3: #2b1608;
-  --edge: #fef08a;
-  --glow: rgba(250, 204, 21, 0.58);
-  --shine: rgba(254, 249, 195, 0.36);
-  --portrait-grad-1: rgba(250, 204, 21, 0.46);
-  --portrait-grad-2: rgba(38, 20, 10, 0.94);
+  --card-grad-1: #ffd84b;
+  --card-grad-2: #ad6f08;
+  --card-grad-3: #2a1604;
+  --edge: #fff0a8;
+  --glow: rgba(255, 213, 80, 0.58);
+  --shine: rgba(255, 247, 192, 0.34);
+  --portrait-grad-1: rgba(255, 214, 72, 0.48);
+  --portrait-grad-2: rgba(42, 22, 4, 0.96);
 }
 
-.rank-Ω .holo,
-.rank-S .holo {
-  opacity: 0.9;
+.rank-S .holo,
+.rank-Ω .holo {
+  opacity: 0.92;
 }
 
 .afc-card.is-exporting {
@@ -698,7 +701,7 @@
 
 .afc-card.is-exporting .holo,
 .afc-card.is-exporting .rank-aura {
-  opacity: 0.35;
+  opacity: 0.36;
   animation: none !important;
 }
 
@@ -717,5 +720,5 @@
 .afc-card.is-exporting-lite .meta-right,
 .afc-card.is-exporting-lite .identity--hero,
 .afc-card.is-exporting-lite .skills {
-  background: rgba(10, 14, 26, 0.78);
+  background: rgba(10, 14, 26, 0.86);
 }
