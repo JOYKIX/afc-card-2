@@ -8,9 +8,18 @@ const DAILY_LOGIN_REWARD = 50;
 
 const getAlbumStorageKey = (uid = 'guest') => `${ALBUM_STORAGE_KEY}:${uid || 'guest'}`;
 
-const normalizeDroppedCardIds = (value) => Array.isArray(value)
-  ? value.map((entry) => String(entry || '').trim()).filter(Boolean)
-  : [];
+const normalizeDroppedCardIds = (value) => {
+  if (!Array.isArray(value)) return [];
+
+  const seen = new Set();
+  return value
+    .map((entry) => String(entry || '').trim())
+    .filter((entry) => {
+      if (!entry || seen.has(entry)) return false;
+      seen.add(entry);
+      return true;
+    });
+};
 
 const normalizeProfileCoins = (value, fallback = INITIAL_COINS) => {
   const numericValue = Number(value);
@@ -61,26 +70,24 @@ const saveLocalAlbum = (uid, entries) => {
 
 const summarizeAlbumEntries = (catalog = [], droppedCardIds = []) => {
   const cardById = new Map(catalog.map((card) => [String(card.uniqueId), card]));
-  const counts = new Map();
   const newestAtById = new Map();
 
   droppedCardIds.forEach((cardId, index) => {
     const normalizedId = String(cardId || '').trim();
     if (!normalizedId) return;
-    counts.set(normalizedId, (counts.get(normalizedId) || 0) + 1);
     newestAtById.set(normalizedId, index + 1);
   });
 
-  return Array.from(counts.entries())
-    .map(([uniqueId, dropCount]) => {
+  return Array.from(newestAtById.entries())
+    .map(([uniqueId, droppedAt]) => {
       const card = cardById.get(uniqueId);
       if (!card) return null;
 
       return normalizeAlbumEntry({
         ...card,
         uniqueId,
-        dropCount,
-        droppedAt: newestAtById.get(uniqueId) || Date.now()
+        dropCount: 1,
+        droppedAt: droppedAt || Date.now()
       });
     })
     .filter(Boolean)
@@ -178,14 +185,13 @@ const saveAlbumDrops = async (uid, cards = [], { boosterCost = BOOSTER_COST } = 
       const uniqueId = String(card?.uniqueId || card?.id || card?.cardNumber || '').trim();
       if (!uniqueId) return;
 
-      nextDroppedCardIds.push(uniqueId);
-
       if (ownedUniqueIds.has(uniqueId)) {
         soldDuplicates.push(card);
         return;
       }
 
       ownedUniqueIds.add(uniqueId);
+      nextDroppedCardIds.push(uniqueId);
       keptCards.push(card);
     });
 
