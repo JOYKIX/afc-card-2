@@ -44,6 +44,12 @@ export const initBoosterPage = async () => {
   let boosterEntries = [];
   let openingTimeouts = [];
 
+  const handleBoosterError = (error, message = 'Impossible de charger les cartes.') => {
+    console.error('Erreur booster :', error);
+    resetBoosterStage(message);
+    setHint(message, true);
+  };
+
   const clearOpeningTimers = () => {
     openingTimeouts.forEach((timeoutId) => window.clearTimeout(timeoutId));
     openingTimeouts = [];
@@ -233,9 +239,7 @@ export const initBoosterPage = async () => {
 
       setHint(`${pulls.length} cartes · ${uniqueCards} distincte(s) · ${outcome.keptCards.length} nouvelle(s)${resaleSummary}`);
     } catch (error) {
-      console.error('Erreur lors de l’ouverture du booster :', error);
-      resetBoosterStage('Impossible de charger les cartes.');
-      setHint('Impossible d’ouvrir le booster.', true);
+      handleBoosterError(error, 'Impossible d’ouvrir le booster.');
     } finally {
       if (currentCoins >= BOOSTER_COST) {
         openBoosterBtn.disabled = false;
@@ -267,9 +271,13 @@ export const initBoosterPage = async () => {
     requireAuth: true,
     onUserChanged: async (user) => {
       currentUser = user;
-      const cards = await loadApprovedCards();
-      renderDropRates(cards);
-      await refreshProfileStats();
+      try {
+        const cards = await loadApprovedCards();
+        renderDropRates(cards);
+        await refreshProfileStats();
+      } catch (error) {
+        handleBoosterError(error);
+      }
     }
   });
 
