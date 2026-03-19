@@ -2831,3 +2831,247 @@ select {
     border-radius: 22px;
   }
 }
+
+/* === 2026 minimal content cleanup === */
+
+:root {
+  --surface: rgba(12, 9, 18, 0.84);
+  --surface-soft: rgba(18, 12, 26, 0.72);
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(83, 235, 255, 0.22);
+  --muted: #c8bfd3;
+}
+
+body::before,
+body::after,
+.bg-grid,
+.workspace-frame {
+  opacity: 0.14;
+}
+
+.bg-orb {
+  opacity: 0.36;
+}
+
+.glass {
+  background: linear-gradient(180deg, rgba(17, 12, 25, 0.96), rgba(10, 8, 16, 0.98));
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.2);
+}
+
+.glass-soft,
+.auth-actions--topbar,
+.topbar__brand,
+.nav-link,
+.hero-stats article,
+.review-stats--revamp article,
+.profile-form-wrap--primary,
+.login-card--featured,
+.editor-form__cluster,
+.portrait-position-tools,
+.stat-controls,
+.verification-box,
+.admin-focus--revamp,
+.role-manager,
+.album-binder__topbar--revamp,
+.album-binder__shell--revamp,
+.booster-stage--revamp,
+.preview-wrap--stage {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: none;
+}
+
+.topbar--dashboard {
+  grid-template-columns: minmax(220px, 0.9fr) minmax(0, 1.6fr) minmax(240px, 0.75fr);
+  padding: 0.85rem;
+  background: rgba(10, 8, 15, 0.82);
+  backdrop-filter: blur(18px);
+}
+
+.topbar--dashboard::before,
+.preview-wrap--stage::before,
+.login-card--featured::before {
+  display: none;
+}
+
+.topbar__brand {
+  padding: 1rem 1.1rem;
+}
+
+.topbar__brand-copy {
+  gap: 0.18rem;
+}
+
+.topbar__subtitle {
+  color: rgba(252, 246, 255, 0.7);
+}
+
+.site-nav {
+  gap: 0.55rem;
+}
+
+.nav-link {
+  padding: 0.85rem 0.95rem;
+  align-items: center;
+}
+
+.nav-link__content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-link__eyebrow,
+.kicker,
+.panel-heading .eyebrow,
+.section-head-inline .eyebrow,
+.profile-card--aside,
+.admin-tips--revamp,
+.login-shell__intro,
+.album-binder__legend,
+.panel-subtitle {
+  display: none;
+}
+
+.panel-heading,
+.section-head-inline {
+  gap: 0.75rem;
+}
+
+.panel-heading--spread,
+.section-head-inline--stack-mobile {
+  align-items: center;
+}
+
+.subtitle,
+.hint,
+#renderEngineStatus,
+#verificationStatusText,
+#profileHint,
+#boosterHint,
+#albumHint,
+#loginHint,
+#loginState,
+#dailyRewardStatus,
+#roleFeedback,
+#rerollStatusText,
+.topbar__subtitle {
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.feature-list {
+  gap: 0.45rem;
+  padding-left: 1rem;
+}
+
+.feature-list--compact {
+  margin: 0;
+  padding-left: 1rem;
+}
+
+.login-shell--solo,
+.profile-layout--single {
+  grid-template-columns: minmax(0, 640px);
+  justify-content: start;
+}
+
+.login-card--solo {
+  max-width: 640px;
+  min-height: 0;
+  align-content: start;
+}
+
+.layout--create-minimal .portrait-position-tools,
+.verification-box--minimal,
+.booster-dashboard--minimal .booster-sidebar,
+.single-layout--profile-minimal .profile-layout,
+.admin-layout--minimal .admin-sidebar {
+  gap: 0.85rem;
+}
+
+.layout--create-minimal .portrait-position-tools,
+.verification-box--minimal,
+.profile-form-wrap--primary,
+.role-manager,
+.booster-rates-card {
+  padding: 1rem;
+}
+
+.profile-form-wrap--primary,
+.role-manager,
+.booster-rates-card,
+.login-card--featured,
+.admin-focus--revamp,
+.album-binder__topbar--revamp,
+.album-binder__shell--revamp,
+.preview-wrap--stage,
+.booster-stage--revamp {
+  border-radius: 22px;
+}
+
+.actions--editor {
+  gap: 0.75rem;
+}
+
+.hero-stats--profile article,
+.hero-stats--booster article,
+.review-stats--revamp article {
+  min-height: 110px;
+  padding: 0.95rem;
+}
+
+.hero-stats--booster {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.booster-dashboard--minimal {
+  grid-template-columns: minmax(260px, 0.72fr) minmax(0, 1.28fr);
+}
+
+.booster-sidebar--minimal,
+.admin-sidebar--revamp {
+  align-content: start;
+}
+
+.profile-card h3,
+.booster-rates-card h3,
+.role-manager h3,
+.admin-focus--revamp h3,
+.section-title,
+#portraitPositionTitle,
+#portraitCropModalTitle {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.album-binder__topbar--revamp {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.album-binder__controls {
+  width: auto;
+}
+
+.auth-actions__buttons--inline {
+  grid-template-columns: 1fr;
+}
+
+@media (max-width: 1280px) {
+  .booster-dashboard--minimal,
+  .login-shell--solo,
+  .profile-layout--single {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 960px) {
+  .topbar--dashboard {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-stats--booster {
+    grid-template-columns: 1fr;
+  }
+}
