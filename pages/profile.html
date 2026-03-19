@@ -1,45 +1,33 @@
-<main class="single-layout single-layout--narrow single-layout--profile-revamp">
+<main class="single-layout single-layout--narrow single-layout--profile-revamp single-layout--profile-minimal">
   <section class="panel glass profile-panel profile-panel--revamp">
     <div class="panel-heading panel-heading--spread">
       <div>
-        <p class="eyebrow">Compte</p>
-        <h2>Personnalise ton profil</h2>
+        <h2>Profil</h2>
       </div>
-      <p class="subtitle">Renseigne ton pseudo AFC pour associer automatiquement tes cartes, validations, drops et coins à ton compte.</p>
     </div>
 
-    <div class="hero-stats hero-stats--profile">
+    <div class="hero-stats hero-stats--profile hero-stats--profile-minimal">
       <article class="glass-soft">
         <strong id="profileCoins">50 coins</strong>
-        <span>Solde actuel</span>
+        <span>Coins</span>
       </article>
       <article class="glass-soft">
         <strong id="profileDaily">+50 coins / jour</strong>
-        <span>Récompense de connexion</span>
+        <span>Connexion</span>
       </article>
       <article class="glass-soft">
         <strong id="profileDrops">0 carte drop</strong>
-        <span>Cartes uniques possédées</span>
+        <span>Collection</span>
       </article>
     </div>
 
-    <div class="profile-layout profile-layout--revamp">
+    <div class="profile-layout profile-layout--revamp profile-layout--single">
       <div class="profile-form-wrap profile-form-wrap--primary glass-soft">
         <label>Pseudo
           <input id="nickname" type="text" maxlength="24" placeholder="Ton pseudo AFC" />
         </label>
-        <button id="saveProfile" type="button">Enregistrer le pseudo</button>
-        <p id="profileHint" class="hint">Connecte-toi avec Google pour démarrer.</p>
-      </div>
-
-      <div class="profile-card glass-soft profile-card--aside">
-        <p class="eyebrow">Astuce</p>
-        <h3>Un pseudo clair = un profil propre</h3>
-        <ul class="feature-list">
-          <li>Ton pseudo s’actualise directement sur ton profil.</li>
-          <li>Les cartes gardent le bon nom joueur plus facilement.</li>
-          <li>Ton album et tes coins restent liés à ton compte Firebase.</li>
-        </ul>
+        <button id="saveProfile" type="button">Enregistrer</button>
+        <p id="profileHint" class="hint">Connecte-toi avec Google.</p>
       </div>
     </div>
   </section>
