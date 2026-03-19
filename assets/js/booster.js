@@ -30,8 +30,30 @@ export const initBoosterPage = async () => {
   const dailyRewardStatus = document.getElementById('dailyRewardStatus');
   const catalogCount = document.getElementById('catalogCount');
   const dropRateList = document.getElementById('dropRateList');
+  const boosterStage = document.getElementById('boosterStage');
+  const boosterPack = document.getElementById('boosterPack');
+  const boosterViewer = document.getElementById('boosterViewer');
+  const boosterViewerMedia = document.getElementById('boosterViewerMedia');
+  const boosterViewerImage = document.getElementById('boosterViewerImage');
+  const boosterViewerTitle = document.getElementById('boosterViewerTitle');
+  const boosterViewerSubtitle = document.getElementById('boosterViewerSubtitle');
+  const boosterViewerRank = document.getElementById('boosterViewerRank');
+  const closeBoosterViewerBtn = document.getElementById('closeBoosterViewer');
   let currentUser = null;
   let currentCoins = 50;
+  let boosterEntries = [];
+  let openingTimeouts = [];
+
+  const clearOpeningTimers = () => {
+    openingTimeouts.forEach((timeoutId) => window.clearTimeout(timeoutId));
+    openingTimeouts = [];
+  };
+
+  const queueTimeout = (callback, delay) => {
+    const timeoutId = window.setTimeout(callback, delay);
+    openingTimeouts.push(timeoutId);
+    return timeoutId;
+  };
 
   const setHint = (message, isError = false) => {
     if (!boosterHint) return;
@@ -39,8 +61,33 @@ export const initBoosterPage = async () => {
     boosterHint.dataset.state = isError ? 'error' : 'ready';
   };
 
-  const renderPlaceholder = (message) => {
-    boosterGrid.innerHTML = `<article class="booster-capture"><div class="booster-capture__frame"><div class="booster-placeholder">${escapeHtml(message)}</div></div></article>`;
+  const closeViewer = () => {
+    if (!boosterViewer || boosterViewer.hidden) return;
+    boosterViewer.hidden = true;
+    document.body.classList.remove('modal-open');
+  };
+
+  const openViewer = (index) => {
+    const card = boosterEntries[index];
+    if (!card || !boosterViewer || !boosterViewerMedia || !boosterViewerImage || !boosterViewerTitle || !boosterViewerSubtitle || !boosterViewerRank) return;
+
+    boosterViewerImage.src = card.cardCapture || '';
+    boosterViewerImage.alt = `Carte ${card.rank} de ${card.creatorName}`;
+    boosterViewerTitle.textContent = card.cardName || card.name || card.creatorName;
+    boosterViewerSubtitle.textContent = `${formatCardNumber(card.cardNumber, 'Sans numéro')} · ${card.creatorName}`;
+    boosterViewerRank.textContent = `Rang ${card.rank}`;
+    boosterViewerMedia.className = `card-viewer__media rank-${card.rank}`;
+    boosterViewer.hidden = false;
+    document.body.classList.add('modal-open');
+  };
+
+  const resetBoosterStage = (message) => {
+    clearOpeningTimers();
+    boosterEntries = [];
+    closeViewer();
+    boosterStage?.classList.remove('is-opening', 'is-revealed');
+    boosterPack?.classList.remove('is-opening', 'is-opened');
+    boosterGrid.innerHTML = `<article class="booster-empty"><p>${escapeHtml(message)}</p></article>`;
   };
 
   const setCoins = (coins) => {
@@ -60,35 +107,62 @@ export const initBoosterPage = async () => {
     const visibleRates = rates.filter((entry) => entry.count > 0);
     dropRateList.innerHTML = visibleRates.length
       ? visibleRates
-          .map((entry) => `<li><strong>${entry.rank}</strong> · ${entry.chance.toFixed(1)}% de chance · ${entry.count} carte${entry.count > 1 ? 's' : ''} dispo · doublon revendu ${entry.sellValue} coins</li>`)
+          .map((entry) => `<li><strong>${entry.rank}</strong> · ${entry.chance.toFixed(1)}% · ${entry.count} carte${entry.count > 1 ? 's' : ''} · +${entry.sellValue}</li>`)
           .join('')
-      : '<li>Aucune carte validée pour calculer le taux de drop.</li>';
+      : '<li>Aucune carte validée.</li>';
 
     if (catalogCount) {
       catalogCount.textContent = `${cards.length} carte${cards.length > 1 ? 's' : ''} validée${cards.length > 1 ? 's' : ''}`;
     }
   };
 
-  const renderBooster = (cards, soldDuplicates = []) => {
-    boosterGrid.innerHTML = '';
+  const renderBoosterCards = (cards, soldDuplicates = []) => {
     const soldIds = new Set(soldDuplicates.map((card) => String(card.uniqueId)));
+    boosterEntries = cards;
+    boosterGrid.innerHTML = '';
 
     cards.forEach((card, index) => {
       const isDuplicate = soldIds.has(String(card.uniqueId));
-      const item = document.createElement('article');
+      const item = document.createElement('button');
+      item.type = 'button';
       item.className = `booster-capture rank-${card.rank}`;
+      item.dataset.boosterIndex = String(index);
+      item.style.setProperty('--card-delay', `${index * 120}ms`);
       item.innerHTML = `
-        <div class="booster-capture__frame">
-          <img src="${escapeHtml(card.cardCapture)}" alt="${escapeHtml(`Carte ${card.rank} de ${card.creatorName}`)}">
-        </div>
-        <div class="booster-capture__meta">
-          <strong>#${index + 1} · ${escapeHtml(card.cardName || card.name || card.creatorName)}</strong>
-          <small>Carte ${escapeHtml(formatCardNumber(card.cardNumber, 'Sans numéro'))} · ${escapeHtml(card.creatorName)} · ${isDuplicate ? 'doublon revendu automatiquement' : 'ajoutée à ton album'}</small>
-        </div>
-        <div class="booster-capture__rank">${escapeHtml(card.rank)}${isDuplicate ? ` · +${escapeHtml(String(card.sellValue))}` : ''}</div>
+        <span class="booster-capture__frame">
+          <img src="${escapeHtml(card.cardCapture)}" alt="${escapeHtml(`Carte ${card.rank} de ${card.creatorName}`)}" loading="lazy">
+        </span>
+        <span class="booster-capture__meta">
+          <strong>${escapeHtml(card.cardName || card.name || card.creatorName)}</strong>
+          <small>${escapeHtml(formatCardNumber(card.cardNumber, 'Sans numéro'))} · ${escapeHtml(card.creatorName)}</small>
+        </span>
+        <span class="booster-capture__rank">${escapeHtml(card.rank)}${isDuplicate ? ` · +${escapeHtml(String(card.sellValue))}` : ''}</span>
       `;
       boosterGrid.appendChild(item);
     });
+  };
+
+  const playOpeningSequence = (cards, soldDuplicates = []) => {
+    clearOpeningTimers();
+    boosterStage?.classList.remove('is-revealed');
+    boosterStage?.classList.add('is-opening');
+    boosterPack?.classList.remove('is-opened');
+    boosterPack?.classList.add('is-opening');
+    boosterGrid.innerHTML = '';
+
+    queueTimeout(() => {
+      boosterPack?.classList.add('is-opened');
+    }, 520);
+
+    queueTimeout(() => {
+      renderBoosterCards(cards, soldDuplicates);
+      boosterStage?.classList.add('is-revealed');
+    }, 880);
+
+    queueTimeout(() => {
+      boosterStage?.classList.remove('is-opening');
+      boosterPack?.classList.remove('is-opening');
+    }, 1700);
   };
 
   const refreshProfileStats = async () => {
@@ -101,31 +175,31 @@ export const initBoosterPage = async () => {
     const profileAlbum = await loadProfileAlbum(currentUser.uid);
     setCoins(profileAlbum.coins);
     if (dailyRewardStatus) {
-      dailyRewardStatus.textContent = 'La connexion du jour crédite automatiquement 50 coins si elle n’a pas encore été comptée aujourd’hui.';
+      dailyRewardStatus.textContent = 'La connexion du jour crédite automatiquement 50 coins.';
     }
   };
 
   const openBooster = async () => {
     if (!currentUser) {
-      setHint('Connecte-toi pour ouvrir un booster et créditer tes coins.', true);
+      setHint('Connecte-toi pour ouvrir un booster.', true);
       return;
     }
 
     if (currentCoins < BOOSTER_COST) {
-      setHint(`Il te faut ${BOOSTER_COST} coins pour ouvrir un booster. Solde actuel : ${currentCoins} coins.`, true);
+      setHint(`Il te faut ${BOOSTER_COST} coins. Solde : ${currentCoins}.`, true);
       return;
     }
 
     openBoosterBtn.disabled = true;
-    setHint(`Ouverture du booster… ${BOOSTER_COST} coins vont être consommés.`);
+    setHint('Ouverture…');
 
     try {
       const cards = await loadApprovedCards();
       renderDropRates(cards);
 
       if (cards.length === 0) {
-        renderPlaceholder('Aucune carte validée disponible pour le moment.');
-        setHint('Ajoute ou valide au moins une carte pour ouvrir un booster.', true);
+        resetBoosterStage('Aucune carte validée pour le moment.');
+        setHint('Aucune carte disponible.', true);
         openBoosterBtn.disabled = false;
         return;
       }
@@ -140,30 +214,28 @@ export const initBoosterPage = async () => {
 
       if (!outcome.ok && outcome.reason === 'insufficient-coins') {
         setCoins(outcome.balance);
-        renderPlaceholder('Pas assez de coins pour ouvrir ce booster.');
-        setHint(`Booster refusé : il faut ${BOOSTER_COST} coins, mais ton solde est de ${outcome.balance} coins.`, true);
+        resetBoosterStage('Pas assez de coins.');
+        setHint(`Booster refusé : ${outcome.balance} coins.`, true);
         return;
       }
 
-      renderBooster(pulls, outcome.soldDuplicates);
+      playOpeningSequence(pulls, outcome.soldDuplicates);
       setCoins(outcome.balance);
 
       const duplicateCount = outcome.soldDuplicates.length;
       const uniqueCards = new Set(pulls.map((card) => card.uniqueId)).size;
-      const resaleSummary = duplicateCount > 0
-        ? ` ${duplicateCount} doublon(s) revendu(s) pour ${outcome.duplicateCoins} coins.`
-        : '';
+      const resaleSummary = duplicateCount > 0 ? ` · +${outcome.duplicateCoins} coins` : '';
 
       if (cards.length === 1) {
-        setHint(`Une seule carte est disponible : le booster affiche donc 5 fois la même carte.${resaleSummary} Solde restant : ${outcome.balance} coins.`);
+        setHint(`5 cartes tirées · 1 seule carte dispo${resaleSummary}`);
         return;
       }
 
-      setHint(`${pulls.length} cartes tirées (${uniqueCards} carte(s) distincte(s) dans le booster). ${outcome.keptCards.length} nouvelle(s) carte(s) ajoutée(s) à ton album.${resaleSummary} Solde restant : ${outcome.balance} coins.`);
+      setHint(`${pulls.length} cartes · ${uniqueCards} distincte(s) · ${outcome.keptCards.length} nouvelle(s)${resaleSummary}`);
     } catch (error) {
       console.error('Erreur lors de l’ouverture du booster :', error);
-      renderPlaceholder('Impossible de charger les cartes pour le moment.');
-      setHint('Impossible d’ouvrir le booster pour le moment. Réessaie dans quelques secondes.', true);
+      resetBoosterStage('Impossible de charger les cartes.');
+      setHint('Impossible d’ouvrir le booster.', true);
     } finally {
       if (currentCoins >= BOOSTER_COST) {
         openBoosterBtn.disabled = false;
@@ -171,7 +243,25 @@ export const initBoosterPage = async () => {
     }
   };
 
+  const onBoosterGridClick = (event) => {
+    const target = event.target instanceof Element ? event.target.closest('[data-booster-index]') : null;
+    if (!target) return;
+    openViewer(Number(target.getAttribute('data-booster-index')));
+  };
+
+  const onKeyDown = (event) => {
+    if (event.key === 'Escape') closeViewer();
+  };
+
   openBoosterBtn?.addEventListener('click', openBooster);
+  boosterGrid?.addEventListener('click', onBoosterGridClick);
+  closeBoosterViewerBtn?.addEventListener('click', closeViewer);
+  boosterViewer?.addEventListener('click', (event) => {
+    if (event.target instanceof HTMLElement && event.target.hasAttribute('data-close-booster-viewer')) {
+      closeViewer();
+    }
+  });
+  document.addEventListener('keydown', onKeyDown);
 
   const cleanupCommon = await initCommon({
     requireAuth: true,
@@ -183,11 +273,16 @@ export const initBoosterPage = async () => {
     }
   });
 
-  renderPlaceholder('Ouvre un booster pour découvrir 5 cartes.');
-  setHint(`Prêt à découvrir ton tirage. Chaque booster coûte ${BOOSTER_COST} coins.`);
+  resetBoosterStage('Ouvre un booster pour découvrir 5 cartes.');
+  setHint(`Prêt · ${BOOSTER_COST} coins.`);
 
   return () => {
     cleanupCommon?.();
+    clearOpeningTimers();
+    closeViewer();
     openBoosterBtn?.removeEventListener('click', openBooster);
+    boosterGrid?.removeEventListener('click', onBoosterGridClick);
+    closeBoosterViewerBtn?.removeEventListener('click', closeViewer);
+    document.removeEventListener('keydown', onKeyDown);
   };
 };

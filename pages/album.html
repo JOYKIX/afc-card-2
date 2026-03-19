@@ -7,8 +7,22 @@
             </div>
             <span id="albumCount" class="section-pill">0 / 0 carte</span>
           </div>
-          <p class="subtitle">Retrouve ici toutes les cartes déjà possédées. Le compteur affiche les cartes uniques possédées / toutes les cartes validées sur le site, sans compter les doublons.</p>
           <p id="albumHint" class="hint">Chargement de ton album...</p>
           <section id="albumGrid" class="album-grid"></section>
         </section>
       </main>
+
+      <div class="card-viewer" id="albumViewer" hidden>
+        <div class="card-viewer__backdrop" data-close-album-viewer></div>
+        <div class="card-viewer__dialog glass" role="dialog" aria-modal="true" aria-labelledby="albumViewerTitle">
+          <button type="button" class="card-viewer__close ghost" id="closeAlbumViewer">Fermer</button>
+          <div class="card-viewer__media rank-C" id="albumViewerMedia">
+            <img id="albumViewerImage" alt="" />
+          </div>
+          <div class="card-viewer__meta">
+            <p class="eyebrow" id="albumViewerRank">Rang</p>
+            <h3 id="albumViewerTitle">Carte</h3>
+            <p id="albumViewerSubtitle" class="subtitle"></p>
+          </div>
+        </div>
+      </div>
