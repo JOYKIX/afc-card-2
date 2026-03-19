@@ -6,6 +6,8 @@ const normalizeAlbumEntry = (card = {}) => ({
   uniqueId: String(card.uniqueId || card.id || card.cardNumber || `${Date.now()}`),
   cardNumber: card.cardNumber ?? null,
   rank: card.rank || 'D',
+  name: card.name || card.cardName || '',
+  cardName: card.cardName || card.name || '',
   creatorName: card.creatorName || 'Créateur inconnu',
   cardCapture: card.cardCapture || '',
   droppedAt: Number(card.droppedAt || Date.now()),

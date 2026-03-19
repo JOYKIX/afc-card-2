@@ -56,6 +56,8 @@ const getHighestAssignedCardNumber = (records = {}) => Object.values(records).re
 
 const normalizeCardRecord = (record = {}) => ({
   ...record,
+  name: record.name || record.cardName || '',
+  cardName: record.cardName || record.name || '',
   rank: normalizeRank(record.rank || record.rarity),
   creatorName: record.creatorName || record.createdBy || record.ownerNickname || 'Créateur inconnu',
   cardCapture: record.cardCapture || record.cardImage || record.image || '',
@@ -200,6 +202,8 @@ const moveApprovedCardToCollection = async (current, now) => {
     ownerNickname: current.entry.ownerNickname || current.card.ownerNickname,
     creatorName: current.card.creatorName,
     createdBy: current.card.creatorName,
+    name: current.card.name || current.card.cardName || '',
+    cardName: current.card.cardName || current.card.name || '',
     cardNumber,
     cardId: cardNumber,
     rank: current.card.rank,
