@@ -1,11 +1,9 @@
-<main class="admin-layout admin-layout--revamp">
+<main class="admin-layout admin-layout--revamp admin-layout--minimal">
   <section class="panel glass admin-main-panel admin-main-panel--revamp">
     <div class="panel-heading panel-heading--spread">
       <div>
-        <p class="eyebrow">Centre de contrôle</p>
-        <h2>Validation des cartes</h2>
+        <h2>Validation</h2>
       </div>
-      <p class="subtitle">Visualise les cartes en attente, les validations effectuées et les suppressions liées aux refus.</p>
     </div>
 
     <div class="status-banner" id="adminNotice">Contrôle des droits...</div>
@@ -13,7 +11,7 @@
     <div id="reviewStats" class="review-stats review-stats--hero review-stats--revamp">
       <article>
         <strong id="countPending">0</strong>
-        <span>En vérification</span>
+        <span>En attente</span>
       </article>
       <article>
         <strong id="countApproved">0</strong>
@@ -29,8 +27,7 @@
       <section class="admin-focus glass-soft admin-focus--revamp" aria-labelledby="moderationTitle">
         <div class="section-head-inline">
           <div>
-            <p class="eyebrow">Priorité</p>
-            <h3 id="moderationTitle">Carte à modérer</h3>
+            <h3 id="moderationTitle">À modérer</h3>
           </div>
           <span class="section-pill">File active</span>
         </div>
@@ -41,18 +38,15 @@
         <section class="role-manager glass-soft" aria-labelledby="roleManagerTitle">
           <div class="section-head-inline">
             <div>
-              <p class="eyebrow">Accès</p>
-              <h3 id="roleManagerTitle">Gestion des droits</h3>
+              <h3 id="roleManagerTitle">Rôles</h3>
             </div>
-            <span class="section-pill">Rôles AFC</span>
           </div>
-          <p class="subtitle">Cherche un profil par nickname puis attribue-lui ses rôles. Le rôle <strong>african army</strong> reste appliqué par défaut.</p>
           <form id="roleForm" class="role-form role-form--revamp">
             <label>Nickname
               <input id="roleNickname" type="text" placeholder="Pseudo AFC" required />
             </label>
             <fieldset class="role-options">
-              <legend>Rôles supplémentaires</legend>
+              <legend>Rôles</legend>
               <label><input type="checkbox" name="roleOption" value="vip" /> VIP</label>
               <label><input type="checkbox" name="roleOption" value="streamers" /> Streamers</label>
               <label><input type="checkbox" name="roleOption" value="staff afc" /> Staff AFC</label>
@@ -60,19 +54,9 @@
               <label><input type="checkbox" name="roleOption" value="admin" /> Admin</label>
               <label><input type="checkbox" name="roleOption" value="african king" /> African King</label>
             </fieldset>
-            <button id="roleSubmit" type="submit">Mettre à jour les rôles</button>
+            <button id="roleSubmit" type="submit">Mettre à jour</button>
           </form>
           <p id="roleFeedback" class="hint" aria-live="polite"></p>
-        </section>
-
-        <section class="admin-tips glass-soft admin-tips--revamp">
-          <p class="eyebrow">Rappel</p>
-          <h3>Bonnes pratiques de modération</h3>
-          <ul class="feature-list">
-            <li>Valider uniquement les cartes complètes et lisibles.</li>
-            <li>Refuser les visuels incomplets ou non conformes.</li>
-            <li>Utiliser l’historique pour contrôler les derniers mouvements.</li>
-          </ul>
         </section>
       </aside>
     </div>
@@ -81,8 +65,7 @@
   <section class="panel glass admin-history-panel admin-history-panel--revamp">
     <div class="section-head-inline section-head-inline--stack-mobile">
       <div>
-        <p class="eyebrow">Historique</p>
-        <h3 class="section-title">Suivi des vérifications</h3>
+        <h3 class="section-title">Historique</h3>
       </div>
       <div class="toolbar toolbar--revamp">
         <label>Statut
