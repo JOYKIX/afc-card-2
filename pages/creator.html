@@ -1,9 +1,8 @@
-<main class="layout layout--create layout--create-revamp">
+<main class="layout layout--create layout--create-revamp layout--create-minimal">
   <section class="panel glass editor-panel editor-panel--revamp">
     <div class="panel-heading panel-heading--spread panel-heading--editor">
       <div>
-        <p class="eyebrow">Atelier</p>
-        <h2>Composer une nouvelle carte</h2>
+        <h2>Nouvelle carte</h2>
       </div>
     </div>
 
@@ -29,7 +28,7 @@
             <input id="edition" type="text" value="2e édition" readonly />
           </label>
 
-          <label>Photo (JPG / JPEG / PNG / WEBP)
+          <label>Image
             <input id="imageInput" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
           </label>
         </div>
@@ -38,15 +37,13 @@
       <section class="portrait-position-tools glass-soft" aria-labelledby="portraitPositionTitle">
         <div class="section-head-inline section-head-inline--stack-mobile">
           <div>
-            <p class="eyebrow">Illustration</p>
-            <h3 id="portraitPositionTitle">Rognage en pop-up</h3>
+            <h3 id="portraitPositionTitle">Rognage</h3>
           </div>
           <div class="portrait-position-actions">
-            <button type="button" id="openPortraitCropModal" class="ghost">Rogner l'image</button>
+            <button type="button" id="openPortraitCropModal" class="ghost">Rogner</button>
             <button type="button" id="resetPortraitPosition" class="ghost">Réinitialiser</button>
           </div>
         </div>
-        <p class="hint">Choisis une image puis ouvre la pop-up pour la rogner, zoomer et la placer exactement dans le cadre de l’illustration avant l’export.</p>
       </section>
 
       <label>Capacités
@@ -56,38 +53,35 @@
       <section class="stat-controls glass-soft" id="statControls">
         <div class="section-head-inline">
           <div>
-            <p class="eyebrow">Stats</p>
-            <h3>Attaque & défense</h3>
+            <h3>Stats</h3>
           </div>
           <span class="section-pill" id="rerollBadge">3 rerolls</span>
         </div>
-        <p class="subtitle" id="rerollStatusText">Connecte-toi pour voir ton nombre de rerolls restants.</p>
+        <p class="subtitle" id="rerollStatusText">Connecte-toi pour voir tes rerolls.</p>
         <div class="form-grid form-grid--two" id="manualStatsBox" hidden>
-          <label>Attaque manuelle
+          <label>Attaque
             <input id="manualAttack" type="number" min="1" max="100" step="1" value="1" />
           </label>
-          <label>Défense manuelle
+          <label>Défense
             <input id="manualDefense" type="number" min="1" max="100" step="1" value="1" />
           </label>
         </div>
       </section>
 
       <div class="actions actions--spread actions--editor">
-        <button type="button" id="rollStats">Générer attaque / défense</button>
-        <button type="button" id="submitCard">Envoyer en vérification</button>
-        <button type="button" id="downloadCard" class="ghost">Télécharger la carte</button>
+        <button type="button" id="rollStats">Générer les stats</button>
+        <button type="button" id="submitCard">Envoyer</button>
+        <button type="button" id="downloadCard" class="ghost">Télécharger</button>
       </div>
 
-      <section class="verification-box" id="verificationBox">
+      <section class="verification-box verification-box--minimal" id="verificationBox">
         <div class="section-head-inline">
           <div>
-            <p class="eyebrow">Validation</p>
-            <h3>Suivi de vérification</h3>
+            <h3>Vérification</h3>
           </div>
-          <span class="section-pill">Temps réel</span>
         </div>
-        <p id="verificationStatusText">Connecte-toi pour suivre ta carte en validation.</p>
-        <p id="renderEngineStatus" class="render-engine-status">Moteur export: initialisation...</p>
+        <p id="verificationStatusText">Connecte-toi pour suivre ta carte.</p>
+        <p id="renderEngineStatus" class="render-engine-status">Export en cours d'initialisation...</p>
       </section>
     </form>
   </section>
@@ -96,8 +90,7 @@
     <article class="panel glass preview-panel preview-panel--revamp">
       <div class="panel-heading panel-heading--compact">
         <div>
-          <p class="eyebrow">Preview</p>
-          <h2>Carte générée en direct</h2>
+          <h2>Aperçu</h2>
         </div>
       </div>
 
@@ -190,8 +183,7 @@
     <div class="crop-modal__dialog glass" role="dialog" aria-modal="true" aria-labelledby="portraitCropModalTitle">
       <div class="crop-modal__header section-head-inline section-head-inline--stack-mobile">
         <div>
-          <p class="eyebrow">Illustration</p>
-          <h3 id="portraitCropModalTitle">Rogner et placer l’image</h3>
+          <h3 id="portraitCropModalTitle">Rognage</h3>
         </div>
         <button type="button" id="closePortraitCropModal" class="ghost">Fermer</button>
       </div>
@@ -205,7 +197,6 @@
         </div>
 
         <div class="crop-modal__sidebar glass-soft">
-          <p class="hint">Déplace l’image dans ce cadre pour choisir exactement la zone visible sur la carte.</p>
           <div class="portrait-zoom-controls" aria-label="Contrôles de zoom de la pop-up d'illustration">
             <button type="button" id="cropZoomOutPortrait" class="ghost portrait-zoom-button" aria-label="Dézoomer l'illustration">−</button>
             <label class="portrait-zoom-slider" for="cropPortraitZoomRange">Zoom
@@ -217,7 +208,7 @@
           <div class="crop-modal__actions">
             <button type="button" id="resetPortraitCropModal" class="ghost">Recentrer</button>
             <button type="button" id="cancelPortraitCropModal" class="ghost">Annuler</button>
-            <button type="button" id="applyPortraitCropModal">Appliquer le cadrage</button>
+            <button type="button" id="applyPortraitCropModal">Appliquer</button>
           </div>
         </div>
       </div>
