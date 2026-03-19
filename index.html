@@ -17,17 +17,20 @@
 <body data-route="boot">
   <div class="bg-orb orb-a"></div>
   <div class="bg-orb orb-b"></div>
+  <div class="bg-grid" aria-hidden="true"></div>
 
   <div class="app-shell app-shell--dashboard">
     <header class="topbar topbar--dashboard glass">
-      <div class="brand-wrap topbar__brand">
-        <div class="topbar__brand-copy">
-          <p class="kicker">AFC Universe</p>
-          <h1>AFC Card Studio</h1>
+      <div class="topbar__brand-block">
+        <div class="brand-wrap topbar__brand">
+          <div class="topbar__brand-copy">
+            <p class="kicker">AFC Universe</p>
+            <h1>AFC Card Studio</h1>
+          </div>
         </div>
       </div>
 
-      <div class="topbar__nav-zone">
+      <div class="topbar__nav-block glass-soft">
         <nav class="site-nav" aria-label="Navigation principale">
           <a class="nav-link nav-link--studio" href="./?page=creator" data-route="creator">
             <span class="nav-link__content">
@@ -77,33 +80,40 @@
     </header>
 
     <div id="appWorkspace" class="app-workspace">
+      <div class="workspace-frame glass-soft" aria-hidden="true">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
       <div id="app" class="app-view" aria-live="polite"></div>
     </div>
   </div>
 
   <template id="loginViewTemplate">
-    <main class="login-layout">
+    <main class="login-layout login-layout--revamp">
       <section class="panel glass login-panel">
-        <div class="panel-heading">
-          <div>
-            <p class="eyebrow">Bienvenue</p>
-            <h2>Connecte-toi avant d’utiliser le studio</h2>
+        <div class="login-shell">
+          <div class="login-shell__intro glass-soft">
+            <div class="panel-heading panel-heading--compact">
+              <div>
+                <p class="eyebrow">Bienvenue</p>
+                <h2>Connecte-toi avant d’utiliser le studio</h2>
+              </div>
+              <p class="subtitle">Connexion Google, cache local instantané et navigation fluide sans rechargement.</p>
+            </div>
+
+            <article class="glass-soft login-copy login-copy--featured">
+              <p class="eyebrow">Accès</p>
+              <h3>Une connexion, puis retour direct dans l’app</h3>
+              <ul class="feature-list">
+                <li>Aucun rechargement de page.</li>
+                <li>Retour immédiat au studio si la session locale existe.</li>
+                <li>Synchronisation Firebase en arrière-plan.</li>
+              </ul>
+            </article>
           </div>
-          <p class="subtitle">Connexion Google, cache local instantané et navigation fluide sans rechargement.</p>
-        </div>
 
-        <div class="login-grid">
-          <article class="glass-soft login-copy">
-            <p class="eyebrow">Accès</p>
-            <h3>Une connexion, puis retour direct dans l’app</h3>
-            <ul class="feature-list">
-              <li>Aucun rechargement de page.</li>
-              <li>Retour immédiat au studio si la session locale existe.</li>
-              <li>Synchronisation Firebase en arrière-plan.</li>
-            </ul>
-          </article>
-
-          <article class="glass-soft login-card">
+          <article class="glass-soft login-card login-card--featured">
             <p id="loginState" class="login-state">Connecte-toi avec Google pour accéder au site.</p>
             <p id="loginHint" class="hint">Ton pseudo sera demandé juste après la connexion si nécessaire, puis tes coins/jour seront synchronisés.</p>
 

@@ -2241,3 +2241,593 @@ body.modal-open {
     transform: scale(1.2);
   }
 }
+
+/* === 2026 visual redesign override layer === */
+
+:root {
+  --revamp-shell-gap: clamp(1rem, 2vw, 1.5rem);
+}
+
+body {
+  background:
+    radial-gradient(circle at 12% 12%, rgba(255, 61, 122, 0.24), transparent 24%),
+    radial-gradient(circle at 88% 18%, rgba(83, 235, 255, 0.22), transparent 22%),
+    radial-gradient(circle at 52% 68%, rgba(139, 70, 255, 0.24), transparent 28%),
+    linear-gradient(180deg, #05020a 0%, #0a0410 22%, #100616 52%, #180924 100%);
+}
+
+.bg-grid {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 110px 110px;
+  mask-image: radial-gradient(circle at center, black 38%, transparent 95%);
+  opacity: 0.28;
+}
+
+.app-shell--dashboard {
+  width: min(calc(100% - 2rem), 1640px);
+  padding: 1.25rem 0 2.2rem;
+  display: grid;
+  gap: var(--revamp-shell-gap);
+}
+
+.topbar--dashboard {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.95fr) minmax(0, 1.7fr) minmax(260px, 1fr);
+  align-items: stretch;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 30px;
+  background:
+    linear-gradient(135deg, rgba(27, 15, 41, 0.96), rgba(10, 6, 18, 0.98)),
+    rgba(12, 7, 20, 0.94);
+  border-color: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.topbar--dashboard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at left center, rgba(255, 115, 187, 0.16), transparent 34%),
+    radial-gradient(circle at right center, rgba(83, 235, 255, 0.14), transparent 28%);
+  pointer-events: none;
+}
+
+.topbar__brand-block,
+.topbar__nav-block,
+.auth-actions--topbar {
+  position: relative;
+  z-index: 1;
+}
+
+.topbar__brand-block,
+.topbar__nav-block {
+  display: flex;
+  align-items: stretch;
+}
+
+.topbar__brand {
+  min-height: 100%;
+  width: 100%;
+  padding: 1.15rem 1.25rem;
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.01));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.topbar h1 {
+  font-size: clamp(1.5rem, 2.8vw, 2.45rem);
+  letter-spacing: -0.04em;
+}
+
+.topbar__nav-block {
+  padding: 0.35rem;
+  border-radius: 26px;
+}
+
+.site-nav {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  width: 100%;
+  gap: 0.8rem;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.nav-link {
+  min-height: 100%;
+  border-radius: 22px;
+  padding: 1rem 1.05rem;
+  align-items: flex-end;
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.01)),
+    rgba(13, 8, 22, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 18px 32px rgba(0, 0, 0, 0.2);
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  transform: translateY(-2px);
+  border-color: rgba(83, 235, 255, 0.36);
+  box-shadow: 0 24px 40px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(255, 115, 187, 0.12) inset;
+  background:
+    linear-gradient(160deg, rgba(255, 115, 187, 0.22), rgba(83, 235, 255, 0.08)),
+    rgba(15, 9, 24, 0.96);
+}
+
+.nav-link__content {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.nav-link__eyebrow {
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: rgba(255, 232, 246, 0.72);
+}
+
+.auth-actions--topbar {
+  display: grid;
+  gap: 0.85rem;
+  align-content: space-between;
+  min-height: 100%;
+  padding: 1rem 1.1rem;
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(34, 18, 47, 0.94), rgba(15, 9, 24, 0.96)),
+    rgba(13, 8, 22, 0.94);
+}
+
+.auth-identity {
+  display: flex;
+  align-items: center;
+  min-height: 68px;
+}
+
+.auth-identity__copy {
+  display: grid;
+  gap: 0.45rem;
+}
+
+#authStatus {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.auth-actions__buttons--inline {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.app-workspace {
+  position: relative;
+  min-height: calc(100vh - 170px);
+}
+
+.workspace-frame {
+  position: absolute;
+  inset: 1rem;
+  border-radius: 40px;
+  z-index: 0;
+  overflow: hidden;
+  opacity: 0.8;
+}
+
+.workspace-frame span {
+  position: absolute;
+  display: block;
+  border-radius: 999px;
+  filter: blur(10px);
+}
+
+.workspace-frame span:nth-child(1) {
+  width: 240px;
+  height: 240px;
+  top: -70px;
+  right: 8%;
+  background: radial-gradient(circle, rgba(255, 115, 187, 0.2), transparent 70%);
+}
+
+.workspace-frame span:nth-child(2) {
+  width: 280px;
+  height: 280px;
+  bottom: -120px;
+  left: 8%;
+  background: radial-gradient(circle, rgba(83, 235, 255, 0.15), transparent 72%);
+}
+
+.workspace-frame span:nth-child(3) {
+  width: 180px;
+  height: 180px;
+  top: 32%;
+  left: 46%;
+  background: radial-gradient(circle, rgba(139, 70, 255, 0.18), transparent 72%);
+}
+
+.app-view {
+  position: relative;
+  z-index: 1;
+}
+
+.login-layout--revamp .login-panel,
+.editor-panel--revamp,
+.profile-panel--revamp,
+.panel--booster-revamp,
+.panel--album-revamp,
+.admin-main-panel--revamp,
+.admin-history-panel--revamp {
+  border-radius: 36px;
+  overflow: hidden;
+}
+
+.login-shell,
+.profile-layout--revamp,
+.booster-dashboard,
+.admin-content-grid--revamp {
+  display: grid;
+  gap: 1.1rem;
+}
+
+.login-shell {
+  grid-template-columns: minmax(0, 1.4fr) minmax(320px, 0.9fr);
+  align-items: stretch;
+}
+
+.login-shell__intro,
+.login-card--featured,
+.editor-form__cluster,
+.profile-form-wrap--primary,
+.booster-rates-card,
+.admin-focus--revamp,
+.admin-tips--revamp {
+  border-radius: 28px;
+}
+
+.login-shell__intro {
+  padding: 1.3rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.login-copy--featured,
+.login-card--featured {
+  padding: 1.3rem;
+  min-height: 100%;
+}
+
+.login-card--featured {
+  display: grid;
+  align-content: center;
+  gap: 1rem;
+  background:
+    radial-gradient(circle at top, rgba(255, 115, 187, 0.16), transparent 46%),
+    linear-gradient(180deg, rgba(35, 18, 49, 0.96), rgba(12, 8, 19, 0.98));
+}
+
+.layout--create-revamp {
+  grid-template-columns: minmax(0, 1.1fr) minmax(380px, 0.9fr);
+  align-items: start;
+  gap: 1.2rem;
+}
+
+.editor-panel--revamp {
+  padding: 1.35rem;
+}
+
+.editor-form--revamp {
+  display: grid;
+  gap: 1rem;
+}
+
+.editor-form__cluster {
+  padding: 1rem;
+}
+
+.actions--editor {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.preview-column--revamp {
+  position: sticky;
+  top: 1rem;
+}
+
+.preview-panel--revamp {
+  padding: 1.2rem;
+}
+
+.preview-wrap--stage {
+  min-height: min(78vh, 920px);
+  border-radius: 30px;
+  padding: clamp(1rem, 2vw, 2rem);
+  background:
+    radial-gradient(circle at top, rgba(83, 235, 255, 0.12), transparent 34%),
+    radial-gradient(circle at bottom, rgba(255, 61, 122, 0.16), transparent 36%),
+    linear-gradient(180deg, rgba(18, 11, 29, 0.96), rgba(8, 6, 14, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.preview-wrap--stage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  pointer-events: none;
+}
+
+.single-layout--profile-revamp,
+.single-layout--booster-revamp,
+.single-layout--album-revamp,
+.admin-layout--revamp {
+  display: grid;
+  gap: 1.2rem;
+}
+
+.profile-panel--revamp,
+.panel--booster-revamp,
+.panel--album-revamp,
+.admin-main-panel--revamp,
+.admin-history-panel--revamp {
+  padding: 1.35rem;
+}
+
+.hero-stats--profile,
+.hero-stats--booster,
+.review-stats--revamp {
+  gap: 0.9rem;
+}
+
+.hero-stats--profile article,
+.hero-stats--booster article,
+.review-stats--revamp article {
+  border-radius: 24px;
+  padding: 1.1rem 1rem;
+  min-height: 132px;
+  display: grid;
+  align-content: space-between;
+  background:
+    linear-gradient(180deg, rgba(34, 18, 47, 0.92), rgba(18, 10, 28, 0.94)),
+    rgba(17, 10, 27, 0.94);
+}
+
+.profile-layout--revamp {
+  grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+  align-items: stretch;
+}
+
+.profile-form-wrap--primary {
+  padding: 1.35rem;
+  display: grid;
+  align-content: center;
+  gap: 1rem;
+  background:
+    radial-gradient(circle at top right, rgba(255, 115, 187, 0.18), transparent 34%),
+    linear-gradient(180deg, rgba(34, 18, 47, 0.94), rgba(15, 9, 24, 0.96));
+}
+
+.profile-card--aside {
+  min-height: 100%;
+  display: grid;
+  align-content: space-between;
+}
+
+.booster-dashboard {
+  grid-template-columns: minmax(290px, 0.8fr) minmax(0, 1.4fr);
+  align-items: start;
+}
+
+.booster-sidebar,
+.booster-main-stage {
+  display: grid;
+  gap: 1rem;
+}
+
+.hero-chips--stacked {
+  display: grid;
+  gap: 0.5rem;
+  justify-items: end;
+}
+
+.booster-stage--revamp {
+  min-height: 620px;
+  border-radius: 30px;
+  padding: 1.2rem;
+  background:
+    radial-gradient(circle at top, rgba(255, 217, 105, 0.13), transparent 28%),
+    radial-gradient(circle at bottom, rgba(83, 235, 255, 0.15), transparent 30%),
+    linear-gradient(180deg, rgba(17, 10, 27, 0.96), rgba(8, 6, 14, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.booster-grid--revamp {
+  min-height: 420px;
+  align-content: start;
+}
+
+.panel--album-revamp {
+  background:
+    radial-gradient(circle at top left, rgba(255, 115, 187, 0.12), transparent 26%),
+    radial-gradient(circle at bottom right, rgba(83, 235, 255, 0.14), transparent 26%),
+    linear-gradient(180deg, rgba(26, 15, 39, 0.96), rgba(10, 6, 18, 0.98));
+}
+
+.album-heading__stats--revamp {
+  display: grid;
+  gap: 0.6rem;
+  justify-items: end;
+}
+
+.album-binder--revamp {
+  display: grid;
+  gap: 1rem;
+}
+
+.album-binder__topbar--revamp,
+.album-binder__shell--revamp {
+  border-radius: 28px;
+}
+
+.album-binder__topbar--revamp {
+  padding: 1rem 1.1rem;
+  background: linear-gradient(180deg, rgba(34, 18, 47, 0.78), rgba(15, 9, 24, 0.82));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.album-binder__shell--revamp {
+  padding: 1.2rem;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04), transparent 14%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01)),
+    rgba(12, 8, 19, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.album-grid--revamp {
+  gap: 1.15rem;
+}
+
+.admin-content-grid--revamp {
+  grid-template-columns: minmax(0, 1.28fr) minmax(340px, 0.82fr);
+  align-items: start;
+}
+
+.admin-focus--revamp,
+.role-form--revamp,
+.toolbar--revamp,
+.pending-list--revamp {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-focus--revamp {
+  padding: 1.2rem;
+  min-height: 100%;
+}
+
+.admin-sidebar--revamp {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-tips--revamp,
+.role-manager {
+  padding: 1.2rem;
+  border-radius: 28px;
+}
+
+.tinder-review--revamp {
+  min-height: 520px;
+  display: grid;
+  align-content: start;
+}
+
+.toolbar--revamp {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.pending-list--revamp {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.tinder-card,
+.pending-item--visual,
+.booster-capture,
+.album-card,
+.album-empty,
+.booster-empty {
+  border-radius: 24px;
+}
+
+button,
+input,
+textarea,
+select {
+  border-radius: 18px;
+}
+
+@media (max-width: 1280px) {
+  .topbar--dashboard,
+  .booster-dashboard,
+  .admin-content-grid--revamp,
+  .profile-layout--revamp,
+  .login-shell,
+  .layout--create-revamp {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-chips--stacked,
+  .album-heading__stats--revamp {
+    justify-items: start;
+  }
+
+  .preview-column--revamp {
+    position: static;
+  }
+}
+
+@media (max-width: 960px) {
+  .app-shell--dashboard {
+    width: min(calc(100% - 1rem), 1640px);
+  }
+
+  .site-nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .auth-actions__buttons--inline,
+  .actions--editor,
+  .toolbar--revamp {
+    grid-template-columns: 1fr;
+  }
+
+  .booster-stage--revamp {
+    min-height: 520px;
+  }
+}
+
+@media (max-width: 700px) {
+  .topbar--dashboard,
+  .workspace-frame,
+  .login-layout--revamp .login-panel,
+  .editor-panel--revamp,
+  .preview-panel--revamp,
+  .profile-panel--revamp,
+  .panel--booster-revamp,
+  .panel--album-revamp,
+  .admin-main-panel--revamp,
+  .admin-history-panel--revamp {
+    border-radius: 24px;
+  }
+
+  .site-nav {
+    grid-template-columns: 1fr;
+  }
+
+  .preview-wrap--stage,
+  .booster-stage--revamp,
+  .album-binder__shell--revamp,
+  .album-binder__topbar--revamp,
+  .login-shell__intro,
+  .login-card--featured,
+  .profile-form-wrap--primary,
+  .admin-focus--revamp,
+  .admin-tips--revamp,
+  .role-manager {
+    border-radius: 22px;
+  }
+}

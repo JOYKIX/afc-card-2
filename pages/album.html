@@ -1,53 +1,53 @@
-<main class="single-layout">
-        <section class="panel glass panel--album panel--album-binder">
-          <div class="panel-heading panel-heading--spread panel-heading--album">
-            <div>
-              <p class="eyebrow">Collection perso</p>
-              <h2>Ton album de cartes</h2>
-              <p class="panel-subtitle">Un classeur interactif trié par numéro, avec 9 emplacements par page.</p>
-            </div>
-            <div class="album-heading__stats">
-              <span id="albumCount" class="section-pill">0 / 0 carte</span>
-              <span id="albumPageIndicator" class="section-pill section-pill--ghost">Page 1 / 1</span>
-            </div>
-          </div>
-          <p id="albumHint" class="hint">Chargement de ton album...</p>
+<main class="single-layout single-layout--album-revamp">
+  <section class="panel glass panel--album panel--album-binder panel--album-revamp">
+    <div class="panel-heading panel-heading--spread panel-heading--album">
+      <div>
+        <p class="eyebrow">Collection perso</p>
+        <h2>Ton album de cartes</h2>
+        <p class="panel-subtitle">Un classeur interactif trié par numéro, avec 9 emplacements par page.</p>
+      </div>
+      <div class="album-heading__stats album-heading__stats--revamp">
+        <span id="albumCount" class="section-pill">0 / 0 carte</span>
+        <span id="albumPageIndicator" class="section-pill section-pill--ghost">Page 1 / 1</span>
+      </div>
+    </div>
+    <p id="albumHint" class="hint">Chargement de ton album...</p>
 
-          <section class="album-binder" aria-label="Classeur de cartes">
-            <div class="album-binder__topbar">
-              <div class="album-binder__legend" aria-hidden="true">
-                <span class="album-binder__legend-dot album-binder__legend-dot--owned"></span>
-                <span>Carte possédée</span>
-                <span class="album-binder__legend-dot album-binder__legend-dot--missing"></span>
-                <span>Emplacement à découvrir</span>
-              </div>
-              <div class="album-binder__controls">
-                <button type="button" class="ghost" id="albumPrevPage">← Page précédente</button>
-                <button type="button" class="ghost" id="albumNextPage">Page suivante →</button>
-              </div>
-            </div>
-
-            <div class="album-binder__shell">
-              <div class="album-binder__spine" aria-hidden="true">
-                <span></span><span></span><span></span><span></span><span></span>
-              </div>
-              <section id="albumGrid" class="album-grid album-grid--binder" aria-live="polite"></section>
-            </div>
-          </section>
-        </section>
-      </main>
-
-      <div class="card-viewer" id="albumViewer" hidden>
-        <div class="card-viewer__backdrop" data-close-album-viewer></div>
-        <div class="card-viewer__dialog glass" role="dialog" aria-modal="true" aria-labelledby="albumViewerTitle">
-          <button type="button" class="card-viewer__close ghost" id="closeAlbumViewer">Fermer</button>
-          <div class="card-viewer__media rank-C" id="albumViewerMedia">
-            <img id="albumViewerImage" alt="" />
-          </div>
-          <div class="card-viewer__meta">
-            <p class="eyebrow" id="albumViewerRank">Rang</p>
-            <h3 id="albumViewerTitle">Carte</h3>
-            <p id="albumViewerSubtitle" class="subtitle"></p>
-          </div>
+    <section class="album-binder album-binder--revamp" aria-label="Classeur de cartes">
+      <div class="album-binder__topbar album-binder__topbar--revamp">
+        <div class="album-binder__legend" aria-hidden="true">
+          <span class="album-binder__legend-dot album-binder__legend-dot--owned"></span>
+          <span>Carte possédée</span>
+          <span class="album-binder__legend-dot album-binder__legend-dot--missing"></span>
+          <span>Emplacement à découvrir</span>
+        </div>
+        <div class="album-binder__controls">
+          <button type="button" class="ghost" id="albumPrevPage">← Page précédente</button>
+          <button type="button" class="ghost" id="albumNextPage">Page suivante →</button>
         </div>
       </div>
+
+      <div class="album-binder__shell album-binder__shell--revamp">
+        <div class="album-binder__spine" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <section id="albumGrid" class="album-grid album-grid--binder album-grid--revamp" aria-live="polite"></section>
+      </div>
+    </section>
+  </section>
+</main>
+
+<div class="card-viewer" id="albumViewer" hidden>
+  <div class="card-viewer__backdrop" data-close-album-viewer></div>
+  <div class="card-viewer__dialog glass" role="dialog" aria-modal="true" aria-labelledby="albumViewerTitle">
+    <button type="button" class="card-viewer__close ghost" id="closeAlbumViewer">Fermer</button>
+    <div class="card-viewer__media rank-C" id="albumViewerMedia">
+      <img id="albumViewerImage" alt="" />
+    </div>
+    <div class="card-viewer__meta">
+      <p class="eyebrow" id="albumViewerRank">Rang</p>
+      <h3 id="albumViewerTitle">Carte</h3>
+      <p id="albumViewerSubtitle" class="subtitle"></p>
+    </div>
+  </div>
+</div>
