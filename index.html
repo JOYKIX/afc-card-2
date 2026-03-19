@@ -42,11 +42,6 @@
               <strong>Album</strong>
             </span>
           </a>
-          <a class="nav-link nav-link--profile" href="./?page=profile" data-route="profile">
-            <span class="nav-link__content">
-              <strong>Profil</strong>
-            </span>
-          </a>
           <a class="nav-link nav-link--admin" href="./?page=admin" data-admin-link="true" data-route="admin" hidden>
             <span class="nav-link__content">
               <strong>Admin</strong>
@@ -56,15 +51,29 @@
       </div>
 
       <section class="auth-actions auth-actions--topbar glass-soft">
-        <div class="auth-identity">
-          <div class="auth-identity__copy">
-            <span id="authStatus">Chargement…</span>
+        <div class="auth-menu" data-auth-menu>
+          <button
+            id="authMenuTrigger"
+            class="auth-menu__trigger"
+            type="button"
+            aria-haspopup="menu"
+            aria-expanded="false"
+          >
+            <span class="auth-menu__identity">
+              <span id="authStatus">Chargement…</span>
+              <span id="userRoleBadge" class="role-badge" hidden></span>
+            </span>
+            <span class="auth-menu__chevron" aria-hidden="true">▾</span>
+          </button>
+
+          <div id="authMenuPanel" class="auth-menu__panel" role="menu" hidden>
+            <a class="auth-menu__item" href="./?page=profile" data-route="profile" role="menuitem">Profil</a>
+            <button id="logout" type="button" class="auth-menu__item auth-menu__item--button" role="menuitem">Déconnexion</button>
           </div>
         </div>
 
         <div class="auth-actions__buttons auth-actions__buttons--inline">
-          <button id="googleLogin" type="button">Connexion Google</button>
-          <button id="logout" type="button" class="ghost">Déconnexion</button>
+          <button id="googleLogin" type="button">Connexion</button>
         </div>
       </section>
     </header>
