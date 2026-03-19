@@ -67,11 +67,11 @@ const supportedImageTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const MIN_STAT = 1;
 const MAX_STAT = 100;
 const RANK_RANGES = [
-  { rank: 'D', minAverage: 1, maxAverage: 19 },
-  { rank: 'C', minAverage: 20, maxAverage: 39 },
-  { rank: 'B', minAverage: 40, maxAverage: 59 },
-  { rank: 'A', minAverage: 60, maxAverage: 79 },
-  { rank: 'S', minAverage: 80, maxAverage: 99 },
+  { rank: 'D', minAverage: 1, maxAverage: 19.5 },
+  { rank: 'C', minAverage: 20, maxAverage: 39.5 },
+  { rank: 'B', minAverage: 40, maxAverage: 59.5 },
+  { rank: 'A', minAverage: 60, maxAverage: 79.5 },
+  { rank: 'S', minAverage: 80, maxAverage: 99.5 },
   { rank: 'Ω', minAverage: 100, maxAverage: 100 }
 ];
 
