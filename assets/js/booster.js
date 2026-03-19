@@ -1,7 +1,7 @@
 import { escapeHtml, formatCardNumber } from './firebase.js';
 import { initCommon } from './common.js';
 import { BOOSTER_COST, loadProfileAlbum, saveAlbumDrops } from './lib/album-storage.js';
-import { getCardWeight, getDropRates, getDuplicateSellValue, loadApprovedCards } from './lib/cards-catalog.js';
+import { buildCardCatalogStats, getCardWeight, getDropRates, getDuplicateSellValue, loadApprovedCards } from './lib/cards-catalog.js';
 
 const pickWeightedCard = (cards) => {
   const totalWeight = cards.reduce((sum, card) => sum + getCardWeight(card), 0);
@@ -130,9 +130,10 @@ export const initBoosterPage = async () => {
         return;
       }
 
+      const catalogStats = buildCardCatalogStats(cards);
       const pulls = buildBooster(cards, 5).map((card) => ({
         ...card,
-        sellValue: getDuplicateSellValue(card)
+        sellValue: getDuplicateSellValue(card, catalogStats)
       }));
 
       const outcome = await saveAlbumDrops(currentUser.uid, pulls, { boosterCost: BOOSTER_COST });
