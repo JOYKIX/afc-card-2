@@ -35,8 +35,7 @@ const emitAuthChanged = () => {
 
 const getShellElements = () => {
   const authStatus = document.getElementById('authStatus');
-  const googleLoginBtn = document.getElementById('googleLogin');
-  const logoutBtn = document.getElementById('logout');
+  const authToggleBtn = document.getElementById('authToggle');
   const profileLink = document.getElementById('profileLink');
   const authActions = authStatus?.closest('.auth-actions') || authStatus?.parentElement || null;
   const navLinks = Array.from(document.querySelectorAll('.site-nav [data-route]'));
@@ -57,8 +56,7 @@ const getShellElements = () => {
     authActions,
     authNotice,
     authStatus,
-    googleLoginBtn,
-    logoutBtn,
+    authToggleBtn,
     navLinks,
     profileLink,
     roleBadge
@@ -106,17 +104,10 @@ const toggleAdminNav = (visible) => {
   });
 };
 
-const setButtonVisibility = (element, visible) => {
-  if (!element) return;
-  element.hidden = !visible;
-  if ('disabled' in element) element.disabled = !visible;
-};
-
 const setAuthUi = (session = null) => {
   const {
     authStatus,
-    googleLoginBtn,
-    logoutBtn,
+    authToggleBtn,
     navLinks,
     profileLink,
     roleBadge
@@ -126,8 +117,13 @@ const setAuthUi = (session = null) => {
 
   if (authStatus) authStatus.textContent = isConnected ? getDisplayIdentity(session) : 'Mon compte';
 
-  setButtonVisibility(googleLoginBtn, !isConnected);
-  setButtonVisibility(logoutBtn, isConnected);
+  if (authToggleBtn) {
+    authToggleBtn.hidden = false;
+    authToggleBtn.disabled = false;
+    authToggleBtn.dataset.authAction = isConnected ? 'logout' : 'login';
+    authToggleBtn.textContent = isConnected ? 'Déconnexion' : 'Connexion';
+    authToggleBtn.setAttribute('aria-label', isConnected ? 'Se déconnecter' : 'Se connecter');
+  }
 
   if (profileLink) {
     profileLink.hidden = !isConnected;
@@ -315,9 +311,13 @@ const bindShellActions = () => {
   state.shellBound = true;
 
   document.addEventListener('click', async (event) => {
-    const loginButton = event.target.closest('#googleLogin');
-    if (loginButton) {
-      loginButton.disabled = true;
+    const authToggleButton = event.target.closest('#authToggle');
+    if (!authToggleButton) return;
+
+    const authAction = authToggleButton.dataset.authAction || 'login';
+    authToggleButton.disabled = true;
+
+    if (authAction === 'login') {
       try {
         const authResult = await performGoogleSignIn();
         const signedUser = authResult?.user || auth.currentUser;
@@ -345,27 +345,25 @@ const bindShellActions = () => {
         setAuthNotice(error.message, 'error');
         alert(error.message);
       } finally {
-        if (!loginButton.hidden) loginButton.disabled = false;
+        authToggleButton.disabled = false;
       }
       return;
     }
 
-
-    const logoutButton = event.target.closest('#logout');
-    if (logoutButton) {
-      try {
-        if (auth.currentUser) {
-          await signOut(auth);
-        }
-
-        clearAuthCache();
-        applySessionState({ user: null, session: null, profile: null, notice: getAuthRuntimeState().notice || '' });
-        emitAuthChanged();
-        await notifyCurrentHandler();
-      } catch (error) {
-        setAuthNotice('Impossible de fermer la session pour le moment.', 'error');
-        console.error('Erreur de déconnexion :', error);
+    try {
+      if (auth.currentUser) {
+        await signOut(auth);
       }
+
+      clearAuthCache();
+      applySessionState({ user: null, session: null, profile: null, notice: getAuthRuntimeState().notice || '' });
+      emitAuthChanged();
+      await notifyCurrentHandler();
+    } catch (error) {
+      setAuthNotice('Impossible de fermer la session pour le moment.', 'error');
+      console.error('Erreur de déconnexion :', error);
+    } finally {
+      authToggleButton.disabled = false;
     }
   }, { signal });
 
