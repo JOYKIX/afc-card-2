@@ -1,8 +1,10 @@
-<main class="single-layout single-layout--album-revamp single-layout--album-minimal">
-  <section class="panel glass panel--album panel--album-binder panel--album-revamp">
-    <div class="panel-heading panel-heading--spread panel-heading--album">
-      <div>
+<main class="single-layout single-layout--album-revamp single-layout--album-minimal album-page-shell">
+  <section class="panel glass panel--album panel--album-binder panel--album-revamp album-hero-panel">
+    <div class="panel-heading panel-heading--spread panel-heading--album album-hero-panel__head">
+      <div class="page-intro page-intro--album">
+        <span class="page-intro__eyebrow">Collection center</span>
         <h2>Album</h2>
+        <p class="page-intro__lede">Parcours ton classeur, filtre tes cartes, repère tes manques et suis la progression complète de ta collection AFC.</p>
       </div>
       <div class="album-heading__stats album-heading__stats--revamp">
         <span id="albumCount" class="section-pill">0 / 0 carte</span>
@@ -11,15 +13,68 @@
     </div>
     <p id="albumHint" class="hint">Chargement...</p>
 
-    <section class="album-binder album-binder--revamp" aria-label="Classeur de cartes">
-      <div class="album-binder__topbar album-binder__topbar--revamp">
-        <div class="album-binder__controls">
-          <button type="button" class="ghost" id="albumPrevPage">← Précédente</button>
-          <button type="button" class="ghost" id="albumNextPage">Suivante →</button>
+    <section class="album-overview-grid" aria-label="Résumé de collection">
+      <article class="glass-soft album-overview-card album-overview-card--wide">
+        <span class="page-intro__eyebrow">Progression</span>
+        <strong id="albumCompletionPercent">0%</strong>
+        <p id="albumCompletionText">Aucune carte synchronisée pour le moment.</p>
+        <div class="album-progress-track" aria-hidden="true">
+          <span id="albumCompletionBar"></span>
+        </div>
+      </article>
+      <article class="glass-soft album-overview-card">
+        <span>Obtenues</span>
+        <strong id="albumOwnedCount">0</strong>
+      </article>
+      <article class="glass-soft album-overview-card">
+        <span>Manquantes</span>
+        <strong id="albumMissingCount">0</strong>
+      </article>
+      <article class="glass-soft album-overview-card">
+        <span>Dernière obtenue</span>
+        <strong id="albumRecentCard">—</strong>
+      </article>
+    </section>
+
+    <section class="album-binder album-binder--revamp album-binder--deluxe" aria-label="Classeur de cartes">
+      <div class="album-binder__topbar album-binder__topbar--revamp album-binder__topbar--filters">
+        <div class="album-toolbar">
+          <label class="album-toolbar__search">
+            <span>Recherche</span>
+            <input id="albumSearch" type="search" placeholder="Nom, créateur, numéro" />
+          </label>
+          <label>
+            <span>Vue</span>
+            <select id="albumOwnershipFilter">
+              <option value="all">Toutes</option>
+              <option value="owned">Obtenues</option>
+              <option value="missing">Manquantes</option>
+            </select>
+          </label>
+          <label>
+            <span>Rang</span>
+            <select id="albumRankFilter">
+              <option value="all">Tous</option>
+              <option value="D">D</option>
+              <option value="C">C</option>
+              <option value="B">B</option>
+              <option value="A">A</option>
+              <option value="S">S</option>
+              <option value="Ω">Ω</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="album-binder__controls album-binder__controls--deluxe">
+          <p id="albumFilterSummary" class="album-filter-summary">0 carte affichée</p>
+          <div class="album-binder__buttons">
+            <button type="button" class="ghost" id="albumPrevPage">← Précédente</button>
+            <button type="button" class="ghost" id="albumNextPage">Suivante →</button>
+          </div>
         </div>
       </div>
 
-      <div class="album-binder__shell album-binder__shell--revamp">
+      <div class="album-binder__shell album-binder__shell--revamp album-binder__shell--deluxe">
         <div class="album-binder__spine" aria-hidden="true">
           <span></span><span></span><span></span><span></span><span></span>
         </div>

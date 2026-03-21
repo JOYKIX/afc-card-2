@@ -3987,3 +3987,335 @@ button.danger {
     max-width: 18ch;
   }
 }
+
+/* === Booster & album deluxe refresh === */
+.page-intro {
+  display: grid;
+  gap: 0.45rem;
+  max-width: 62ch;
+}
+
+.page-intro__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: fit-content;
+  padding: 0.36rem 0.78rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--brand-cyan);
+}
+
+.page-intro__lede,
+.section-subtitle {
+  margin: 0;
+  color: rgba(252, 246, 255, 0.74);
+  line-height: 1.65;
+}
+
+.booster-page-shell,
+.album-page-shell {
+  gap: 1.5rem;
+}
+
+.booster-hero-panel,
+.album-hero-panel {
+  gap: 1.5rem;
+}
+
+.booster-hero-panel__head,
+.album-hero-panel__head {
+  align-items: flex-start;
+}
+
+.booster-dashboard--deluxe {
+  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+  gap: 1.35rem;
+}
+
+.booster-sidebar--deluxe,
+.booster-main-stage--deluxe {
+  gap: 1rem;
+}
+
+.booster-quick-stats {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.booster-quick-stats article,
+.booster-session-card,
+.album-overview-card {
+  overflow: hidden;
+}
+
+.booster-info-card,
+.booster-command-panel,
+.booster-session-card,
+.album-overview-card,
+.album-binder__topbar--filters,
+.album-binder__shell--deluxe {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: var(--shadow-soft);
+}
+
+.booster-rate-list {
+  display: grid;
+  gap: 0.9rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.booster-rate-row {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.85rem 0.95rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.booster-rate-row__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  font-weight: 700;
+}
+
+.booster-rate-row__bar {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.booster-rate-row__bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--brand-pink), var(--brand-purple), var(--brand-cyan));
+  box-shadow: 0 0 18px rgba(83, 235, 255, 0.4);
+}
+
+.booster-rate-row small {
+  color: rgba(252, 246, 255, 0.68);
+}
+
+.booster-command-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.15rem 1.2rem;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at top right, rgba(83, 235, 255, 0.12), transparent 30%),
+    linear-gradient(180deg, rgba(36, 22, 54, 0.92), rgba(18, 11, 28, 0.96));
+}
+
+.booster-command-panel__copy {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.booster-command-panel__copy h3,
+.album-overview-card strong {
+  margin: 0;
+}
+
+.booster-command-panel__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.booster-command-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.55rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--muted-strong);
+  font-weight: 600;
+}
+
+.booster-stage--cinematic {
+  min-height: 540px;
+  padding-top: 2rem;
+}
+
+.booster-session-grid,
+.album-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.booster-session-card,
+.album-overview-card {
+  grid-column: span 3;
+  display: grid;
+  gap: 0.5rem;
+  padding: 1.1rem 1.15rem;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.08), transparent 32%),
+    linear-gradient(180deg, rgba(34, 20, 50, 0.9), rgba(16, 10, 25, 0.96));
+}
+
+.booster-session-card span,
+.album-overview-card span {
+  color: rgba(252, 246, 255, 0.72);
+}
+
+.booster-session-card strong,
+.album-overview-card strong {
+  font-size: clamp(1.1rem, 2vw, 1.7rem);
+}
+
+.booster-session-card p,
+.album-overview-card p {
+  margin: 0;
+  line-height: 1.6;
+  color: rgba(252, 246, 255, 0.74);
+}
+
+.booster-session-card--wide,
+.album-overview-card--wide {
+  grid-column: span 6;
+}
+
+.album-overview-card--wide strong {
+  font-size: clamp(1.55rem, 3vw, 2.65rem);
+}
+
+.album-progress-track {
+  height: 10px;
+  width: 100%;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.album-progress-track span {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--brand-pink), var(--brand-purple), var(--brand-cyan));
+  transition: width 0.35s ease;
+}
+
+.album-binder--deluxe {
+  gap: 1rem;
+}
+
+.album-binder__topbar--filters {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem 1.1rem;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at top left, rgba(255, 61, 122, 0.1), transparent 28%),
+    linear-gradient(180deg, rgba(33, 20, 48, 0.92), rgba(18, 11, 28, 0.96));
+}
+
+.album-toolbar {
+  display: grid;
+  grid-template-columns: minmax(240px, 2fr) repeat(2, minmax(150px, 1fr));
+  gap: 0.85rem;
+}
+
+.album-toolbar label,
+.album-toolbar__search {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.album-toolbar label span,
+.album-filter-summary {
+  color: rgba(252, 246, 255, 0.72);
+}
+
+.album-toolbar input,
+.album-toolbar select {
+  width: 100%;
+}
+
+.album-binder__controls--deluxe {
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.album-binder__buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.album-filter-summary {
+  margin: 0;
+}
+
+.album-binder__shell--deluxe {
+  min-height: 720px;
+}
+
+.album-card__meta small {
+  line-height: 1.5;
+}
+
+@media (max-width: 1080px) {
+  .booster-dashboard--deluxe,
+  .album-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .booster-session-card,
+  .album-overview-card {
+    grid-column: span 6;
+  }
+}
+
+@media (max-width: 760px) {
+  .booster-command-panel,
+  .booster-command-panel__actions,
+  .album-binder__controls--deluxe,
+  .album-binder__buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .booster-quick-stats,
+  .booster-session-grid,
+  .album-overview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .booster-session-card,
+  .booster-session-card--wide,
+  .album-overview-card,
+  .album-overview-card--wide {
+    grid-column: span 12;
+  }
+
+  .booster-stage--cinematic {
+    min-height: 460px;
+  }
+
+  .album-binder__shell--deluxe {
+    min-height: auto;
+  }
+}
