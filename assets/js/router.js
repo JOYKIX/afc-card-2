@@ -1,4 +1,5 @@
 import { checkAuthFast } from './lib/auth-cache.js';
+import { canAccessAdmin } from './lib/roles.js';
 
 const routes = {
   creator: {
@@ -110,6 +111,9 @@ const getResolvedRouteKey = (requestedRouteKey) => {
   const route = routes[requestedRouteKey];
   if (!route) return fastUser ? 'creator' : 'login';
   if (route.requireAuth && !fastUser) return 'login';
+  if (requestedRouteKey === 'admin' && !canAccessAdmin(fastUser?.roles || [])) {
+    return fastUser ? 'creator' : 'login';
+  }
 
   return requestedRouteKey;
 };
@@ -249,6 +253,13 @@ const syncRouteWithAuthState = () => {
   if (currentRouteKey !== resolvedRouteKey && resolvedRouteKey === 'login') {
     currentUrl.searchParams.delete('page');
     currentUrl.searchParams.set('next', currentRouteKey);
+    navigate(currentUrl.href, { replace: true, immediate: true });
+    return;
+  }
+
+  if (currentRouteKey !== resolvedRouteKey) {
+    currentUrl.searchParams.set('page', resolvedRouteKey);
+    currentUrl.searchParams.delete('next');
     navigate(currentUrl.href, { replace: true, immediate: true });
   }
 };
