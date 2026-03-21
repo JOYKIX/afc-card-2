@@ -3557,3 +3557,401 @@ button.danger {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* === Booster suspense overhaul === */
+.booster-stage--revamp {
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.booster-stage--revamp::before,
+.booster-stage--revamp::after {
+  content: '';
+  position: absolute;
+  inset: auto;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.booster-stage--revamp::before {
+  top: -12%;
+  left: 50%;
+  width: min(46vw, 520px);
+  height: min(46vw, 520px);
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.18), rgba(139, 70, 255, 0.12) 35%, transparent 72%);
+  filter: blur(18px);
+  opacity: 0.38;
+}
+
+.booster-stage--revamp::after {
+  inset: 14px;
+  border-radius: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.booster-stage--revamp > * {
+  position: relative;
+  z-index: 1;
+}
+
+.booster-stage.is-opening .booster-pack {
+  animation: boosterPackPulseEpic 2.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.booster-pack.is-opening .booster-pack__shell {
+  animation: boosterWrapperShakeEpic 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.booster-pack.is-opened .booster-pack__burst {
+  animation: boosterBurstEpic 1.15s ease forwards;
+}
+
+.booster-pack__glow {
+  background:
+    radial-gradient(circle at 50% 35%, rgba(255, 217, 105, 0.65), transparent 32%),
+    radial-gradient(circle at 22% 72%, rgba(255, 61, 122, 0.34), transparent 38%),
+    radial-gradient(circle at 78% 74%, rgba(83, 235, 255, 0.34), transparent 38%),
+    radial-gradient(circle at 50% 50%, rgba(139, 70, 255, 0.4), transparent 66%);
+  filter: blur(28px);
+  opacity: 0.92;
+}
+
+.booster-pack__shell {
+  background:
+    linear-gradient(160deg, rgba(255, 217, 105, 0.28), rgba(255, 61, 122, 0.18) 34%, rgba(139, 70, 255, 0.38) 68%, rgba(83, 235, 255, 0.22)),
+    linear-gradient(180deg, rgba(27, 18, 43, 0.98), rgba(10, 6, 18, 0.96));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    0 34px 90px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.booster-grid--revamp {
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 1.15rem;
+  perspective: 1800px;
+}
+
+.booster-capture {
+  position: relative;
+  overflow: hidden;
+}
+
+.booster-capture.rank-D,
+.booster-capture.rank-C,
+.booster-capture.rank-B,
+.booster-capture.rank-A,
+.booster-capture.rank-S,
+.booster-capture.rank-Ω,
+.card-viewer__media.rank-D,
+.card-viewer__media.rank-C,
+.card-viewer__media.rank-B,
+.card-viewer__media.rank-A,
+.card-viewer__media.rank-S,
+.card-viewer__media.rank-Ω,
+.album-card.rank-D,
+.album-card.rank-C,
+.album-card.rank-B,
+.album-card.rank-A,
+.album-card.rank-S,
+.album-card.rank-Ω {
+  background:
+    radial-gradient(circle at top, color-mix(in srgb, var(--glow) 68%, transparent), transparent 48%),
+    linear-gradient(180deg, color-mix(in srgb, var(--card-grad-1) 30%, rgba(255, 255, 255, 0.02)), rgba(8, 5, 14, 0.94) 58%, rgba(6, 4, 12, 0.98));
+  border-color: color-mix(in srgb, var(--edge) 42%, rgba(255, 255, 255, 0.12));
+  box-shadow:
+    0 26px 46px rgba(0, 0, 0, 0.34),
+    0 0 0 1px color-mix(in srgb, var(--edge) 12%, transparent),
+    0 0 28px color-mix(in srgb, var(--glow) 62%, transparent);
+}
+
+.booster-capture__flare {
+  position: absolute;
+  inset: -14%;
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--shine) 90%, white 8%), transparent 52%),
+    conic-gradient(from 90deg, transparent 0deg, color-mix(in srgb, var(--edge) 74%, white 8%) 75deg, transparent 155deg, color-mix(in srgb, var(--glow) 74%, white 8%) 255deg, transparent 340deg);
+  filter: blur(16px);
+  opacity: 0;
+  transform: scale(0.72);
+  transition: opacity 0.55s ease, transform 0.75s ease;
+  pointer-events: none;
+}
+
+.booster-capture__veil {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 0.65rem;
+  padding: 1rem;
+  text-align: center;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--card-grad-1) 54%, rgba(255, 255, 255, 0.08)), color-mix(in srgb, var(--card-grad-2) 82%, rgba(5, 2, 10, 0.95)) 55%, color-mix(in srgb, var(--card-grad-3) 96%, rgba(5, 2, 10, 0.98))),
+    rgba(7, 4, 12, 0.85);
+  z-index: 3;
+  transition: opacity 0.72s ease, transform 0.82s ease, filter 0.72s ease;
+}
+
+.booster-capture__signal,
+.booster-capture__teaser-copy,
+.booster-capture__teaser-rank {
+  text-shadow: 0 0 18px color-mix(in srgb, var(--glow) 62%, transparent);
+}
+
+.booster-capture__signal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.42rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--edge) 40%, rgba(255, 255, 255, 0.12));
+  background: rgba(6, 4, 12, 0.36);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--edge) 84%, white 16%);
+}
+
+.booster-capture__teaser-rank {
+  font-size: clamp(1.35rem, 3vw, 1.9rem);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--edge) 80%, white 20%);
+}
+
+.booster-capture__teaser-copy {
+  max-width: 15ch;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.booster-capture__frame,
+.booster-capture__meta,
+.booster-capture__rank {
+  opacity: 0;
+  transform: translateY(20px) scale(0.96);
+  transition:
+    opacity 0.55s ease,
+    transform 0.72s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.62s ease;
+  filter: blur(12px);
+}
+
+.booster-capture__frame {
+  transform: rotateX(-12deg) scale(0.92);
+}
+
+.booster-capture--mystery {
+  min-height: 390px;
+  cursor: default;
+  pointer-events: none;
+  transform-style: preserve-3d;
+}
+
+.booster-capture--mystery.is-signaled {
+  transform: translateY(-6px) scale(1.01);
+  border-color: color-mix(in srgb, var(--edge) 70%, rgba(255, 255, 255, 0.16));
+}
+
+.booster-capture--mystery.is-signaled .booster-capture__flare {
+  opacity: 1;
+  transform: scale(1.06);
+  animation: rarityPulse 1.4s ease-in-out infinite;
+}
+
+.booster-capture--mystery.is-signaled .booster-capture__veil {
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--edge) 30%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--edge) 16%, transparent),
+    0 0 40px color-mix(in srgb, var(--glow) 68%, transparent);
+}
+
+.booster-capture--mystery.is-revealed {
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.booster-capture--mystery.is-revealed .booster-capture__veil {
+  opacity: 0;
+  transform: translateY(-14px) scale(1.04);
+  filter: blur(12px);
+}
+
+.booster-capture--mystery.is-revealed .booster-capture__flare {
+  opacity: 0.28;
+  transform: scale(1.12);
+}
+
+.booster-capture--mystery.is-revealed .booster-capture__frame,
+.booster-capture--mystery.is-revealed .booster-capture__meta,
+.booster-capture--mystery.is-revealed .booster-capture__rank {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  filter: blur(0);
+}
+
+.booster-capture--mystery.is-revealed .booster-capture__frame {
+  animation: revealCardFrame 0.88s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.booster-capture--mystery.is-revealed:hover,
+.booster-capture--mystery.is-revealed:focus-visible {
+  transform: translateY(-8px) scale(1.025);
+  border-color: color-mix(in srgb, var(--edge) 82%, rgba(255, 255, 255, 0.2));
+  box-shadow:
+    0 34px 58px rgba(0, 0, 0, 0.38),
+    0 0 0 1px color-mix(in srgb, var(--edge) 18%, transparent),
+    0 0 38px color-mix(in srgb, var(--glow) 72%, transparent);
+}
+
+.booster-capture__frame,
+.card-viewer__media {
+  background:
+    radial-gradient(circle at top, color-mix(in srgb, var(--glow) 42%, transparent), transparent 52%),
+    rgba(7, 4, 12, 0.88);
+  border-color: color-mix(in srgb, var(--edge) 34%, rgba(255, 255, 255, 0.08));
+}
+
+.booster-capture__rank {
+  color: color-mix(in srgb, var(--edge) 88%, white 12%);
+  background: color-mix(in srgb, var(--card-grad-2) 76%, rgba(255, 255, 255, 0.08));
+  border-color: color-mix(in srgb, var(--edge) 34%, rgba(255, 255, 255, 0.08));
+}
+
+.booster-stage.is-signaling .booster-pack {
+  opacity: 0.28;
+  transform: translateY(-1.2rem) scale(0.88);
+}
+
+.booster-stage.is-revealed .booster-pack {
+  opacity: 0.12;
+  transform: translateY(-1.4rem) scale(0.8);
+}
+
+.card-viewer__media.rank-D,
+.card-viewer__media.rank-C,
+.card-viewer__media.rank-B,
+.card-viewer__media.rank-A,
+.card-viewer__media.rank-S,
+.card-viewer__media.rank-Ω {
+  box-shadow:
+    0 24px 54px rgba(0, 0, 0, 0.34),
+    0 0 0 1px color-mix(in srgb, var(--edge) 16%, transparent),
+    0 0 30px color-mix(in srgb, var(--glow) 72%, transparent);
+}
+
+@keyframes rarityPulse {
+  0%,
+  100% {
+    opacity: 0.75;
+    transform: scale(0.98);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes revealCardFrame {
+  0% {
+    opacity: 0;
+    transform: rotateX(-24deg) scale(0.82);
+  }
+
+  60% {
+    opacity: 1;
+    transform: rotateX(10deg) scale(1.02);
+  }
+
+  100% {
+    opacity: 1;
+    transform: rotateX(0deg) scale(1);
+  }
+}
+
+@keyframes boosterPackPulseEpic {
+  0% {
+    transform: translateY(0) scale(0.96);
+    filter: brightness(0.96);
+  }
+
+  25% {
+    transform: translateY(-10px) scale(1.02);
+    filter: brightness(1.06);
+  }
+
+  58% {
+    transform: translateY(-22px) scale(1.06);
+    filter: brightness(1.2);
+  }
+
+  100% {
+    transform: translateY(-10px) scale(1.03);
+    filter: brightness(1.08);
+  }
+}
+
+@keyframes boosterWrapperShakeEpic {
+  0%,
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+
+  10% {
+    transform: rotate(-2.2deg) scale(0.99);
+  }
+
+  24% {
+    transform: rotate(2.4deg) scale(1.01);
+  }
+
+  42% {
+    transform: rotate(-1.8deg) translateY(-6px);
+  }
+
+  60% {
+    transform: rotate(1.6deg) translateY(-12px);
+  }
+
+  82% {
+    transform: rotate(-0.8deg) translateY(-4px);
+  }
+}
+
+@keyframes boosterBurstEpic {
+  0% {
+    opacity: 0;
+    transform: scale(0.18);
+    filter: blur(28px);
+  }
+
+  38% {
+    opacity: 1;
+    transform: scale(0.84);
+    filter: blur(10px);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.8);
+    filter: blur(26px);
+  }
+}
+
+@media (max-width: 700px) {
+  .booster-capture--mystery {
+    min-height: 340px;
+  }
+
+  .booster-capture__teaser-copy {
+    max-width: 18ch;
+  }
+}
