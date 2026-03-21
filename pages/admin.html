@@ -58,6 +58,32 @@
           </form>
           <p id="roleFeedback" class="hint" aria-live="polite"></p>
         </section>
+
+        <section class="role-manager glass-soft" aria-labelledby="accountManagerTitle">
+          <div class="section-head-inline">
+            <div>
+              <h3 id="accountManagerTitle">Crédits & quota</h3>
+            </div>
+          </div>
+          <form id="accountCreditForm" class="role-form role-form--revamp">
+            <label>Nickname
+              <input id="accountNickname" type="text" placeholder="Pseudo AFC" required />
+            </label>
+            <div class="form-grid form-grid--two">
+              <label>Coins à ajouter / retirer
+                <input id="coinsDelta" type="number" step="1" value="0" />
+              </label>
+              <label>Rerolls à ajouter / retirer
+                <input id="rerollsDelta" type="number" step="1" value="0" />
+              </label>
+            </div>
+            <label>Quota cartes autorisées
+              <input id="cardCreationLimit" type="number" min="1" step="1" placeholder="Ex: 3" />
+            </label>
+            <button id="accountCreditSubmit" type="submit">Appliquer</button>
+          </form>
+          <p id="accountCreditFeedback" class="hint" aria-live="polite"></p>
+        </section>
       </aside>
     </div>
   </section>

@@ -1,4 +1,5 @@
 import { db, get, ref } from '../firebase.js';
+import { normalizeRank } from './format.js';
 import { normalizeCardRecord as normalizeCatalogCardRecord } from './card-data.js';
 
 const rarityRanks = ['D', 'C', 'B', 'A', 'S', 'Ω'];

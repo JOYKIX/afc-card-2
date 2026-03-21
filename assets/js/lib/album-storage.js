@@ -265,6 +265,7 @@ const saveAlbumDrops = async (uid, cards = [], { boosterCost = BOOSTER_COST } = 
     outcome.duplicateCoins = duplicateCoins;
     outcome.balance = nextCoins;
     outcome.droppedCardIds = nextDroppedCardIds;
+    outcome.ownedCards = nextOwnedCards;
 
     return {
       ...profile,
