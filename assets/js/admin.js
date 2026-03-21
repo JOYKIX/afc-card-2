@@ -20,9 +20,10 @@ import {
   set,
   update,
   updateCachedRoles,
-  canAccessAdmin
+  canAccessAdmin,
+  getProfileRoles
 } from './firebase.js';
-import { initCommon } from './common.js';
+import { initCommon, navigateTo } from './common.js';
 import {
   CARD_NUMBER_REGISTRY_PATH,
   buildOwnershipIndex,
@@ -60,6 +61,47 @@ let pendingQueue = [];
 let unsubs = [];
 let moderationInFlight = false;
 let cardManagementInFlight = false;
+let adminAccessDeniedRedirected = false;
+
+const handleUnauthorizedAdminAccess = (message = 'Accès refusé : cet onglet est réservé aux rôles admin et african king.') => {
+  resetAdminScreen();
+  if (adminNotice) adminNotice.textContent = message;
+  setRoleFeedback(message, true);
+
+  if (typeof window !== 'undefined' && !adminAccessDeniedRedirected) {
+    adminAccessDeniedRedirected = true;
+    window.setTimeout(() => {
+      navigateTo('./?page=creator', { replace: true });
+    }, 0);
+  }
+};
+
+const requireLiveAdminAccess = async () => {
+  if (!currentUser?.uid) {
+    handleUnauthorizedAdminAccess('Connecte-toi avec un compte admin ou african king.');
+    return { authorized: false, roles: [] };
+  }
+
+  try {
+    const roles = await getProfileRoles(currentUser.uid);
+    const authorized = canAccessAdmin(roles);
+
+    updateCachedRoles(roles);
+
+    if (!authorized) {
+      handleUnauthorizedAdminAccess('Accès refusé : tes rôles actuels ne permettent pas d’ouvrir ou d’utiliser l’admin.');
+      return { authorized: false, roles };
+    }
+
+    adminAccessDeniedRedirected = false;
+    return { authorized: true, roles };
+  } catch (error) {
+    console.error('Impossible de vérifier les rôles admin en direct :', error);
+    setRoleFeedback('Impossible de vérifier tes rôles admin pour le moment.', true);
+    if (adminNotice) adminNotice.textContent = 'Impossible de vérifier les droits admin. Réessaie dans un instant.';
+    return { authorized: false, roles: [] };
+  }
+};
 
 const getUsedNumbersMap = () => normalizeCardNumberRegistry({ usedNumbers: Object.fromEntries(
   Object.values(cardsById)
@@ -339,6 +381,9 @@ const resetOwnerRerollsOnRejection = async (ownerUid) => {
 };
 
 const moderateCurrentCard = async (status) => {
+  const { authorized } = await requireLiveAdminAccess();
+  if (!authorized) return;
+
   const current = pendingQueue[0];
   if (!current || !currentUser || moderationInFlight) return;
 
@@ -451,7 +496,8 @@ const renderManagedCards = () => {
 };
 
 const updateManagedCardNumber = async (cardId, nextValue) => {
-  if (!cardId || cardManagementInFlight) return;
+  const { authorized } = await requireLiveAdminAccess();
+  if (!authorized || !cardId || cardManagementInFlight) return;
   const card = normalizeCardRecord(cardsById[cardId] || {}, cardId);
   const nextNumber = normalizeCardNumber(nextValue);
 
@@ -495,7 +541,8 @@ const updateManagedCardNumber = async (cardId, nextValue) => {
 };
 
 const deleteManagedCard = async (cardId) => {
-  if (!cardId || cardManagementInFlight) return;
+  const { authorized } = await requireLiveAdminAccess();
+  if (!authorized || !cardId || cardManagementInFlight) return;
   const card = normalizeCardRecord(cardsById[cardId] || {}, cardId);
   if (!card.cardId) return;
 
@@ -590,10 +637,8 @@ export const initAdminPage = async () => {
   const handleRoleSubmit = async (event) => {
     event.preventDefault();
 
-    if (!currentUser) {
-      setRoleFeedback('Connecte-toi avec un compte autorisé à gérer l’admin.', true);
-      return;
-    }
+    const { authorized } = await requireLiveAdminAccess();
+    if (!authorized) return;
 
     const nickname = normalizeNickname(roleNickname?.value || '');
     const selectedRoles = getSelectedRoles().filter((role) => assignableRoles.includes(role));
@@ -647,14 +692,16 @@ export const initAdminPage = async () => {
         return;
       }
 
-      const roles = context?.session?.roles || [];
-      const canManageAdmin = canAccessAdmin(roles);
+      const sessionRoles = context?.session?.roles || [];
+      const canManageAdminFromSession = canAccessAdmin(sessionRoles);
 
-      if (!canManageAdmin) {
-        resetAdminScreen();
-        adminNotice.textContent = 'Accès refusé : cet onglet est réservé aux rôles admin et african king.';
+      if (!canManageAdminFromSession) {
+        handleUnauthorizedAdminAccess('Accès refusé : cet onglet est réservé aux rôles admin et african king.');
         return;
       }
+
+      const { authorized } = await requireLiveAdminAccess();
+      if (!authorized) return;
 
       bindRealtime();
       adminNotice.textContent = 'Accès admin confirmé. Tu peux valider, supprimer et renuméroter les cartes, ainsi que gérer les rôles.';
