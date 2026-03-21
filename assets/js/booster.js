@@ -3,6 +3,14 @@ import { initCommon } from './common.js';
 import { BOOSTER_COST, loadProfileAlbum, saveAlbumDrops } from './lib/album-storage.js';
 import { buildCardCatalogStats, getCardWeight, getDropRates, getDuplicateSellValue, loadApprovedCards } from './lib/cards-catalog.js';
 
+const SIGNAL_STEP_DELAY = 650;
+const REVEAL_STEP_DELAY = 820;
+const PACK_CHARGE_DELAY = 720;
+const PACK_OPEN_DELAY = 1480;
+const PAUSE_BETWEEN_SIGNAL_AND_REVEAL = 1200;
+
+const getSequenceDuration = (cardCount) => PACK_OPEN_DELAY + 220 + ((Math.max(0, cardCount - 1)) * SIGNAL_STEP_DELAY) + PAUSE_BETWEEN_SIGNAL_AND_REVEAL + (cardCount * REVEAL_STEP_DELAY);
+
 const pickWeightedCard = (cards, catalogStats) => {
   const totalWeight = cards.reduce((sum, card) => sum + getCardWeight(card, catalogStats), 0);
   if (totalWeight <= 0) return cards[0];
@@ -87,11 +95,19 @@ export const initBoosterPage = async () => {
     document.body.classList.add('modal-open');
   };
 
+  const getBoosterSlots = () => Array.from(boosterGrid?.querySelectorAll('[data-booster-index]') || []);
+
+  const setSlotInteractiveState = (slot, isInteractive) => {
+    if (!(slot instanceof HTMLButtonElement)) return;
+    slot.disabled = !isInteractive;
+    slot.setAttribute('aria-disabled', String(!isInteractive));
+  };
+
   const resetBoosterStage = (message) => {
     clearOpeningTimers();
     boosterEntries = [];
     closeViewer();
-    boosterStage?.classList.remove('is-opening', 'is-revealed');
+    boosterStage?.classList.remove('is-opening', 'is-revealed', 'is-signaling');
     boosterPack?.classList.remove('is-opening', 'is-opened');
     boosterGrid.innerHTML = `<article class="booster-empty"><p>${escapeHtml(message)}</p></article>`;
   };
@@ -122,7 +138,7 @@ export const initBoosterPage = async () => {
     }
   };
 
-  const renderBoosterCards = (cards, soldDuplicates = []) => {
+  const renderBoosterSlots = (cards, soldDuplicates = []) => {
     const soldIds = new Set(soldDuplicates.map((card) => String(card.uniqueId)));
     boosterEntries = cards;
     boosterGrid.innerHTML = '';
@@ -131,10 +147,16 @@ export const initBoosterPage = async () => {
       const isDuplicate = soldIds.has(String(card.uniqueId));
       const item = document.createElement('button');
       item.type = 'button';
-      item.className = `booster-capture rank-${card.rank}`;
+      item.className = `booster-capture booster-capture--mystery rank-${card.rank}`;
       item.dataset.boosterIndex = String(index);
       item.style.setProperty('--card-delay', `${index * 120}ms`);
       item.innerHTML = `
+        <span class="booster-capture__flare" aria-hidden="true"></span>
+        <span class="booster-capture__veil" aria-hidden="true">
+          <span class="booster-capture__signal">Aura détectée</span>
+          <strong class="booster-capture__teaser-rank">Rang ${escapeHtml(card.rank)}</strong>
+          <span class="booster-capture__teaser-copy">La couleur apparaît avant la révélation…</span>
+        </span>
         <span class="booster-capture__frame">
           <img src="${escapeHtml(card.cardCapture)}" alt="${escapeHtml(`Carte ${card.rank} de ${card.creatorName}`)}" loading="lazy">
         </span>
@@ -144,6 +166,7 @@ export const initBoosterPage = async () => {
         </span>
         <span class="booster-capture__rank">${escapeHtml(card.rank)}${isDuplicate ? ` · +${escapeHtml(String(card.sellValue))}` : ''}</span>
       `;
+      setSlotInteractiveState(item, false);
       boosterGrid.appendChild(item);
     });
   };
@@ -156,19 +179,43 @@ export const initBoosterPage = async () => {
     boosterPack?.classList.add('is-opening');
     boosterGrid.innerHTML = '';
 
+    setHint('Le booster se charge… laisse monter le suspense.');
+
     queueTimeout(() => {
       boosterPack?.classList.add('is-opened');
-    }, 520);
+      setHint('Le sceau cède… des auras sortent une par une.');
+    }, PACK_CHARGE_DELAY);
 
     queueTimeout(() => {
-      renderBoosterCards(cards, soldDuplicates);
+      renderBoosterSlots(cards, soldDuplicates);
+      boosterStage?.classList.add('is-signaling');
+    }, PACK_OPEN_DELAY);
+
+    cards.forEach((card, index) => {
+      queueTimeout(() => {
+        const slot = getBoosterSlots()[index];
+        slot?.classList.add('is-signaled');
+        setHint(`Signal ${index + 1}/${cards.length} · rang ${card.rank} détecté.`);
+      }, PACK_OPEN_DELAY + 220 + (index * SIGNAL_STEP_DELAY));
+    });
+
+    const revealStartDelay = getSequenceDuration(cards.length) - (cards.length * REVEAL_STEP_DELAY);
+
+    cards.forEach((card, index) => {
+      queueTimeout(() => {
+        const slot = getBoosterSlots()[index];
+        if (!slot) return;
+        slot.classList.add('is-revealed');
+        setSlotInteractiveState(slot, true);
+        setHint(`Révélation ${index + 1}/${cards.length} · ${card.cardName || card.name || card.creatorName}.`);
+      }, revealStartDelay + (index * REVEAL_STEP_DELAY));
+    });
+
+    queueTimeout(() => {
+      boosterStage?.classList.remove('is-opening', 'is-signaling');
       boosterStage?.classList.add('is-revealed');
-    }, 880);
-
-    queueTimeout(() => {
-      boosterStage?.classList.remove('is-opening');
       boosterPack?.classList.remove('is-opening');
-    }, 1700);
+    }, revealStartDelay + (cards.length * REVEAL_STEP_DELAY));
   };
 
   const refreshProfileStats = async () => {
@@ -232,23 +279,31 @@ export const initBoosterPage = async () => {
       const uniqueCards = new Set(pulls.map((card) => card.uniqueId)).size;
       const resaleSummary = duplicateCount > 0 ? ` · +${outcome.duplicateCoins} coins` : '';
 
-      if (cards.length === 1) {
-        setHint(`5 cartes tirées · 1 seule carte dispo${resaleSummary}`);
-        return;
-      }
+      queueTimeout(() => {
+        if (cards.length === 1) {
+          setHint(`5 cartes tirées · 1 seule carte dispo${resaleSummary}`);
+          return;
+        }
 
-      setHint(`${pulls.length} cartes · ${uniqueCards} distincte(s) · ${outcome.keptCards.length} nouvelle(s)${resaleSummary}`);
+        setHint(`${pulls.length} cartes · ${uniqueCards} distincte(s) · ${outcome.keptCards.length} nouvelle(s)${resaleSummary}`);
+      }, getSequenceDuration(pulls.length) + 240);
+
+      queueTimeout(() => {
+        if (currentCoins >= BOOSTER_COST) {
+          openBoosterBtn.disabled = false;
+        }
+      }, getSequenceDuration(pulls.length) + 120);
     } catch (error) {
       handleBoosterError(error, 'Impossible d’ouvrir le booster.');
     } finally {
-      if (currentCoins >= BOOSTER_COST) {
+      if (!boosterStage?.classList.contains('is-opening') && currentCoins >= BOOSTER_COST) {
         openBoosterBtn.disabled = false;
       }
     }
   };
 
   const onBoosterGridClick = (event) => {
-    const target = event.target instanceof Element ? event.target.closest('[data-booster-index]') : null;
+    const target = event.target instanceof Element ? event.target.closest('[data-booster-index].is-revealed') : null;
     if (!target) return;
     openViewer(Number(target.getAttribute('data-booster-index')));
   };
