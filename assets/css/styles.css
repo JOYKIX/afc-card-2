@@ -673,6 +673,38 @@ button.danger {
   color: #ffafc3;
 }
 
+.draft-tools {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.draft-status {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.draft-status[data-state='saved'],
+.draft-status[data-state='restored'] {
+  color: rgba(160, 255, 206, 0.9);
+}
+
+.draft-status[data-state='pending'] {
+  color: rgba(255, 230, 168, 0.92);
+}
+
+.draft-status[data-state='cleared'] {
+  color: rgba(255, 205, 154, 0.92);
+}
+
+.draft-status[data-state='error'] {
+  color: #ffafc3;
+}
+
 .review-stats--hero {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   margin-bottom: 1rem;
