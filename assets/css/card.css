@@ -603,3 +603,70 @@
 .afc-card.is-exporting-lite .meta-right span {
   background: rgba(11, 5, 19, 0.72);
 }
+
+
+/* === Rounded card shell unification === */
+:root {
+  --card-shell-radius: 34px;
+  --card-shell-radius-inner: 28px;
+  --card-shell-radius-soft: 24px;
+  --card-shell-radius-pill: 999px;
+}
+
+.afc-card {
+  border-radius: var(--card-shell-radius);
+}
+
+.afc-card::before {
+  border-radius: calc(var(--card-shell-radius) - 2px);
+}
+
+.afc-card::after {
+  border-radius: var(--card-shell-radius-inner);
+}
+
+.card-frame-lines {
+  border-radius: calc(var(--card-shell-radius) - 4px);
+}
+
+.card-corner {
+  width: 62px;
+  height: 62px;
+  border-radius: var(--card-shell-radius-soft);
+}
+
+.card-corner--tl {
+  border-top-left-radius: var(--card-shell-radius-soft);
+}
+
+.card-corner--tr {
+  border-top-right-radius: var(--card-shell-radius-soft);
+}
+
+.card-corner--bl {
+  border-bottom-left-radius: var(--card-shell-radius-soft);
+}
+
+.card-corner--br {
+  border-bottom-right-radius: var(--card-shell-radius-soft);
+}
+
+.meta-left span,
+.meta-right span,
+.identity--hero,
+.portrait,
+.skills,
+.stat-card {
+  border-radius: var(--card-shell-radius-soft);
+}
+
+.portrait-shell {
+  border-radius: var(--card-shell-radius-inner);
+}
+
+.section-label,
+.type-chip,
+.edition-chip,
+.stats strong {
+  border-radius: var(--card-shell-radius-pill);
+}

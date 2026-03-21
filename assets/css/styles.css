@@ -4319,3 +4319,491 @@ button.danger {
     min-height: auto;
   }
 }
+
+
+/* === Rounded art direction unification === */
+:root {
+  --ua-radius-xs: 18px;
+  --ua-radius-sm: 22px;
+  --ua-radius-md: 26px;
+  --ua-radius-lg: 32px;
+  --ua-radius-xl: 38px;
+  --ua-panel-padding: clamp(1rem, 1.25vw + 0.75rem, 1.5rem);
+  --ua-block-padding: clamp(0.9rem, 1vw + 0.65rem, 1.2rem);
+  --ua-surface-1: linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.02));
+  --ua-surface-2: linear-gradient(180deg, rgba(34, 22, 49, 0.92), rgba(14, 9, 23, 0.96));
+  --ua-surface-3: linear-gradient(180deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.025));
+  --ua-outline: rgba(255, 255, 255, 0.11);
+  --ua-outline-strong: rgba(83, 235, 255, 0.18);
+  --ua-shadow: 0 20px 44px rgba(0, 0, 0, 0.24);
+  --ua-shadow-soft: 0 14px 30px rgba(0, 0, 0, 0.18);
+}
+
+.topbar--dashboard,
+.workspace-frame,
+.login-layout--revamp .login-panel,
+.editor-panel--revamp,
+.preview-panel--revamp,
+.profile-panel--revamp,
+.panel--booster-revamp,
+.panel--album-revamp,
+.admin-main-panel--revamp,
+.admin-history-panel--revamp,
+.card-viewer__dialog,
+.crop-modal__dialog {
+  border-radius: var(--ua-radius-xl);
+}
+
+.topbar__brand,
+.topbar__nav-block,
+.auth-actions--topbar,
+.auth-profile-link,
+.site-nav,
+.nav-link,
+.panel,
+.review-stats article,
+.hero-stats article,
+.status-banner,
+.verification-box,
+.stat-controls,
+.portrait-position-tools,
+.editor-form__cluster,
+.profile-form-wrap--primary,
+.role-manager,
+.admin-focus,
+.booster-rates-card,
+.booster-command-panel,
+.booster-session-card,
+.album-overview-card,
+.album-binder__topbar--filters,
+.album-binder__shell--deluxe,
+.tinder-card,
+.pending-item,
+.album-card,
+.booster-capture,
+.album-empty,
+.booster-empty,
+.login-card,
+.nickname-step,
+.crop-modal__frame-wrap,
+.crop-modal__sidebar,
+.role-options,
+.booster-rate-row,
+.album-card__frame,
+.booster-capture__frame,
+.card-viewer__media,
+.tinder-image,
+.pending-thumb,
+.crop-frame,
+.preview-wrap--stage,
+.booster-stage--revamp {
+  border-radius: var(--ua-radius-md);
+}
+
+.glass,
+.glass-soft,
+.panel,
+.review-stats article,
+.hero-stats article,
+.status-banner,
+.verification-box,
+.stat-controls,
+.portrait-position-tools,
+.editor-form__cluster,
+.profile-form-wrap--primary,
+.role-manager,
+.admin-focus,
+.booster-rates-card,
+.booster-command-panel,
+.booster-session-card,
+.album-overview-card,
+.album-binder__topbar--filters,
+.album-binder__shell--deluxe,
+.tinder-card,
+.pending-item,
+.album-card,
+.booster-capture,
+.album-empty,
+.booster-empty,
+.login-card,
+.nickname-step,
+.crop-modal__frame-wrap,
+.crop-modal__sidebar,
+.auth-profile-link,
+.topbar__brand,
+.site-nav,
+.nav-link,
+.role-options,
+.booster-rate-row {
+  background-image: var(--ua-surface-1), var(--ua-surface-2);
+  border-color: var(--ua-outline);
+  box-shadow: var(--ua-shadow-soft);
+}
+
+.workspace-frame,
+.preview-wrap--stage,
+.booster-stage--revamp,
+.album-binder__shell--deluxe {
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.07), transparent 24%),
+    radial-gradient(circle at bottom right, rgba(83, 235, 255, 0.08), transparent 26%),
+    linear-gradient(180deg, rgba(20, 13, 31, 0.94), rgba(8, 5, 14, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), var(--ua-shadow);
+}
+
+.panel,
+.editor-panel--revamp,
+.preview-panel--revamp,
+.profile-panel--revamp,
+.panel--booster-revamp,
+.panel--album-revamp,
+.admin-main-panel--revamp,
+.admin-history-panel--revamp,
+.login-layout--revamp .login-panel {
+  padding: var(--ua-panel-padding);
+}
+
+.review-stats article,
+.hero-stats article,
+.status-banner,
+.verification-box,
+.stat-controls,
+.portrait-position-tools,
+.editor-form__cluster,
+.profile-form-wrap--primary,
+.role-manager,
+.admin-focus,
+.booster-rates-card,
+.booster-command-panel,
+.booster-session-card,
+.album-overview-card,
+.album-binder__topbar--filters,
+.album-card,
+.booster-capture,
+.album-empty,
+.booster-empty,
+.tinder-card,
+.pending-item,
+.login-card,
+.nickname-step,
+.crop-modal__frame-wrap,
+.crop-modal__sidebar {
+  padding: var(--ua-block-padding);
+}
+
+input,
+textarea,
+select,
+button,
+.nav-link,
+.auth-profile-link,
+.page-intro__eyebrow,
+.section-pill,
+.hero-chips span,
+.booster-capture__rank,
+.album-card__status,
+.album-card__number,
+.booster-command-pill,
+.booster-pack__brand,
+.booster-pack__count,
+.role-badge,
+.album-progress-track,
+.booster-rate-row__bar {
+  border-radius: var(--ua-radius-sm);
+}
+
+button,
+.nav-link,
+.auth-profile-link,
+input,
+textarea,
+select {
+  min-height: 3.1rem;
+}
+
+button,
+.nav-link,
+.auth-profile-link {
+  box-shadow: none;
+}
+
+button:hover,
+.nav-link:hover,
+.auth-profile-link:hover,
+.auth-profile-link:focus-visible {
+  transform: translateY(-2px);
+}
+
+.preview-wrap--stage {
+  padding: clamp(1rem, 1.6vw, 1.4rem);
+}
+
+.workspace-frame {
+  inset: 0.6rem;
+}
+
+.topbar--dashboard {
+  padding: 0.8rem;
+  gap: 0.8rem;
+  background:
+    radial-gradient(circle at top left, rgba(255, 79, 146, 0.12), transparent 24%),
+    radial-gradient(circle at bottom right, rgba(83, 235, 255, 0.1), transparent 26%),
+    linear-gradient(180deg, rgba(18, 11, 29, 0.92), rgba(10, 7, 18, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: var(--ua-shadow);
+}
+
+.topbar__brand,
+.topbar__nav-block,
+.auth-actions--topbar {
+  padding: 0.35rem;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02)),
+    rgba(14, 9, 23, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.site-nav {
+  padding: 0.2rem;
+  gap: 0.55rem;
+}
+
+.nav-link,
+.auth-profile-link,
+button.ghost {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.02)),
+    rgba(13, 9, 22, 0.84);
+}
+
+button {
+  padding-inline: 1.1rem;
+}
+
+.actions,
+.album-binder__buttons,
+.booster-command-panel__actions,
+.portrait-position-actions,
+.crop-modal__actions,
+.auth-actions__buttons {
+  align-items: stretch;
+}
+
+.actions button,
+.album-binder__buttons button,
+.booster-command-panel__actions button,
+.crop-modal__actions button,
+.auth-actions__buttons button {
+  min-height: 3.1rem;
+}
+
+.album-toolbar,
+.toolbar,
+.form-grid--two,
+.booster-dashboard--deluxe,
+.admin-content-grid,
+.album-overview-grid,
+.booster-session-grid {
+  align-items: stretch;
+}
+
+.album-binder__shell--deluxe {
+  padding: clamp(1rem, 1.4vw, 1.45rem) clamp(1rem, 1.4vw, 1.45rem) clamp(1rem, 1.4vw, 1.45rem) clamp(2rem, 2vw, 2.6rem);
+}
+
+.album-binder__shell::before,
+.booster-stage--revamp::after {
+  border-radius: calc(var(--ua-radius-md) - 6px);
+}
+
+.album-binder__spine {
+  top: 1.1rem;
+  bottom: 1.1rem;
+  left: 0.95rem;
+}
+
+.booster-command-panel,
+.album-binder__topbar--filters,
+.booster-session-card,
+.album-overview-card,
+.booster-rate-row {
+  background:
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.08), transparent 30%),
+    linear-gradient(180deg, rgba(34, 20, 50, 0.9), rgba(15, 10, 24, 0.96));
+}
+
+.tinder-image img {
+  width: 100%;
+}
+
+.page-intro,
+.booster-command-panel__copy,
+.album-card__meta,
+.booster-capture__meta,
+.profile-form-wrap,
+.admin-sidebar,
+.role-form,
+.crop-modal__content {
+  min-width: 0;
+}
+
+.page-intro__lede,
+.section-subtitle,
+.subtitle,
+.hint,
+#verificationStatusText,
+#profileHint,
+#boosterHint,
+#albumHint,
+#loginHint,
+#roleFeedback,
+#dailyRewardStatus,
+#rerollStatusText,
+.draft-status,
+.render-engine-status,
+.album-filter-summary {
+  max-width: 70ch;
+}
+
+@media (max-width: 1080px) {
+  .topbar--dashboard,
+  .workspace-frame,
+  .login-layout--revamp .login-panel,
+  .editor-panel--revamp,
+  .preview-panel--revamp,
+  .profile-panel--revamp,
+  .panel--booster-revamp,
+  .panel--album-revamp,
+  .admin-main-panel--revamp,
+  .admin-history-panel--revamp,
+  .card-viewer__dialog,
+  .crop-modal__dialog {
+    border-radius: var(--ua-radius-lg);
+  }
+
+  .album-binder__shell--deluxe {
+    padding-left: 1.55rem;
+  }
+}
+
+@media (max-width: 760px) {
+  :root {
+    --ua-radius-sm: 20px;
+    --ua-radius-md: 22px;
+    --ua-radius-lg: 26px;
+    --ua-radius-xl: 30px;
+  }
+
+  .topbar--dashboard,
+  .workspace-frame,
+  .login-layout--revamp .login-panel,
+  .editor-panel--revamp,
+  .preview-panel--revamp,
+  .profile-panel--revamp,
+  .panel--booster-revamp,
+  .panel--album-revamp,
+  .admin-main-panel--revamp,
+  .admin-history-panel--revamp,
+  .card-viewer__dialog,
+  .crop-modal__dialog {
+    border-radius: var(--ua-radius-lg);
+  }
+
+  .topbar--dashboard,
+  .panel,
+  .editor-panel--revamp,
+  .preview-panel--revamp,
+  .profile-panel--revamp,
+  .panel--booster-revamp,
+  .panel--album-revamp,
+  .admin-main-panel--revamp,
+  .admin-history-panel--revamp,
+  .login-layout--revamp .login-panel,
+  .preview-wrap--stage,
+  .booster-stage--revamp,
+  .album-binder__topbar--filters,
+  .album-binder__shell--deluxe {
+    padding: 1rem;
+  }
+
+  .topbar__brand,
+  .topbar__nav-block,
+  .auth-actions--topbar,
+  .auth-profile-link,
+  .nav-link,
+  .review-stats article,
+  .hero-stats article,
+  .status-banner,
+  .verification-box,
+  .stat-controls,
+  .portrait-position-tools,
+  .editor-form__cluster,
+  .profile-form-wrap--primary,
+  .role-manager,
+  .admin-focus,
+  .booster-rates-card,
+  .booster-command-panel,
+  .booster-session-card,
+  .album-overview-card,
+  .album-binder__topbar--filters,
+  .album-binder__shell--deluxe,
+  .tinder-card,
+  .pending-item,
+  .album-card,
+  .booster-capture,
+  .album-empty,
+  .booster-empty,
+  .login-card,
+  .nickname-step,
+  .crop-modal__frame-wrap,
+  .crop-modal__sidebar,
+  .role-options,
+  .booster-rate-row,
+  .album-card__frame,
+  .booster-capture__frame,
+  .card-viewer__media,
+  .tinder-image,
+  .pending-thumb,
+  .crop-frame,
+  .preview-wrap--stage,
+  .booster-stage--revamp {
+    border-radius: var(--ua-radius-md);
+  }
+
+  .album-binder__shell--deluxe {
+    padding-left: 1rem;
+  }
+
+  .workspace-frame {
+    inset: 0.35rem;
+  }
+
+  .album-toolbar,
+  .toolbar,
+  .booster-command-panel,
+  .booster-command-panel__actions,
+  .album-binder__controls--deluxe,
+  .album-binder__buttons,
+  .crop-modal__content {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .site-nav {
+    grid-template-columns: 1fr;
+  }
+
+  .album-binder__shell--deluxe {
+    padding: 0.95rem;
+  }
+
+  .booster-grid--revamp,
+  .album-grid--binder,
+  .hero-stats,
+  .review-stats--hero,
+  .booster-quick-stats {
+    grid-template-columns: 1fr;
+  }
+}
