@@ -1,7 +1,10 @@
 import { db, get, ref, runTransaction } from '../firebase.js';
+import { normalizeCardNumber, normalizeText } from './format.js';
+import { normalizeCardRecord, normalizeOwnedCards } from './card-data.js';
 
 const ALBUM_STORAGE_KEY = 'afc-card-album-v1';
 const PROFILE_DROPPED_CARD_IDS_KEY = 'droppedCardIds';
+const PROFILE_OWNED_CARDS_KEY = 'ownedCards';
 const INITIAL_COINS = 50;
 const BOOSTER_COST = 50;
 const DAILY_LOGIN_REWARD = 50;
@@ -27,17 +30,22 @@ const normalizeProfileCoins = (value, fallback = INITIAL_COINS) => {
   return Math.max(0, Math.floor(numericValue));
 };
 
-const normalizeAlbumEntry = (card = {}) => ({
-  uniqueId: String(card.uniqueId || card.id || card.cardNumber || `${Date.now()}`),
-  cardNumber: card.cardNumber ?? null,
-  rank: card.rank || 'D',
-  name: card.name || card.cardName || '',
-  cardName: card.cardName || card.name || '',
-  creatorName: card.creatorName || 'Créateur inconnu',
-  cardCapture: card.cardCapture || '',
-  droppedAt: Number(card.droppedAt || Date.now()),
-  dropCount: Math.max(1, Number(card.dropCount || 1))
-});
+const normalizeAlbumEntry = (card = {}) => {
+  const normalizedCard = normalizeCardRecord(card, card.id || card.cardId || card.uniqueId || '');
+
+  return {
+    uniqueId: String(card.uniqueId || normalizedCard.cardId || normalizedCard.id || `${Date.now()}`),
+    cardId: String(card.cardId || normalizedCard.cardId || normalizedCard.id || ''),
+    cardNumber: normalizeCardNumber(card.cardNumber ?? normalizedCard.cardNumber),
+    rank: normalizedCard.rank || 'D',
+    name: normalizedCard.name || normalizedCard.cardName || '',
+    cardName: normalizedCard.cardName || normalizedCard.name || '',
+    creatorName: normalizedCard.creatorName || 'Créateur inconnu',
+    cardCapture: normalizedCard.cardCapture || '',
+    droppedAt: Number(card.droppedAt || card.obtainedAt || Date.now()),
+    dropCount: Math.max(1, Number(card.dropCount || 1))
+  };
+};
 
 const getTodayKey = () => {
   const now = new Date();
@@ -68,60 +76,88 @@ const saveLocalAlbum = (uid, entries) => {
   }
 };
 
-const summarizeAlbumEntries = (catalog = [], droppedCardIds = []) => {
-  const cardById = new Map(catalog.map((card) => [String(card.uniqueId), card]));
-  const newestAtById = new Map();
+const summarizeAlbumEntries = (catalog = [], album = {}) => {
+  const cardById = new Map();
+  const cardByLegacyNumber = new Map();
 
-  droppedCardIds.forEach((cardId, index) => {
-    const normalizedId = String(cardId || '').trim();
-    if (!normalizedId) return;
-    newestAtById.set(normalizedId, index + 1);
+  catalog.forEach((card) => {
+    const normalized = normalizeCardRecord(card, card.id || card.cardId || card.uniqueId || '');
+    const cardId = String(normalized.cardId || normalized.uniqueId || '').trim();
+    if (cardId) cardById.set(cardId, normalized);
+    if (normalized.cardNumber) cardByLegacyNumber.set(String(normalized.cardNumber), normalized);
   });
 
-  return Array.from(newestAtById.entries())
-    .map(([uniqueId, droppedAt]) => {
-      const card = cardById.get(uniqueId);
-      if (!card) return null;
+  const ownedCards = normalizeOwnedCards(album.ownedCards);
+  const legacyIds = normalizeDroppedCardIds(album.droppedCardIds);
+  const entriesById = new Map();
 
-      return normalizeAlbumEntry({
-        ...card,
-        uniqueId,
-        dropCount: 1,
-        droppedAt: droppedAt || Date.now()
-      });
-    })
-    .filter(Boolean)
-    .sort((a, b) => (b.droppedAt || 0) - (a.droppedAt || 0));
+  Object.entries(ownedCards).forEach(([cardId, ownership]) => {
+    const card = cardById.get(cardId);
+    if (!card) return;
+
+    entriesById.set(cardId, normalizeAlbumEntry({
+      ...card,
+      cardId,
+      uniqueId: cardId,
+      cardNumber: ownership.cardNumber ?? card.cardNumber,
+      obtainedAt: ownership.obtainedAt,
+      droppedAt: ownership.obtainedAt || Date.now()
+    }));
+  });
+
+  legacyIds.forEach((legacyId, index) => {
+    const normalizedLegacyId = String(legacyId || '').trim();
+    if (!normalizedLegacyId || entriesById.has(normalizedLegacyId)) return;
+
+    const card = cardById.get(normalizedLegacyId) || cardByLegacyNumber.get(normalizedLegacyId);
+    if (!card) return;
+
+    const cardId = String(card.cardId || card.uniqueId || normalizedLegacyId).trim();
+    if (!cardId || entriesById.has(cardId)) return;
+
+    entriesById.set(cardId, normalizeAlbumEntry({
+      ...card,
+      cardId,
+      uniqueId: cardId,
+      droppedAt: index + 1 || Date.now()
+    }));
+  });
+
+  return Array.from(entriesById.values()).sort((a, b) => (b.droppedAt || 0) - (a.droppedAt || 0));
 };
 
 const loadProfileAlbum = async (uid) => {
-  if (!uid) return { droppedCardIds: [], coins: INITIAL_COINS };
+  if (!uid) return { droppedCardIds: [], ownedCards: {}, coins: INITIAL_COINS };
 
   try {
     const snapshot = await get(ref(db, `profiles/${uid}`));
-    if (!snapshot.exists()) return { droppedCardIds: [], coins: INITIAL_COINS };
+    if (!snapshot.exists()) return { droppedCardIds: [], ownedCards: {}, coins: INITIAL_COINS };
 
     const profile = snapshot.val() || {};
     return {
       droppedCardIds: normalizeDroppedCardIds(profile[PROFILE_DROPPED_CARD_IDS_KEY]),
+      ownedCards: normalizeOwnedCards(profile[PROFILE_OWNED_CARDS_KEY]),
       coins: normalizeProfileCoins(profile.coins, INITIAL_COINS)
     };
   } catch (error) {
     console.warn('Impossible de lire l’album en base :', error);
-    return { droppedCardIds: [], coins: INITIAL_COINS };
+    return { droppedCardIds: [], ownedCards: {}, coins: INITIAL_COINS };
   }
 };
 
 const loadAlbum = async (uid, catalog = []) => {
   const profileAlbum = await loadProfileAlbum(uid);
-  const entries = summarizeAlbumEntries(catalog, profileAlbum.droppedCardIds);
+  const entries = summarizeAlbumEntries(catalog, profileAlbum);
+  const ownedCardIds = Object.keys(normalizeOwnedCards(profileAlbum.ownedCards));
+  const uniqueOwnedIds = new Set([...profileAlbum.droppedCardIds, ...ownedCardIds]);
 
   if (entries.length) {
     saveLocalAlbum(uid, entries);
     return {
       entries,
       droppedCardIds: profileAlbum.droppedCardIds,
-      uniqueCount: new Set(profileAlbum.droppedCardIds).size,
+      ownedCards: normalizeOwnedCards(profileAlbum.ownedCards),
+      uniqueCount: uniqueOwnedIds.size,
       coins: profileAlbum.coins,
       source: 'database'
     };
@@ -131,6 +167,11 @@ const loadAlbum = async (uid, catalog = []) => {
   return {
     entries: localEntries,
     droppedCardIds: localEntries.map((entry) => entry.uniqueId),
+    ownedCards: Object.fromEntries(localEntries.map((entry) => [String(entry.cardId || entry.uniqueId), {
+      cardId: String(entry.cardId || entry.uniqueId),
+      cardNumber: normalizeCardNumber(entry.cardNumber),
+      obtainedAt: Number(entry.droppedAt || Date.now())
+    }])),
     uniqueCount: localEntries.length,
     coins: profileAlbum.coins,
     source: localEntries.length ? 'local' : 'database'
@@ -147,7 +188,8 @@ const saveAlbumDrops = async (uid, cards = [], { boosterCost = BOOSTER_COST } = 
       coinsSpent: 0,
       duplicateCoins: 0,
       balance: INITIAL_COINS,
-      droppedCardIds: []
+      droppedCardIds: [],
+      ownedCards: {}
     };
   }
 
@@ -161,14 +203,18 @@ const saveAlbumDrops = async (uid, cards = [], { boosterCost = BOOSTER_COST } = 
     coinsSpent: 0,
     duplicateCoins: 0,
     balance: INITIAL_COINS,
-    droppedCardIds: []
+    droppedCardIds: [],
+    ownedCards: {}
   };
 
   const transaction = await runTransaction(profileRef, (currentProfile) => {
     const profile = currentProfile && typeof currentProfile === 'object' ? currentProfile : {};
     const existingDroppedCardIds = normalizeDroppedCardIds(profile[PROFILE_DROPPED_CARD_IDS_KEY]);
+    const existingOwnedCards = normalizeOwnedCards(profile[PROFILE_OWNED_CARDS_KEY]);
     const ownedUniqueIds = new Set(existingDroppedCardIds);
+    const ownedCardIds = new Set(Object.keys(existingOwnedCards));
     const nextDroppedCardIds = [...existingDroppedCardIds];
+    const nextOwnedCards = { ...existingOwnedCards };
     const currentCoins = normalizeProfileCoins(profile.coins, INITIAL_COINS);
 
     if (currentCoins < boosterCost) {
@@ -182,17 +228,31 @@ const saveAlbumDrops = async (uid, cards = [], { boosterCost = BOOSTER_COST } = 
     const keptCards = [];
 
     cards.forEach((card) => {
-      const uniqueId = String(card?.uniqueId || card?.id || card?.cardNumber || '').trim();
+      const normalizedCard = normalizeCardRecord(card, card?.id || card?.cardId || card?.uniqueId || '');
+      const uniqueId = String(normalizedCard.cardId || normalizedCard.uniqueId || '').trim();
+      const legacyNumberId = normalizedCard.cardNumber ? String(normalizedCard.cardNumber) : '';
       if (!uniqueId) return;
 
-      if (ownedUniqueIds.has(uniqueId)) {
+      if (ownedCardIds.has(uniqueId) || (legacyNumberId && ownedUniqueIds.has(legacyNumberId))) {
         soldDuplicates.push(card);
         return;
       }
 
+      ownedCardIds.add(uniqueId);
       ownedUniqueIds.add(uniqueId);
       nextDroppedCardIds.push(uniqueId);
-      keptCards.push(card);
+      nextOwnedCards[uniqueId] = {
+        cardId: uniqueId,
+        cardNumber: normalizedCard.cardNumber,
+        obtainedAt: timestamp,
+        updatedAt: timestamp
+      };
+      keptCards.push({
+        ...card,
+        uniqueId,
+        cardId: uniqueId,
+        cardNumber: normalizedCard.cardNumber
+      });
     });
 
     const duplicateCoins = soldDuplicates.reduce((sum, card) => sum + Math.max(0, Number(card?.sellValue || 0)), 0);
@@ -210,6 +270,7 @@ const saveAlbumDrops = async (uid, cards = [], { boosterCost = BOOSTER_COST } = 
       ...profile,
       coins: nextCoins,
       [PROFILE_DROPPED_CARD_IDS_KEY]: nextDroppedCardIds,
+      [PROFILE_OWNED_CARDS_KEY]: nextOwnedCards,
       updatedAt: timestamp
     };
   });
@@ -226,6 +287,7 @@ export {
   DAILY_LOGIN_REWARD,
   INITIAL_COINS,
   PROFILE_DROPPED_CARD_IDS_KEY,
+  PROFILE_OWNED_CARDS_KEY,
   getTodayKey,
   loadAlbum,
   loadProfileAlbum,

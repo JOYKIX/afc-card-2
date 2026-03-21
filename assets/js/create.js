@@ -26,6 +26,7 @@ import {
   update
 } from './firebase.js';
 import { initCommon } from './common.js';
+import { normalizeCardRecord } from './lib/card-data.js';
 
 const CARD_DRAFT_STORAGE_KEY = 'afc-card-draft-v2';
 const CARD_DRAFT_STORAGE_VERSION = 1;
@@ -716,19 +717,10 @@ const refreshProfile = async (uid) => {
 const getCardRecordSummary = (record) => {
   if (!record) return null;
 
-  const capture = record.cardCapture || record.cardImage || record.image || '';
-  const rank = normalizeRank(record.rank || record.rarity);
-  const creatorName = normalizeText(record.creatorName || record.createdBy || record.ownerNickname || '');
-
+  const summary = normalizeCardRecord(record, record.cardId || record.id || record.uniqueId || '');
   return {
-    ...record,
-    cardCapture: capture,
-    rank,
-    creatorName,
-    cardNumber: normalizeCardNumber(record.cardNumber ?? record.cardId),
-    displayName: creatorName || 'Créateur inconnu',
-    updatedAt: record.updatedAt || record.submittedAt || record.createdAt || 0,
-    status: record.status || 'approved'
+    ...summary,
+    displayName: summary.creatorName || 'Créateur inconnu'
   };
 };
 
@@ -930,6 +922,7 @@ const buildCardPayload = async () => {
   const rank = getRank(average);
   const createdAt = Date.now();
   const cardCapture = await exportCardAsJpeg();
+  const selectedTitle = normalizeCardTitle(fields.title.value);
 
   return {
     ownerUid: currentUser.uid,
@@ -938,8 +931,16 @@ const buildCardPayload = async () => {
     createdBy: currentNickname,
     name: normalizeText(fields.name.value),
     cardName: normalizeText(fields.name.value),
+    title: TITLE_LABELS[selectedTitle] || fields.title.value,
+    titleKey: selectedTitle,
+    edition: normalizeText(fields.edition.value),
+    abilities: normalizeText(fields.abilities.value),
     rank,
     rarity: rank,
+    attack,
+    defense,
+    average,
+    type: computeType(),
     cardCapture,
     createdAt,
     updatedAt: createdAt,
