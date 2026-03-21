@@ -28,6 +28,7 @@ import {
 import { initCommon } from './common.js';
 
 const CARD_DRAFT_STORAGE_KEY = 'afc-card-draft-v2';
+const CARD_DRAFT_STORAGE_VERSION = 1;
 const DEFAULT_USER_ROLES = ['african army'];
 
 let fields = {};
@@ -62,6 +63,8 @@ let rerollStatusText;
 let manualStatsBox;
 let manualAttackInput;
 let manualDefenseInput;
+let draftStatusText;
+let clearDraftBtn;
 
 const titleOptions = new Set(CARD_TITLES);
 const supportedImageTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
@@ -90,6 +93,7 @@ let portraitNaturalSize = { width: 0, height: 0 };
 let portraitCropState = null;
 let portraitCropDragState = null;
 let verificationUnsubscribe = null;
+let pendingDraftSaveTimer = null;
 
 const getAverage = () => (attack + defense) / 2;
 
@@ -102,23 +106,71 @@ const getCost = (rank) => rankScale.indexOf(rank) + 1;
 const computeType = () => (attack > defense ? 'attaquant' : defense > attack ? 'défenseur' : 'équilibré');
 const hasUnlimitedStatAccess = () => hasUnlimitedStatAccessForRoles(currentUserRoles);
 
-const saveDraft = () => {
+const setDraftStatus = (message = '', state = '') => {
+  if (!draftStatusText) return;
+  draftStatusText.textContent = message;
+  draftStatusText.dataset.state = state;
+};
+
+const getDraftSnapshot = () => ({
+  version: CARD_DRAFT_STORAGE_VERSION,
+  name: fields.name.value,
+  title: fields.title.value,
+  edition: fields.edition.value,
+  abilities: fields.abilities.value,
+  attack,
+  defense,
+  portraitDataUrl,
+  portraitSourceDataUrl,
+  portraitPosition,
+  portraitZoom,
+  savedAt: Date.now()
+});
+
+const saveDraft = ({ silent = false } = {}) => {
   try {
-    window.localStorage.setItem(CARD_DRAFT_STORAGE_KEY, JSON.stringify({
-      name: fields.name.value,
-      title: fields.title.value,
-      edition: fields.edition.value,
-      abilities: fields.abilities.value,
-      attack,
-      defense,
-      portraitDataUrl,
-      portraitSourceDataUrl,
-      portraitPosition,
-      portraitZoom,
-      savedAt: Date.now()
-    }));
+    window.localStorage.setItem(CARD_DRAFT_STORAGE_KEY, JSON.stringify(getDraftSnapshot()));
+    if (!silent) setDraftStatus('Brouillon sauvegardé sur cet appareil.', 'saved');
+    return true;
   } catch (error) {
     console.warn('Impossible de sauvegarder le brouillon local :', error);
+    if (!silent) setDraftStatus('Sauvegarde locale impossible sur ce navigateur.', 'error');
+    return false;
+  }
+};
+
+const queueDraftSave = () => {
+  if (pendingDraftSaveTimer) window.clearTimeout(pendingDraftSaveTimer);
+  setDraftStatus('Sauvegarde locale en attente...', 'pending');
+  pendingDraftSaveTimer = window.setTimeout(() => {
+    pendingDraftSaveTimer = null;
+    saveDraft();
+  }, 180);
+};
+
+const flushDraftSave = ({ silent = false } = {}) => {
+  if (pendingDraftSaveTimer) {
+    window.clearTimeout(pendingDraftSaveTimer);
+    pendingDraftSaveTimer = null;
+  }
+
+  return saveDraft({ silent });
+};
+
+const clearDraft = () => {
+  if (pendingDraftSaveTimer) {
+    window.clearTimeout(pendingDraftSaveTimer);
+    pendingDraftSaveTimer = null;
+  }
+
+  try {
+    window.localStorage.removeItem(CARD_DRAFT_STORAGE_KEY);
+    setDraftStatus('Brouillon local effacé sur cet appareil.', 'cleared');
+    return true;
+  } catch (error) {
+    console.warn('Impossible d’effacer le brouillon local :', error);
+    setDraftStatus('Impossible d’effacer la sauvegarde locale.', 'error');
+    return false;
   }
 };
 
@@ -164,9 +216,11 @@ const restoreDraft = async () => {
       });
     }
 
+    setDraftStatus('Brouillon local restauré sur cet appareil.', 'restored');
     return true;
   } catch (error) {
     console.warn('Impossible de restaurer le brouillon local :', error);
+    setDraftStatus('Restauration du brouillon impossible.', 'error');
     return false;
   }
 };
@@ -197,6 +251,7 @@ const syncManualStatInputs = () => {
 
 const syncPortraitActionUi = () => {
   if (openPortraitCropModalBtn) openPortraitCropModalBtn.disabled = !(portraitSourceDataUrl || portraitDataUrl);
+  if (clearDraftBtn) clearDraftBtn.disabled = false;
 };
 
 const syncCropZoomUi = () => {
@@ -942,6 +997,8 @@ const bindDomReferences = () => {
   manualStatsBox = document.getElementById('manualStatsBox');
   manualAttackInput = document.getElementById('manualAttack');
   manualDefenseInput = document.getElementById('manualDefense');
+  draftStatusText = document.getElementById('draftStatusText');
+  clearDraftBtn = document.getElementById('clearDraft');
 };
 
 export const initCreatePage = async () => {
@@ -952,7 +1009,7 @@ export const initCreatePage = async () => {
 
   form.addEventListener('input', () => {
     render();
-    saveDraft();
+    queueDraftSave();
   }, { signal });
 
   rollStatsBtn.addEventListener('click', async () => {
@@ -990,7 +1047,7 @@ export const initCreatePage = async () => {
       portraitZoom = 1;
       portraitPosition = { x: 50, y: 50 };
       applyPortraitImage();
-      saveDraft();
+      flushDraftSave();
       return;
     }
 
@@ -1086,6 +1143,10 @@ export const initCreatePage = async () => {
     }
   }, { signal });
 
+  clearDraftBtn?.addEventListener('click', () => {
+    clearDraft();
+  }, { signal });
+
   resetPortraitPositionBtn?.addEventListener('click', async () => {
     try {
       await resetPortraitPosition();
@@ -1160,6 +1221,15 @@ export const initCreatePage = async () => {
     }
   }, { signal });
   window.addEventListener('resize', syncPortraitCropFrameRatio, { signal });
+  window.addEventListener('beforeunload', () => {
+    flushDraftSave({ silent: true });
+  }, { signal });
+  window.addEventListener('pagehide', () => {
+    flushDraftSave({ silent: true });
+  }, { signal });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') flushDraftSave({ silent: true });
+  }, { signal });
 
   const cleanupCommon = await initCommon({
     requireAuth: true,
@@ -1205,9 +1275,10 @@ Stream Ban : Met hors combat la carte adverse. Peut être utilisé deux fois.`;
   }
   syncAvailableTitles();
   render();
-  saveDraft();
+  flushDraftSave();
 
   return () => {
+    flushDraftSave({ silent: true });
     cleanupCommon?.();
     abortController.abort();
     stopPortraitCropDrag();
