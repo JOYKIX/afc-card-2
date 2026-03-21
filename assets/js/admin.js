@@ -38,7 +38,9 @@ let roleFeedback;
 let roleCheckboxes = [];
 
 const assignableRoles = ['vip', 'streamers', 'staff afc', 'creator', 'admin', 'african king'];
+const getEntryTimestamp = (item = {}) => item.entry?.submittedAt || item.entry?.createdAt || item.card?.createdAt || item.entry?.updatedAt || item.card?.updatedAt || 0;
 const sortByRecency = (entries = []) => [...entries].sort((a, b) => (b.entry?.updatedAt || b.entry?.submittedAt || b.entry?.createdAt || 0) - (a.entry?.updatedAt || a.entry?.submittedAt || a.entry?.createdAt || 0));
+const sortByOldestSubmission = (entries = []) => [...entries].sort((a, b) => getEntryTimestamp(a) - getEntryTimestamp(b));
 const cardNumberCounterRef = ref(db, 'metadata/cardNumberCounter');
 
 let currentUser = null;
@@ -98,7 +100,7 @@ const refreshStats = () => {
 };
 
 const buildPendingQueue = () => {
-  pendingQueue = sortByRecency(
+  pendingQueue = sortByOldestSubmission(
     Object.entries(verificationById)
       .map(toVerificationRow)
       .filter(({ entry }) => entry.status === 'pending')
