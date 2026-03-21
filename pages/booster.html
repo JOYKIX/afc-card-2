@@ -66,3 +66,47 @@
     </div>
   </div>
 </div>
+
+<div class="booster-opening-modal" id="boosterOpeningModal" hidden>
+  <div class="booster-opening-modal__backdrop" data-close-booster-opening></div>
+  <div
+    class="booster-opening-modal__dialog glass"
+    id="boosterOpeningDialog"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="boosterOpeningTitle"
+    aria-describedby="boosterOpeningStatus"
+  >
+    <div class="booster-opening-modal__fx">
+      <span class="booster-opening-modal__halo"></span>
+      <span class="booster-opening-modal__halo booster-opening-modal__halo--alt"></span>
+      <span class="booster-opening-modal__particles"></span>
+    </div>
+
+    <div class="booster-opening-modal__topbar">
+      <div>
+        <p class="eyebrow">Ouverture spectaculaire</p>
+        <h3 id="boosterOpeningTitle">AFC Booster Reactor</h3>
+      </div>
+      <button type="button" class="ghost booster-opening-modal__close" id="closeBoosterOpening">Fermer</button>
+    </div>
+
+    <div class="booster-opening-modal__core">
+      <div class="booster-opening-modal__pack" id="boosterOpeningPack" aria-hidden="true">
+        <span class="booster-opening-modal__pack-ring"></span>
+        <span class="booster-opening-modal__pack-core"></span>
+        <span class="booster-opening-modal__pack-label">DROP</span>
+      </div>
+
+      <div class="booster-opening-modal__content">
+        <p class="booster-opening-modal__status" id="boosterOpeningStatus">Initialisation du portail...</p>
+        <div class="booster-opening-modal__spotlight" id="boosterOpeningSpotlight">
+          <span class="booster-opening-modal__spotlight-rank" id="boosterOpeningSpotlightRank">?</span>
+          <strong id="boosterOpeningSpotlightLabel">Rareté inconnue</strong>
+          <small id="boosterOpeningSpotlightText">Les énergies du booster se chargent…</small>
+        </div>
+        <div class="booster-opening-modal__rarities" id="boosterRarityTrack" aria-live="polite"></div>
+      </div>
+    </div>
+  </div>
+</div>
