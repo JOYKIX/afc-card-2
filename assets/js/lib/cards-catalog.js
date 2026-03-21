@@ -1,4 +1,5 @@
 import { db, get, ref } from '../firebase.js';
+import { CARDS_PATH } from './firebase-paths.js';
 import { normalizeRank } from './format.js';
 import { normalizeCardRecord as normalizeCatalogCardRecord } from './card-data.js';
 
@@ -182,7 +183,7 @@ const getDuplicateSellValue = (card = {}, catalogStats = buildCardCatalogStats(c
 };
 
 const loadApprovedCards = async () => {
-  const snapshot = await get(ref(db, 'cards'));
+  const snapshot = await get(ref(db, CARDS_PATH));
   if (!snapshot.exists()) return [];
 
   return Object.entries(snapshot.val())

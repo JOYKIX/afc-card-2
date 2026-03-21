@@ -12,6 +12,7 @@ Refonte complète en **multi-pages** pour améliorer la prise en main :
 - `assets/js/lib/firebase-sdk.js` : imports Firebase Web SDK centralisés (v12.10.0).
 - `assets/js/lib/firebase-config.js` : configuration Firebase et liste des hôtes autorisés.
 - `assets/js/lib/firebase-core.js` : initialisation unique de l’app, Auth et Realtime Database.
+- `assets/js/lib/firebase-paths.js` : chemins Firebase mutualisés pour éviter les doublons entre modules.
 - `assets/js/lib/auth-service.js` : flux de connexion Google, persistance et synchronisation des profils.
 - `assets/js/lib/auth-cache.js` : cache local de session utilisateur.
 - `assets/js/lib/roles.js` : rôles, badges, droits, rerolls et titres autorisés.

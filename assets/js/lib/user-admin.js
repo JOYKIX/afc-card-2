@@ -1,9 +1,8 @@
 import { db, get, ref } from '../firebase.js';
+import { USER_ADMIN_ENTRIES_PATH, getUserAdminEntryPath } from './firebase-paths.js';
 import { getMaxPendingSubmissionsForRoles } from './roles.js';
 
-const USER_ADMIN_ENTRIES_PATH = 'userAdminEntries';
-
-const getUserAdminEntryRef = (uid = '') => ref(db, `${USER_ADMIN_ENTRIES_PATH}/${uid}`);
+const getUserAdminEntryRef = (uid = '') => ref(db, getUserAdminEntryPath(uid));
 
 const getDefaultCardCreationLimitForRoles = (roles = []) => (
   getMaxPendingSubmissionsForRoles(roles) === Number.POSITIVE_INFINITY

@@ -1,4 +1,5 @@
 import { db, get, ref, runTransaction } from '../firebase.js';
+import { getProfilePath } from './firebase-paths.js';
 import { normalizeCardNumber, normalizeText } from './format.js';
 import { normalizeCardRecord, normalizeOwnedCards } from './card-data.js';
 
@@ -130,7 +131,7 @@ const loadProfileAlbum = async (uid) => {
   if (!uid) return { droppedCardIds: [], ownedCards: {}, coins: INITIAL_COINS };
 
   try {
-    const snapshot = await get(ref(db, `profiles/${uid}`));
+    const snapshot = await get(ref(db, getProfilePath(uid)));
     if (!snapshot.exists()) return { droppedCardIds: [], ownedCards: {}, coins: INITIAL_COINS };
 
     const profile = snapshot.val() || {};
@@ -193,7 +194,7 @@ const saveAlbumDrops = async (uid, cards = [], { boosterCost = BOOSTER_COST } = 
     };
   }
 
-  const profileRef = ref(db, `profiles/${uid}`);
+  const profileRef = ref(db, getProfilePath(uid));
   const timestamp = Date.now();
   const outcome = {
     ok: false,

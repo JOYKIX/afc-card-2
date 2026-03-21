@@ -27,6 +27,12 @@ import {
 } from './firebase.js';
 import { initCommon } from './common.js';
 import { normalizeCardRecord } from './lib/card-data.js';
+import {
+  CARDS_PATH,
+  CARD_VERIFICATION_PATH,
+  getProfileFieldPath,
+  getProfilePath
+} from './lib/firebase-paths.js';
 import { loadUserAdminEntry } from './lib/user-admin.js';
 
 const CARD_DRAFT_STORAGE_KEY = 'afc-card-draft-v2';
@@ -678,7 +684,7 @@ const randomizeStats = () => {
 };
 
 const ensureProfileRerollCount = async (uid) => {
-  const profileRef = ref(db, `profiles/${uid}`);
+  const profileRef = ref(db, getProfilePath(uid));
   const profileSnapshot = await get(profileRef);
   const profileData = profileSnapshot.exists() ? profileSnapshot.val() || {} : {};
   const profileRoles = currentUserRoles.length > 0 ? currentUserRoles : await getProfileRoles(uid);
@@ -699,7 +705,7 @@ const ensureProfileRerollCount = async (uid) => {
 const consumeStoredReroll = async () => {
   if (!currentUser || hasUnlimitedStatAccess()) return true;
 
-  const rerollRef = ref(db, `profiles/${currentUser.uid}/remainingStatRerolls`);
+  const rerollRef = ref(db, getProfileFieldPath(currentUser.uid, 'remainingStatRerolls'));
   const result = await runTransaction(rerollRef, (currentValue) => {
     const normalized = normalizeRemainingStatRerolls(currentValue, currentUserRoles);
     if (normalized <= 0) return;
@@ -729,7 +735,7 @@ const rollStats = async ({ consumeReroll = true } = {}) => {
 };
 
 const refreshProfile = async (uid) => {
-  const profileSnapshot = await get(ref(db, `profiles/${uid}`));
+  const profileSnapshot = await get(ref(db, getProfilePath(uid)));
   currentNickname = profileSnapshot.exists() ? normalizeText(profileSnapshot.val().nickname || '') : '';
   remainingStatRerolls = profileSnapshot.exists()
     ? normalizeRemainingStatRerolls(profileSnapshot.val().remainingStatRerolls, currentUserRoles)
@@ -741,8 +747,8 @@ const countUserCreatedCards = async (uid) => {
   if (!uid) return 0;
 
   const [cardsSnapshot, verificationSnapshot] = await Promise.all([
-    get(query(ref(db, 'cards'), orderByChild('ownerUid'), equalTo(uid))),
-    get(query(ref(db, 'cardVerification'), orderByChild('ownerUid'), equalTo(uid)))
+    get(query(ref(db, CARDS_PATH), orderByChild('ownerUid'), equalTo(uid))),
+    get(query(ref(db, CARD_VERIFICATION_PATH), orderByChild('ownerUid'), equalTo(uid)))
   ]);
 
   const approvedCount = cardsSnapshot.exists() ? Object.keys(cardsSnapshot.val() || {}).length : 0;
@@ -798,7 +804,7 @@ const watchVerificationStatus = (uid) => {
 
   const unsubs = [];
 
-  const userCardsQuery = query(ref(db, 'cards'), orderByChild('ownerUid'), equalTo(uid));
+  const userCardsQuery = query(ref(db, CARDS_PATH), orderByChild('ownerUid'), equalTo(uid));
   unsubs.push(onValue(userCardsQuery, (snapshot) => {
     if (!snapshot.exists()) {
       latestApprovedCard = null;
@@ -811,7 +817,7 @@ const watchVerificationStatus = (uid) => {
     updateStatus();
   }));
 
-  const verificationQuery = query(ref(db, 'cardVerification'), orderByChild('ownerUid'), equalTo(uid));
+  const verificationQuery = query(ref(db, CARD_VERIFICATION_PATH), orderByChild('ownerUid'), equalTo(uid));
   unsubs.push(onValue(verificationQuery, (snapshot) => {
     if (!snapshot.exists()) {
       latestVerification = null;
@@ -841,7 +847,7 @@ const watchVerificationStatus = (uid) => {
 };
 
 const hasPendingVerification = async (uid) => {
-  const verificationQuery = query(ref(db, 'cardVerification'), orderByChild('ownerUid'), equalTo(uid));
+  const verificationQuery = query(ref(db, CARD_VERIFICATION_PATH), orderByChild('ownerUid'), equalTo(uid));
   const snapshot = await get(verificationQuery);
 
   if (!snapshot.exists()) return false;
@@ -1160,7 +1166,7 @@ export const initCreatePage = async () => {
 
     try {
       const payload = await buildCardPayload();
-      const verificationRef = push(ref(db, 'cardVerification'));
+      const verificationRef = push(ref(db, CARD_VERIFICATION_PATH));
 
       await set(verificationRef, {
         ownerUid: currentUser.uid,
