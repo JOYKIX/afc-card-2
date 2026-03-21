@@ -3,15 +3,6 @@ import { initCommon } from './common.js';
 import { BOOSTER_COST, loadProfileAlbum, saveAlbumDrops } from './lib/album-storage.js';
 import { buildCardCatalogStats, getCardWeight, getDropRates, getDuplicateSellValue, loadApprovedCards } from './lib/cards-catalog.js';
 
-const rarityPresentation = {
-  D: { label: 'Commune', flavor: 'Flux stable', accent: '#8aa0ff' },
-  C: { label: 'Peu commune', flavor: 'Signal brillant', accent: '#53ebff' },
-  B: { label: 'Rare', flavor: 'Impact énergique', accent: '#79f5be' },
-  A: { label: 'Épique', flavor: 'Aura premium', accent: '#ff73bb' },
-  S: { label: 'Légendaire', flavor: 'Explosion divine', accent: '#ffd969' },
-  Ω: { label: 'Mythique Ω', flavor: 'Distorsion cosmique', accent: '#c796ff' }
-};
-
 const pickWeightedCard = (cards, catalogStats) => {
   const totalWeight = cards.reduce((sum, card) => sum + getCardWeight(card, catalogStats), 0);
   if (totalWeight <= 0) return cards[0];
@@ -48,28 +39,10 @@ export const initBoosterPage = async () => {
   const boosterViewerSubtitle = document.getElementById('boosterViewerSubtitle');
   const boosterViewerRank = document.getElementById('boosterViewerRank');
   const closeBoosterViewerBtn = document.getElementById('closeBoosterViewer');
-  const boosterOpeningModal = document.getElementById('boosterOpeningModal');
-  const boosterOpeningDialog = document.getElementById('boosterOpeningDialog');
-  const boosterOpeningPack = document.getElementById('boosterOpeningPack');
-  const boosterOpeningStatus = document.getElementById('boosterOpeningStatus');
-  const boosterOpeningSpotlight = document.getElementById('boosterOpeningSpotlight');
-  const boosterOpeningSpotlightRank = document.getElementById('boosterOpeningSpotlightRank');
-  const boosterOpeningSpotlightLabel = document.getElementById('boosterOpeningSpotlightLabel');
-  const boosterOpeningSpotlightText = document.getElementById('boosterOpeningSpotlightText');
-  const boosterRarityTrack = document.getElementById('boosterRarityTrack');
-  const closeBoosterOpeningBtn = document.getElementById('closeBoosterOpening');
   let currentUser = null;
   let currentCoins = 50;
   let boosterEntries = [];
   let openingTimeouts = [];
-  let boosterOpeningCanClose = true;
-
-  const handleCloseOpeningModal = () => closeOpeningModal();
-  const syncBodyModalState = () => {
-    const hasViewerOpen = Boolean(boosterViewer && !boosterViewer.hidden);
-    const hasOpeningModalOpen = Boolean(boosterOpeningModal && !boosterOpeningModal.hidden);
-    document.body.classList.toggle('modal-open', hasViewerOpen || hasOpeningModalOpen);
-  };
 
   const handleBoosterError = (error, message = 'Impossible de charger les cartes.') => {
     console.error('Erreur booster :', error);
@@ -97,41 +70,7 @@ export const initBoosterPage = async () => {
   const closeViewer = () => {
     if (!boosterViewer || boosterViewer.hidden) return;
     boosterViewer.hidden = true;
-    syncBodyModalState();
-  };
-
-  const closeOpeningModal = ({ force = false } = {}) => {
-    if (!boosterOpeningModal || boosterOpeningModal.hidden) return;
-    if (!force && !boosterOpeningCanClose) return;
-
-    boosterOpeningModal.hidden = true;
-    boosterOpeningDialog?.classList.remove('is-animating', 'is-revealed');
-    boosterOpeningPack?.classList.remove('is-pulsing', 'is-opening');
-    boosterOpeningStatus?.removeAttribute('data-rank');
-    boosterOpeningSpotlight?.removeAttribute('data-rank');
-    boosterRarityTrack?.classList.remove('is-reveal-phase');
-    syncBodyModalState();
-  };
-
-  const showOpeningModal = () => {
-    if (!boosterOpeningModal || !boosterOpeningDialog) return;
-    boosterOpeningCanClose = false;
-    boosterOpeningModal.hidden = false;
-    boosterOpeningDialog.classList.add('is-animating');
-    boosterOpeningDialog.classList.remove('is-revealed');
-    boosterOpeningPack?.classList.add('is-pulsing');
-    boosterRarityTrack?.classList.remove('is-reveal-phase');
-    syncBodyModalState();
-  };
-
-  const updateSpotlight = (rank = 'D', description = '') => {
-    const presentation = rarityPresentation[rank] || rarityPresentation.D;
-
-    if (boosterOpeningStatus) boosterOpeningStatus.dataset.rank = rank;
-    if (boosterOpeningSpotlight) boosterOpeningSpotlight.dataset.rank = rank;
-    if (boosterOpeningSpotlightRank) boosterOpeningSpotlightRank.textContent = rank;
-    if (boosterOpeningSpotlightLabel) boosterOpeningSpotlightLabel.textContent = presentation.label;
-    if (boosterOpeningSpotlightText) boosterOpeningSpotlightText.textContent = description || presentation.flavor;
+    document.body.classList.remove('modal-open');
   };
 
   const openViewer = (index) => {
@@ -145,14 +84,13 @@ export const initBoosterPage = async () => {
     boosterViewerRank.textContent = `Rang ${card.rank}`;
     boosterViewerMedia.className = `card-viewer__media rank-${card.rank}`;
     boosterViewer.hidden = false;
-    syncBodyModalState();
+    document.body.classList.add('modal-open');
   };
 
   const resetBoosterStage = (message) => {
     clearOpeningTimers();
     boosterEntries = [];
     closeViewer();
-    closeOpeningModal({ force: true });
     boosterStage?.classList.remove('is-opening', 'is-revealed');
     boosterPack?.classList.remove('is-opening', 'is-opened');
     boosterGrid.innerHTML = `<article class="booster-empty"><p>${escapeHtml(message)}</p></article>`;
@@ -210,100 +148,28 @@ export const initBoosterPage = async () => {
     });
   };
 
-  const renderOpeningTrack = (cards, soldDuplicates = []) => {
-    if (!boosterRarityTrack) return;
-
-    const soldIds = new Set(soldDuplicates.map((card) => String(card.uniqueId)));
-    boosterRarityTrack.innerHTML = '';
-
-    cards.forEach((card, index) => {
-      const presentation = rarityPresentation[card.rank] || rarityPresentation.D;
-      const isDuplicate = soldIds.has(String(card.uniqueId));
-      const item = document.createElement('article');
-      item.className = 'booster-opening-card';
-      item.dataset.rank = card.rank;
-      item.style.setProperty('--reveal-delay', `${index * 180}ms`);
-      item.innerHTML = `
-        <div class="booster-opening-card__rarity">
-          <span class="booster-opening-card__rarity-rank">${escapeHtml(card.rank)}</span>
-          <strong>${escapeHtml(presentation.label)}</strong>
-          <small>${escapeHtml(presentation.flavor)}</small>
-        </div>
-        <div class="booster-opening-card__reveal">
-          <span class="booster-opening-card__shine"></span>
-          <img src="${escapeHtml(card.cardCapture)}" alt="${escapeHtml(`Carte ${card.rank} de ${card.creatorName}`)}" loading="lazy">
-          <div class="booster-opening-card__meta">
-            <strong>${escapeHtml(card.cardName || card.name || card.creatorName)}</strong>
-            <small>${escapeHtml(formatCardNumber(card.cardNumber, 'Sans numéro'))} · ${escapeHtml(card.creatorName)}${isDuplicate ? ` · +${escapeHtml(String(card.sellValue))} coins` : ''}</small>
-          </div>
-        </div>
-      `;
-      boosterRarityTrack.appendChild(item);
-    });
-  };
-
-  const playOpeningSequence = (cards, soldDuplicates = []) => new Promise((resolve) => {
+  const playOpeningSequence = (cards, soldDuplicates = []) => {
     clearOpeningTimers();
-    renderOpeningTrack(cards, soldDuplicates);
-    showOpeningModal();
     boosterStage?.classList.remove('is-revealed');
     boosterStage?.classList.add('is-opening');
     boosterPack?.classList.remove('is-opened');
     boosterPack?.classList.add('is-opening');
     boosterGrid.innerHTML = '';
-    if (boosterOpeningStatus) {
-      boosterOpeningStatus.textContent = 'Calibrage du noyau booster...';
-    }
-    updateSpotlight('D', 'Analyse des fréquences en cours…');
 
     queueTimeout(() => {
       boosterPack?.classList.add('is-opened');
-      boosterOpeningPack?.classList.add('is-opening');
-      if (boosterOpeningStatus) {
-        boosterOpeningStatus.textContent = 'Compression d’énergie... attention au drop.';
-      }
-    }, 300);
-
-    cards.forEach((card, index) => {
-      queueTimeout(() => {
-        const currentCard = boosterRarityTrack?.children[index];
-        currentCard?.classList.add('is-rarity-visible');
-        updateSpotlight(card.rank, `${rarityPresentation[card.rank]?.label || `Rang ${card.rank}`} détecté pour la carte ${index + 1}.`);
-        if (boosterOpeningStatus) {
-          boosterOpeningStatus.textContent = `Signature ${card.rank} repérée · slot ${index + 1}/5`;
-        }
-      }, 850 + (index * 260));
-    });
+    }, 520);
 
     queueTimeout(() => {
-      boosterRarityTrack?.classList.add('is-reveal-phase');
-      boosterOpeningPack?.classList.remove('is-pulsing');
       renderBoosterCards(cards, soldDuplicates);
       boosterStage?.classList.add('is-revealed');
-      if (boosterOpeningStatus) {
-        boosterOpeningStatus.textContent = 'Révélation totale du booster.';
-      }
-    }, 2300);
-
-    cards.forEach((card, index) => {
-      queueTimeout(() => {
-        const currentCard = boosterRarityTrack?.children[index];
-        currentCard?.classList.add('is-card-visible');
-        updateSpotlight(card.rank, `${card.cardName || card.name || card.creatorName} sort du portail.`);
-      }, 2450 + (index * 220));
-    });
+    }, 880);
 
     queueTimeout(() => {
       boosterStage?.classList.remove('is-opening');
       boosterPack?.classList.remove('is-opening');
-      boosterOpeningDialog?.classList.add('is-revealed');
-      boosterOpeningCanClose = true;
-    }, 3600);
-
-    queueTimeout(() => {
-      resolve();
-    }, 3650);
-  });
+    }, 1700);
+  };
 
   const refreshProfileStats = async () => {
     if (!currentUser) {
@@ -359,7 +225,7 @@ export const initBoosterPage = async () => {
         return;
       }
 
-      await playOpeningSequence(pulls, outcome.soldDuplicates);
+      playOpeningSequence(pulls, outcome.soldDuplicates);
       setCoins(outcome.balance);
 
       const duplicateCount = outcome.soldDuplicates.length;
@@ -388,24 +254,15 @@ export const initBoosterPage = async () => {
   };
 
   const onKeyDown = (event) => {
-    if (event.key === 'Escape') {
-      closeViewer();
-      closeOpeningModal();
-    }
+    if (event.key === 'Escape') closeViewer();
   };
 
   openBoosterBtn?.addEventListener('click', openBooster);
   boosterGrid?.addEventListener('click', onBoosterGridClick);
   closeBoosterViewerBtn?.addEventListener('click', closeViewer);
-  closeBoosterOpeningBtn?.addEventListener('click', handleCloseOpeningModal);
   boosterViewer?.addEventListener('click', (event) => {
     if (event.target instanceof HTMLElement && event.target.hasAttribute('data-close-booster-viewer')) {
       closeViewer();
-    }
-  });
-  boosterOpeningModal?.addEventListener('click', (event) => {
-    if (event.target instanceof HTMLElement && event.target.hasAttribute('data-close-booster-opening')) {
-      handleCloseOpeningModal();
     }
   });
   document.addEventListener('keydown', onKeyDown);
@@ -431,11 +288,9 @@ export const initBoosterPage = async () => {
     cleanupCommon?.();
     clearOpeningTimers();
     closeViewer();
-    closeOpeningModal({ force: true });
     openBoosterBtn?.removeEventListener('click', openBooster);
     boosterGrid?.removeEventListener('click', onBoosterGridClick);
     closeBoosterViewerBtn?.removeEventListener('click', closeViewer);
-    closeBoosterOpeningBtn?.removeEventListener('click', handleCloseOpeningModal);
     document.removeEventListener('keydown', onKeyDown);
   };
 };
