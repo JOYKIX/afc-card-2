@@ -3366,6 +3366,10 @@ button.danger {
 }
 
 .auth-actions--topbar {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  flex-wrap: nowrap;
   min-height: auto;
   min-width: 220px;
   padding: 0;
@@ -3376,14 +3380,18 @@ button.danger {
 
 .auth-actions__buttons--inline {
   display: flex;
+  flex: 0 0 auto;
+  align-items: stretch;
   gap: 0.5rem;
 }
 
 .auth-actions__buttons--inline button {
   min-width: 140px;
+  height: 100%;
 }
 
 .auth-profile-link {
+  flex: 1 1 auto;
   min-width: 0;
   min-height: 56px;
   padding: 0.7rem 0.9rem;
@@ -3438,9 +3446,11 @@ button.danger {
   .auth-actions--topbar {
     width: 100%;
     min-width: 0;
+    flex-wrap: wrap;
   }
 
   .auth-profile-link,
+  .auth-actions__buttons--inline,
   .auth-actions__buttons--inline button {
     width: 100%;
   }
