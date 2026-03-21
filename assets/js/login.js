@@ -1,5 +1,6 @@
-import { claimNickname, db, get, normalizeNickname, ref, update, updateCachedNickname } from './firebase.js';
+import { claimNickname, db, getProfile, normalizeNickname, ref, update, updateCachedNickname } from './firebase.js';
 import { getRedirectTarget, initCommon, navigateTo } from './common.js';
+import { getProfilePath } from './lib/firebase-paths.js';
 
 export const initLoginPage = async () => {
   const loginState = document.getElementById('loginState');
@@ -21,8 +22,7 @@ export const initLoginPage = async () => {
 
   const loadProfile = async (uid) => {
     try {
-      const snapshot = await get(ref(db, `profiles/${uid}`));
-      return snapshot.exists() ? snapshot.val() || {} : {};
+      return await getProfile(uid);
     } catch (error) {
       console.error('Erreur lors du chargement du profil :', error);
       throw new Error('Impossible de charger ton profil pour le moment. Vérifie ta connexion puis recharge la page.');
@@ -49,7 +49,7 @@ export const initLoginPage = async () => {
         previousNicknameKey: currentProfile.nicknameKey || ''
       });
 
-      await update(ref(db, `profiles/${currentUser.uid}`), {
+      await update(ref(db, getProfilePath(currentUser.uid)), {
         nickname: claim.nickname,
         nicknameKey: claim.nicknameKey,
         updatedAt: Date.now()

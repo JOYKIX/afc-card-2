@@ -31,7 +31,19 @@ import {
   normalizeCardRecord,
   normalizeOwnedCards
 } from './lib/card-data.js';
-import { USER_ADMIN_ENTRIES_PATH, normalizeCardCreationLimit } from './lib/user-admin.js';
+import {
+  CARDS_PATH,
+  CARD_VERIFICATION_PATH,
+  PROFILES_PATH,
+  getCardsPath,
+  getCardVerificationPath,
+  getNicknameIndexPath,
+  getProfileOwnedCardFieldPath,
+  getProfileOwnedCardPath,
+  getProfilePath,
+  getUserAdminEntryPath
+} from './lib/firebase-paths.js';
+import { normalizeCardCreationLimit } from './lib/user-admin.js';
 
 let adminNotice;
 let tinderReview;
@@ -330,12 +342,12 @@ const syncOwnershipForCard = async ({ cardId, cardNumber, removeOwnership = fals
     if (!ownedCards[cardId]) return;
 
     if (removeOwnership) {
-      updates[`profiles/${uid}/ownedCards/${cardId}`] = null;
+      updates[getProfileOwnedCardPath(uid, cardId)] = null;
       return;
     }
 
-    updates[`profiles/${uid}/ownedCards/${cardId}/cardNumber`] = normalizeCardNumber(cardNumber);
-    updates[`profiles/${uid}/ownedCards/${cardId}/updatedAt`] = Date.now();
+    updates[getProfileOwnedCardFieldPath(uid, cardId, 'cardNumber')] = normalizeCardNumber(cardNumber);
+    updates[getProfileOwnedCardFieldPath(uid, cardId, 'updatedAt')] = Date.now();
   });
 
   if (Object.keys(updates).length > 0) {
@@ -344,7 +356,7 @@ const syncOwnershipForCard = async ({ cardId, cardNumber, removeOwnership = fals
 };
 
 const moveApprovedCardToCollection = async (current, now) => {
-  const approvedCardRef = push(ref(db, 'cards'));
+  const approvedCardRef = push(ref(db, CARDS_PATH));
   const cardId = approvedCardRef.key;
   const cardNumber = await reserveLowestAvailableCardNumber();
   const approvedPayload = normalizeCardRecord({
@@ -377,17 +389,17 @@ const moveApprovedCardToCollection = async (current, now) => {
 
   await set(approvedCardRef, approvedPayload);
   await finalizeReservedCardNumber(cardNumber, cardId);
-  await remove(ref(db, `cardVerification/${current.verificationId}`));
+  await remove(ref(db, getCardVerificationPath(current.verificationId)));
 };
 
 const resetOwnerRerollsOnRejection = async (ownerUid) => {
   if (!ownerUid) return;
 
-  const profileSnapshot = await get(ref(db, `profiles/${ownerUid}`));
+  const profileSnapshot = await get(ref(db, getProfilePath(ownerUid)));
   const profileData = profileSnapshot.exists() ? profileSnapshot.val() || {} : {};
   const nextRoles = normalizeRoles(profileData.roles, profileData);
 
-  await update(ref(db, `profiles/${ownerUid}`), {
+  await update(ref(db, getProfilePath(ownerUid)), {
     remainingStatRerolls: normalizeRemainingStatRerolls(null, nextRoles),
     updatedAt: Date.now()
   });
@@ -410,7 +422,7 @@ const moderateCurrentCard = async (status) => {
       await moveApprovedCardToCollection(current, now);
     } else {
       await resetOwnerRerollsOnRejection(current.entry.ownerUid || current.card.ownerUid);
-      await remove(ref(db, `cardVerification/${current.verificationId}`));
+      await remove(ref(db, getCardVerificationPath(current.verificationId)));
     }
   } catch (error) {
     console.error('Erreur de modération :', error);
@@ -529,7 +541,7 @@ const updateManagedCardNumber = async (cardId, nextValue) => {
   renderManagedCards();
 
   try {
-    await update(ref(db, `cards/${cardId}`), {
+    await update(ref(db, getCardsPath(cardId)), {
       cardNumber: nextNumber,
       updatedAt: Date.now(),
       moderatedBy: currentUser?.uid || ''
@@ -563,7 +575,7 @@ const deleteManagedCard = async (cardId) => {
   renderManagedCards();
 
   try {
-    await remove(ref(db, `cards/${cardId}`));
+    await remove(ref(db, getCardsPath(cardId)));
     await releaseCardNumber(card.cardNumber);
     await syncOwnershipForCard({ cardId, cardNumber: null, removeOwnership: true });
   } catch (error) {
@@ -579,7 +591,7 @@ const bindRealtime = () => {
   if (unsubs.length > 0) return;
 
   unsubs.push(
-    onValue(ref(db, 'cards'), (snapshot) => {
+    onValue(ref(db, CARDS_PATH), (snapshot) => {
       cardsById = snapshot.exists() ? snapshot.val() : {};
       refreshStats();
       renderTinderCard();
@@ -589,7 +601,7 @@ const bindRealtime = () => {
   );
 
   unsubs.push(
-    onValue(ref(db, 'cardVerification'), (snapshot) => {
+    onValue(ref(db, CARD_VERIFICATION_PATH), (snapshot) => {
       verificationById = snapshot.exists() ? snapshot.val() : {};
       refreshStats();
       buildPendingQueue();
@@ -599,7 +611,7 @@ const bindRealtime = () => {
   );
 
   unsubs.push(
-    onValue(ref(db, 'profiles'), (snapshot) => {
+    onValue(ref(db, PROFILES_PATH), (snapshot) => {
       profilesByUid = snapshot.exists() ? snapshot.val() : {};
       refreshStats();
       renderManagedCards();
@@ -611,14 +623,14 @@ const findProfileByNickname = async (nickname) => {
   const nicknameKey = nicknameToKey(nickname);
   if (!nicknameKey) return null;
 
-  const nicknameSnapshot = await get(ref(db, `nicknameIndex/${nicknameKey}`));
+  const nicknameSnapshot = await get(ref(db, getNicknameIndexPath(nicknameKey)));
   if (nicknameSnapshot.exists()) {
     const uid = nicknameSnapshot.val();
-    const profileSnapshot = await get(ref(db, `profiles/${uid}`));
+    const profileSnapshot = await get(ref(db, getProfilePath(uid)));
     return profileSnapshot.exists() ? { uid, profile: profileSnapshot.val() || {} } : null;
   }
 
-  const profileQuery = query(ref(db, 'profiles'), orderByChild('nicknameKey'), equalTo(nicknameKey));
+  const profileQuery = query(ref(db, PROFILES_PATH), orderByChild('nicknameKey'), equalTo(nicknameKey));
   const snapshot = await get(profileQuery);
   if (!snapshot.exists()) return null;
 
@@ -629,7 +641,7 @@ const findProfileByNickname = async (nickname) => {
 const loadAccountEntry = async (uid) => {
   if (!uid) return {};
 
-  const snapshot = await get(ref(db, `${USER_ADMIN_ENTRIES_PATH}/${uid}`));
+  const snapshot = await get(ref(db, getUserAdminEntryPath(uid)));
   return snapshot.exists() ? snapshot.val() || {} : {};
 };
 
@@ -682,7 +694,7 @@ export const initAdminPage = async () => {
         return;
       }
 
-      await update(ref(db, `profiles/${profileEntry.uid}`), {
+      await update(ref(db, getProfilePath(profileEntry.uid)), {
         roles: nextRoles,
         admin: null,
         vip: null,
@@ -742,7 +754,7 @@ export const initAdminPage = async () => {
       const nextCoins = Math.max(0, Math.floor((Number(profile.coins) || 0) + coinsDelta));
       const nextRerolls = Math.max(0, Math.floor((Number(profile.remainingStatRerolls) || 0) + rerollsDelta));
 
-      await update(ref(db, `profiles/${profileEntry.uid}`), {
+      await update(ref(db, getProfilePath(profileEntry.uid)), {
         coins: nextCoins,
         remainingStatRerolls: nextRerolls,
         updatedAt: now
@@ -752,7 +764,7 @@ export const initAdminPage = async () => {
         const accountEntry = await loadAccountEntry(profileEntry.uid);
         const normalizedLimit = normalizeCardCreationLimit(parsedCardCreationLimit, 1);
 
-        await update(ref(db, `${USER_ADMIN_ENTRIES_PATH}/${profileEntry.uid}`), {
+        await update(ref(db, getUserAdminEntryPath(profileEntry.uid)), {
           ...accountEntry,
           cardCreationLimit: normalizedLimit,
           updatedAt: now

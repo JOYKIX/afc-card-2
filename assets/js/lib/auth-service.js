@@ -1,6 +1,7 @@
 import { checkAuthFast, clearAuthCache, loadAuthCache, saveAuthCache } from './auth-cache.js';
 import { DEPLOYED_HOSTS } from './firebase-config.js';
 import { auth, authRuntimeState, db, provider } from './firebase-core.js';
+import { getNicknameIndexPath, getProfilePath } from './firebase-paths.js';
 import { nicknameToKey, normalizeEmail, normalizeNickname } from './format.js';
 import { canAccessAdmin, normalizeRemainingStatRerolls, normalizeRoles, userHasRole } from './roles.js';
 import {
@@ -151,7 +152,7 @@ const consumeRedirect = async () => {
 
 const getProfile = async (uid) => {
   if (!uid) return {};
-  const snapshot = await get(ref(db, `profiles/${uid}`));
+  const snapshot = await get(ref(db, getProfilePath(uid)));
   if (!snapshot.exists()) return {};
 
   const profile = snapshot.val() || {};
@@ -174,7 +175,7 @@ const claimNickname = async ({ uid, nickname, previousNicknameKey = '' }) => {
   if (!uid) throw new Error('missing-uid');
   if (!nicknameKey) throw new Error('missing-nickname');
 
-  const nicknameIndexRef = ref(db, `nicknameIndex/${nicknameKey}`);
+  const nicknameIndexRef = ref(db, getNicknameIndexPath(nicknameKey));
   const result = await runTransaction(nicknameIndexRef, (currentValue) => {
     if (currentValue === null || currentValue === uid) {
       return uid;
@@ -187,7 +188,7 @@ const claimNickname = async ({ uid, nickname, previousNicknameKey = '' }) => {
   }
 
   if (previousKey && previousKey !== nicknameKey) {
-    const previousRef = ref(db, `nicknameIndex/${previousKey}`);
+    const previousRef = ref(db, getNicknameIndexPath(previousKey));
     const previousSnapshot = await get(previousRef);
     if (previousSnapshot.exists() && previousSnapshot.val() === uid) {
       await remove(previousRef);
@@ -218,7 +219,7 @@ const getFirebaseTokenSnapshot = async (user) => {
 const syncProfileOnLogin = async (user) => {
   if (!user?.uid) return null;
 
-  const profileRef = ref(db, `profiles/${user.uid}`);
+  const profileRef = ref(db, getProfilePath(user.uid));
   const existingProfile = await getProfile(user.uid);
   const email = normalizeEmail(user.email || '');
   const nickname = normalizeNickname(existingProfile.nickname || '');

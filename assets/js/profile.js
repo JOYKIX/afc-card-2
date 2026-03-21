@@ -1,6 +1,7 @@
-import { claimNickname, db, get, normalizeNickname, ref, update, updateCachedNickname } from './firebase.js';
+import { claimNickname, db, getProfile, normalizeNickname, ref, update, updateCachedNickname } from './firebase.js';
 import { initCommon } from './common.js';
 import { DAILY_LOGIN_REWARD, INITIAL_COINS, loadProfileAlbum } from './lib/album-storage.js';
+import { getProfilePath } from './lib/firebase-paths.js';
 
 export const initProfilePage = async () => {
   const nicknameInput = document.getElementById('nickname');
@@ -35,10 +36,9 @@ export const initProfilePage = async () => {
 
   const refreshProfile = async (uid) => {
     try {
-      const profileSnapshot = await get(ref(db, `profiles/${uid}`));
-      currentProfile = profileSnapshot.exists() ? profileSnapshot.val() || {} : {};
+      currentProfile = await getProfile(uid);
 
-      if (!profileSnapshot.exists()) {
+      if (!currentProfile || Object.keys(currentProfile).length === 0) {
         nicknameInput.value = '';
         await updateEconomyWidgets(uid);
         profileHint.textContent = 'Aucun pseudo enregistré pour le moment.';
@@ -75,7 +75,7 @@ export const initProfilePage = async () => {
         previousNicknameKey: currentProfile.nicknameKey || ''
       });
 
-      await update(ref(db, `profiles/${currentUser.uid}`), {
+      await update(ref(db, getProfilePath(currentUser.uid)), {
         nickname: claim.nickname,
         nicknameKey: claim.nicknameKey,
         email: (currentUser.email || '').trim().toLowerCase(),
