@@ -155,7 +155,6 @@ export const initBoosterPage = async () => {
         <span class="booster-capture__veil" aria-hidden="true">
           <span class="booster-capture__signal">Aura détectée</span>
           <strong class="booster-capture__teaser-rank">Rang ${escapeHtml(card.rank)}</strong>
-          <span class="booster-capture__teaser-copy">La couleur apparaît avant la révélation…</span>
         </span>
         <span class="booster-capture__frame">
           <img src="${escapeHtml(card.cardCapture)}" alt="${escapeHtml(`Carte ${card.rank} de ${card.creatorName}`)}" loading="lazy">
