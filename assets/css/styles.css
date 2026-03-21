@@ -2552,8 +2552,9 @@ body {
 .managed-card__media .booster-placeholder {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 20px;
+  background: rgba(7, 4, 12, 0.88);
 }
 
 .managed-card__actions {
@@ -4869,6 +4870,201 @@ button {
   .hero-stats,
   .review-stats--hero,
   .booster-quick-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+:root {
+  --admin-review-card-width: min(100%, 460px);
+  --admin-review-preview-width: clamp(160px, 28vw, 220px);
+  --admin-managed-thumb-width: 132px;
+  --admin-managed-thumb-height: 188px;
+  --album-pocket-width: clamp(150px, 16vw, 182px);
+  --album-pocket-height: clamp(244px, 25vw, 288px);
+}
+
+.admin-main-panel--revamp {
+  background:
+    radial-gradient(circle at top left, rgba(255, 115, 187, 0.12), transparent 24%),
+    radial-gradient(circle at bottom right, rgba(83, 235, 255, 0.12), transparent 24%),
+    linear-gradient(180deg, rgba(25, 16, 38, 0.98), rgba(10, 7, 19, 0.98));
+}
+
+.admin-content-grid--revamp {
+  grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.78fr);
+  gap: 1.15rem;
+}
+
+.admin-focus--revamp,
+.role-manager,
+.admin-history-panel--revamp {
+  background:
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.06), transparent 30%),
+    linear-gradient(180deg, rgba(29, 19, 43, 0.94), rgba(14, 10, 24, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: var(--shadow-soft);
+}
+
+.admin-sidebar--revamp {
+  position: sticky;
+  top: 1rem;
+}
+
+.tinder-review--revamp {
+  min-height: auto;
+}
+
+.tinder-card {
+  width: var(--admin-review-card-width);
+  max-width: 100%;
+  margin-inline: auto;
+  gap: 1.1rem;
+  padding: clamp(1rem, 1.6vw, 1.25rem);
+}
+
+.tinder-image {
+  min-height: auto;
+  padding: clamp(0.85rem, 1.6vw, 1.15rem);
+}
+
+.tinder-image img,
+.tinder-image .booster-placeholder {
+  width: min(100%, var(--admin-review-preview-width));
+  max-width: var(--admin-review-preview-width);
+  height: auto;
+  aspect-ratio: 0.72;
+  margin-inline: auto;
+  border-radius: 18px;
+}
+
+.tinder-image .booster-placeholder {
+  min-height: var(--admin-managed-thumb-height);
+}
+
+.tinder-body {
+  gap: 0.45rem;
+}
+
+.tinder-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.pending-list--revamp {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.pending-item--visual {
+  grid-template-columns: 108px minmax(0, 1fr);
+  align-items: start;
+}
+
+.pending-thumb {
+  min-height: 150px;
+}
+
+.managed-card-list {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.managed-card {
+  grid-template-columns: var(--admin-managed-thumb-width) minmax(0, 1fr);
+  align-items: start;
+}
+
+.managed-card__media {
+  min-height: var(--admin-managed-thumb-height);
+  height: var(--admin-managed-thumb-height);
+}
+
+.album-binder__shell--deluxe {
+  min-height: auto;
+}
+
+.album-grid--binder {
+  min-height: auto;
+  grid-template-columns: repeat(3, var(--album-pocket-width));
+  grid-auto-rows: var(--album-pocket-height);
+  justify-content: center;
+  gap: 1rem;
+}
+
+.album-grid--binder .album-card,
+.album-grid--binder .album-card--filler {
+  width: var(--album-pocket-width);
+  min-width: var(--album-pocket-width);
+  max-width: var(--album-pocket-width);
+  min-height: var(--album-pocket-height);
+  max-height: var(--album-pocket-height);
+}
+
+.album-grid--binder .album-card {
+  height: var(--album-pocket-height);
+  padding: 0.7rem;
+  gap: 0.6rem;
+}
+
+.album-card__frame {
+  width: 100%;
+}
+
+.album-card__meta {
+  align-content: start;
+}
+
+.album-card__meta strong {
+  font-size: 0.88rem;
+}
+
+.album-card__meta small {
+  font-size: 0.78rem;
+}
+
+@media (max-width: 1180px) {
+  .admin-content-grid--revamp {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-sidebar--revamp {
+    position: static;
+  }
+
+  .album-grid--binder {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-auto-rows: auto;
+  }
+
+  .album-grid--binder .album-card,
+  .album-grid--binder .album-card--filler {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    height: auto;
+    min-height: var(--album-pocket-height);
+    max-height: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .tinder-card,
+  .managed-card {
+    width: 100%;
+    grid-template-columns: 1fr;
+  }
+
+  .tinder-actions,
+  .managed-card__actions {
+    grid-template-columns: 1fr;
+  }
+
+  .album-grid--binder {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .album-grid--binder {
     grid-template-columns: 1fr;
   }
 }
