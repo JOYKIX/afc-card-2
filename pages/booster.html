@@ -1,42 +1,66 @@
-<main class="single-layout single-layout--booster-revamp single-layout--booster-minimal">
-  <section class="panel glass panel--booster panel--booster-revamp">
-    <div class="panel-heading panel-heading--spread panel-heading--booster">
-      <div>
+<main class="single-layout single-layout--booster-revamp single-layout--booster-minimal booster-page-shell">
+  <section class="panel glass panel--booster panel--booster-revamp booster-hero-panel">
+    <div class="panel-heading panel-heading--spread panel-heading--booster booster-hero-panel__head">
+      <div class="page-intro page-intro--booster">
+        <span class="page-intro__eyebrow">Drop lab</span>
         <h2>Booster</h2>
+        <p class="page-intro__lede">Ouvre un pack premium de 5 cartes avec suspense, stats en direct et suivi instantané de ta collection.</p>
       </div>
-      <div class="hero-chips hero-chips--stacked">
-        <span id="catalogCount">0 carte validée</span>
-        <span id="boosterCoins">50 coins</span>
+      <div class="album-heading__stats album-heading__stats--revamp booster-hero-panel__stats">
+        <span id="catalogCount" class="section-pill">0 carte validée</span>
+        <span id="boosterCoins" class="section-pill section-pill--ghost">50 coins</span>
       </div>
     </div>
 
-    <div class="booster-dashboard booster-dashboard--minimal">
-      <aside class="booster-sidebar booster-sidebar--minimal">
-        <div class="hero-stats hero-stats--booster">
+    <div class="booster-dashboard booster-dashboard--minimal booster-dashboard--deluxe">
+      <aside class="booster-sidebar booster-sidebar--minimal booster-sidebar--deluxe">
+        <div class="hero-stats hero-stats--booster booster-quick-stats">
           <article class="glass-soft">
-            <strong>50 coins</strong>
-            <span>Le booster</span>
+            <strong id="boosterCostLabel">50 coins</strong>
+            <span>Coût du pack</span>
           </article>
           <article class="glass-soft">
             <strong>+50 / jour</strong>
             <span id="dailyRewardStatus">Connecte-toi pour tes coins quotidiens.</span>
           </article>
+          <article class="glass-soft">
+            <strong id="boosterCollectionProgress">0%</strong>
+            <span>Collection complétée</span>
+          </article>
+          <article class="glass-soft">
+            <strong id="boosterExpectedValue">0 coins</strong>
+            <span>Valeur moyenne des doublons</span>
+          </article>
         </div>
 
-        <div class="profile-card glass-soft booster-rates-card">
-          <h3>Taux</h3>
-          <ul id="dropRateList" class="feature-list feature-list--compact">
+        <div class="profile-card glass-soft booster-rates-card booster-info-card">
+          <div class="section-head-inline section-head-inline--stack-mobile">
+            <div>
+              <h3>Probabilités</h3>
+              <p class="section-subtitle">Répartition dynamique selon les cartes validées.</p>
+            </div>
+            <span class="section-pill section-pill--ghost">Live</span>
+          </div>
+          <ul id="dropRateList" class="feature-list feature-list--compact booster-rate-list">
             <li>Chargement...</li>
           </ul>
         </div>
       </aside>
 
-      <section class="booster-main-stage">
-        <div class="panel-heading panel-heading--spread panel-heading--compact-mobile">
-          <p id="boosterHint" class="hint">Prêt.</p>
-          <button id="openBooster" type="button">Ouvrir</button>
+      <section class="booster-main-stage booster-main-stage--deluxe">
+        <div class="glass-soft booster-command-panel">
+          <div class="booster-command-panel__copy">
+            <span class="page-intro__eyebrow">Séquence d'ouverture</span>
+            <h3>Pack AFC x5</h3>
+            <p id="boosterHint" class="hint">Prêt.</p>
+          </div>
+          <div class="booster-command-panel__actions">
+            <div class="booster-command-pill" id="boosterAvailability">En attente de synchronisation</div>
+            <button id="openBooster" type="button">Ouvrir maintenant</button>
+          </div>
         </div>
-        <section class="booster-stage booster-stage--revamp" id="boosterStage">
+
+        <section class="booster-stage booster-stage--revamp booster-stage--cinematic" id="boosterStage">
           <div class="booster-pack" id="boosterPack" aria-hidden="true">
             <div class="booster-pack__glow"></div>
             <div class="booster-pack__shell">
@@ -45,7 +69,31 @@
             </div>
             <div class="booster-pack__burst"></div>
           </div>
-          <section id="boosterGrid" class="booster-grid booster-grid--revamp"></section>
+          <section id="boosterGrid" class="booster-grid booster-grid--revamp" aria-live="polite"></section>
+        </section>
+
+        <section class="booster-session-grid" aria-label="Résumé de la dernière ouverture">
+          <article class="glass-soft booster-session-card booster-session-card--wide">
+            <span class="page-intro__eyebrow">Dernière session</span>
+            <strong id="boosterResultStatus">Aucun booster ouvert pour le moment.</strong>
+            <p id="boosterResultNote">Ouvre un pack pour voir le meilleur rang, les nouveaux drops et les doublons revendus.</p>
+          </article>
+          <article class="glass-soft booster-session-card">
+            <span>Meilleur rang</span>
+            <strong id="boosterResultBestRank">—</strong>
+          </article>
+          <article class="glass-soft booster-session-card">
+            <span>Nouvelles cartes</span>
+            <strong id="boosterResultNewCards">0</strong>
+          </article>
+          <article class="glass-soft booster-session-card">
+            <span>Doublons revendus</span>
+            <strong id="boosterResultDuplicates">0</strong>
+          </article>
+          <article class="glass-soft booster-session-card">
+            <span>Coins récupérés</span>
+            <strong id="boosterResultRefund">0</strong>
+          </article>
         </section>
       </section>
     </div>
