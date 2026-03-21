@@ -27,6 +27,7 @@ import {
 } from './firebase.js';
 import { initCommon } from './common.js';
 import { normalizeCardRecord } from './lib/card-data.js';
+import { loadUserAdminEntry } from './lib/user-admin.js';
 
 const CARD_DRAFT_STORAGE_KEY = 'afc-card-draft-v2';
 const CARD_DRAFT_STORAGE_VERSION = 1;
@@ -61,6 +62,7 @@ let renderEngineStatus;
 let cardElement;
 let rerollBadge;
 let rerollStatusText;
+let creatorQuotaText;
 let manualStatsBox;
 let manualAttackInput;
 let manualDefenseInput;
@@ -95,6 +97,8 @@ let portraitCropState = null;
 let portraitCropDragState = null;
 let verificationUnsubscribe = null;
 let pendingDraftSaveTimer = null;
+let currentCardCreationLimit = 1;
+let currentCreatedCardCount = 0;
 
 const getAverage = () => (attack + defense) / 2;
 
@@ -248,6 +252,25 @@ const setRenderStatus = (message, isError = false) => {
 const syncManualStatInputs = () => {
   if (manualAttackInput) manualAttackInput.value = String(attack);
   if (manualDefenseInput) manualDefenseInput.value = String(defense);
+};
+
+const formatCardCreationLimit = (value) => (value === Number.POSITIVE_INFINITY ? '∞' : String(value));
+
+const updateCreatorQuotaUi = () => {
+  if (!creatorQuotaText) return;
+
+  if (!currentUser) {
+    creatorQuotaText.textContent = 'Connecte-toi pour voir ton quota de création.';
+    return;
+  }
+
+  if (currentCardCreationLimit === Number.POSITIVE_INFINITY) {
+    creatorQuotaText.textContent = `Quota création : illimité · ${currentCreatedCardCount} carte${currentCreatedCardCount > 1 ? 's' : ''} déjà enregistrée${currentCreatedCardCount > 1 ? 's' : ''}.`;
+    return;
+  }
+
+  const remaining = Math.max(0, currentCardCreationLimit - currentCreatedCardCount);
+  creatorQuotaText.textContent = `Quota création : ${currentCreatedCardCount}/${currentCardCreationLimit} carte${currentCardCreationLimit > 1 ? 's' : ''} utilisée${currentCreatedCardCount > 1 ? 's' : ''} · ${remaining} restante${remaining > 1 ? 's' : ''}.`;
 };
 
 const syncPortraitActionUi = () => {
@@ -714,6 +737,19 @@ const refreshProfile = async (uid) => {
   updateRerollUi();
 };
 
+const countUserCreatedCards = async (uid) => {
+  if (!uid) return 0;
+
+  const [cardsSnapshot, verificationSnapshot] = await Promise.all([
+    get(query(ref(db, 'cards'), orderByChild('ownerUid'), equalTo(uid))),
+    get(query(ref(db, 'cardVerification'), orderByChild('ownerUid'), equalTo(uid)))
+  ]);
+
+  const approvedCount = cardsSnapshot.exists() ? Object.keys(cardsSnapshot.val() || {}).length : 0;
+  const pendingCount = verificationSnapshot.exists() ? Object.keys(verificationSnapshot.val() || {}).length : 0;
+  return approvedCount + pendingCount;
+};
+
 const getCardRecordSummary = (record) => {
   if (!record) return null;
 
@@ -813,6 +849,19 @@ const hasPendingVerification = async (uid) => {
 };
 
 const canSubmitCard = async (uid, roles) => {
+  const [createdCount, adminEntry] = await Promise.all([
+    countUserCreatedCards(uid),
+    loadUserAdminEntry(uid, roles)
+  ]);
+
+  currentCreatedCardCount = createdCount;
+  currentCardCreationLimit = adminEntry.cardCreationLimit;
+  updateCreatorQuotaUi();
+
+  if (currentCardCreationLimit !== Number.POSITIVE_INFINITY && createdCount >= currentCardCreationLimit) {
+    return false;
+  }
+
   if (getMaxPendingSubmissionsForRoles(roles) === Number.POSITIVE_INFINITY) return true;
   return !(await hasPendingVerification(uid));
 };
@@ -995,6 +1044,7 @@ const bindDomReferences = () => {
   cardElement = document.getElementById('afcCard');
   rerollBadge = document.getElementById('rerollBadge');
   rerollStatusText = document.getElementById('rerollStatusText');
+  creatorQuotaText = document.getElementById('creatorQuotaText');
   manualStatsBox = document.getElementById('manualStatsBox');
   manualAttackInput = document.getElementById('manualAttack');
   manualDefenseInput = document.getElementById('manualDefense');
@@ -1101,7 +1151,8 @@ export const initCreatePage = async () => {
     }
 
     if (!(await canSubmitCard(currentUser.uid, currentUserRoles))) {
-      alert('Compte African Army : une seule carte en attente autorisée. Attends la validation ou obtiens un rôle supérieur pour envoyer sans limite.');
+      const quotaLimit = formatCardCreationLimit(currentCardCreationLimit);
+      alert(`Quota atteint ou soumission bloquée. Compteur actuel : ${currentCreatedCardCount}/${quotaLimit}. Si tu es sur un rôle limité, attends la validation de la carte en cours ; sinon augmente le quota depuis l’admin.`);
       return;
     }
 
@@ -1121,6 +1172,9 @@ export const initCreatePage = async () => {
         updatedAt: payload.updatedAt,
         cardSnapshot: payload
       });
+
+      currentCreatedCardCount += 1;
+      updateCreatorQuotaUi();
 
       alert('Carte envoyée en attente de vérification.');
     } catch (error) {
@@ -1241,6 +1295,8 @@ export const initCreatePage = async () => {
         currentNickname = '';
         currentUserRoles = [...DEFAULT_USER_ROLES];
         remainingStatRerolls = DEFAULT_STAT_REROLLS;
+        currentCardCreationLimit = 1;
+        currentCreatedCardCount = 0;
         verificationStatusText.textContent = 'Connecte-toi pour voir le statut de ta carte.';
         if (verificationUnsubscribe) {
           verificationUnsubscribe();
@@ -1248,16 +1304,20 @@ export const initCreatePage = async () => {
         }
         syncAvailableTitles();
         updateRerollUi();
+        updateCreatorQuotaUi();
         return;
       }
 
       currentUserRoles = await getProfileRoles(user.uid);
       syncAvailableTitles();
       await refreshProfile(user.uid);
+      currentCreatedCardCount = await countUserCreatedCards(user.uid);
+      currentCardCreationLimit = (await loadUserAdminEntry(user.uid, currentUserRoles)).cardCreationLimit;
       watchVerificationStatus(user.uid);
       await ensureProfileRerollCount(user.uid);
       syncManualStatInputs();
       updateRerollUi();
+      updateCreatorQuotaUi();
     }
   });
 

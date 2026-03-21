@@ -31,6 +31,7 @@ import {
   normalizeCardRecord,
   normalizeOwnedCards
 } from './lib/card-data.js';
+import { USER_ADMIN_ENTRIES_PATH, normalizeCardCreationLimit } from './lib/user-admin.js';
 
 let adminNotice;
 let tinderReview;
@@ -44,6 +45,12 @@ let roleForm;
 let roleNickname;
 let roleFeedback;
 let roleCheckboxes = [];
+let accountCreditForm;
+let accountNickname;
+let coinsDeltaInput;
+let rerollsDeltaInput;
+let cardCreationLimitInput;
+let accountCreditFeedback;
 let managedCards;
 let managedSearchInput;
 let managedStats;
@@ -140,6 +147,12 @@ const setRoleFeedback = (message, isError = false) => {
   if (!roleFeedback) return;
   roleFeedback.textContent = message;
   roleFeedback.style.color = isError ? '#ff9eb7' : '';
+};
+
+const setAccountCreditFeedback = (message, isError = false) => {
+  if (!accountCreditFeedback) return;
+  accountCreditFeedback.textContent = message;
+  accountCreditFeedback.style.color = isError ? '#ff9eb7' : '';
 };
 
 const getSelectedRoles = () => normalizeRoles(roleCheckboxes.filter((checkbox) => checkbox.checked).map((checkbox) => checkbox.value));
@@ -613,6 +626,13 @@ const findProfileByNickname = async (nickname) => {
   return uid ? { uid, profile: profile || {} } : null;
 };
 
+const loadAccountEntry = async (uid) => {
+  if (!uid) return {};
+
+  const snapshot = await get(ref(db, `${USER_ADMIN_ENTRIES_PATH}/${uid}`));
+  return snapshot.exists() ? snapshot.val() || {} : {};
+};
+
 const bindDomReferences = () => {
   adminNotice = document.getElementById('adminNotice');
   tinderReview = document.getElementById('tinderReview');
@@ -626,6 +646,12 @@ const bindDomReferences = () => {
   roleNickname = document.getElementById('roleNickname');
   roleFeedback = document.getElementById('roleFeedback');
   roleCheckboxes = Array.from(document.querySelectorAll('input[name="roleOption"]'));
+  accountCreditForm = document.getElementById('accountCreditForm');
+  accountNickname = document.getElementById('accountNickname');
+  coinsDeltaInput = document.getElementById('coinsDelta');
+  rerollsDeltaInput = document.getElementById('rerollsDelta');
+  cardCreationLimitInput = document.getElementById('cardCreationLimit');
+  accountCreditFeedback = document.getElementById('accountCreditFeedback');
   managedCards = document.getElementById('managedCards');
   managedSearchInput = document.getElementById('managedSearchInput');
   managedStats = document.getElementById('managedStats');
@@ -676,7 +702,78 @@ export const initAdminPage = async () => {
     }
   };
 
+  const handleAccountCreditSubmit = async (event) => {
+    event.preventDefault();
+
+    const { authorized } = await requireLiveAdminAccess();
+    if (!authorized) return;
+
+    const nickname = normalizeNickname(accountNickname?.value || '');
+    const coinsDelta = Number.parseInt(coinsDeltaInput?.value || '0', 10) || 0;
+    const rerollsDelta = Number.parseInt(rerollsDeltaInput?.value || '0', 10) || 0;
+    const rawCardCreationLimit = String(cardCreationLimitInput?.value || '').trim();
+    const shouldUpdateCardLimit = rawCardCreationLimit !== '';
+    const parsedCardCreationLimit = shouldUpdateCardLimit ? Number.parseInt(rawCardCreationLimit, 10) : null;
+
+    if (!nickname) {
+      setAccountCreditFeedback('Merci de renseigner un nickname valide.', true);
+      return;
+    }
+
+    if (!coinsDelta && !rerollsDelta && !shouldUpdateCardLimit) {
+      setAccountCreditFeedback('Aucune modification détectée : ajoute des coins, des rerolls ou un quota cartes.', true);
+      return;
+    }
+
+    if (shouldUpdateCardLimit && (!Number.isInteger(parsedCardCreationLimit) || parsedCardCreationLimit < 1)) {
+      setAccountCreditFeedback('Le quota cartes doit être un nombre entier supérieur ou égal à 1.', true);
+      return;
+    }
+
+    try {
+      const profileEntry = await findProfileByNickname(nickname);
+      if (!profileEntry) {
+        setAccountCreditFeedback('Aucun profil trouvé avec ce nickname.', true);
+        return;
+      }
+
+      const now = Date.now();
+      const profile = profileEntry.profile || {};
+      const nextCoins = Math.max(0, Math.floor((Number(profile.coins) || 0) + coinsDelta));
+      const nextRerolls = Math.max(0, Math.floor((Number(profile.remainingStatRerolls) || 0) + rerollsDelta));
+
+      await update(ref(db, `profiles/${profileEntry.uid}`), {
+        coins: nextCoins,
+        remainingStatRerolls: nextRerolls,
+        updatedAt: now
+      });
+
+      if (shouldUpdateCardLimit) {
+        const accountEntry = await loadAccountEntry(profileEntry.uid);
+        const normalizedLimit = normalizeCardCreationLimit(parsedCardCreationLimit, 1);
+
+        await update(ref(db, `${USER_ADMIN_ENTRIES_PATH}/${profileEntry.uid}`), {
+          ...accountEntry,
+          cardCreationLimit: normalizedLimit,
+          updatedAt: now
+        });
+      }
+
+      accountCreditForm.reset();
+      if (coinsDeltaInput) coinsDeltaInput.value = '0';
+      if (rerollsDeltaInput) rerollsDeltaInput.value = '0';
+
+      setAccountCreditFeedback(
+        `${nickname} mis à jour : ${coinsDelta >= 0 ? '+' : ''}${coinsDelta} coins, ${rerollsDelta >= 0 ? '+' : ''}${rerollsDelta} rerolls${shouldUpdateCardLimit ? `, quota cartes = ${normalizeCardCreationLimit(parsedCardCreationLimit, 1)}` : ''}.`
+      );
+    } catch (error) {
+      console.error('Erreur de crédit admin :', error);
+      setAccountCreditFeedback('Impossible de mettre à jour ce compte pour le moment.', true);
+    }
+  };
+
   roleForm?.addEventListener('submit', handleRoleSubmit);
+  accountCreditForm?.addEventListener('submit', handleAccountCreditSubmit);
   statusFilter?.addEventListener('change', renderVerificationSection);
   searchInput?.addEventListener('input', renderVerificationSection);
   managedSearchInput?.addEventListener('input', renderManagedCards);
@@ -712,6 +809,7 @@ export const initAdminPage = async () => {
     cleanupCommon?.();
     clearRealtime();
     roleForm?.removeEventListener('submit', handleRoleSubmit);
+    accountCreditForm?.removeEventListener('submit', handleAccountCreditSubmit);
     statusFilter?.removeEventListener('change', renderVerificationSection);
     searchInput?.removeEventListener('input', renderVerificationSection);
     managedSearchInput?.removeEventListener('input', renderManagedCards);
