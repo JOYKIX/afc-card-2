@@ -8,7 +8,7 @@ const REVEAL_STEP_DELAY = 820;
 const PACK_CHARGE_DELAY = 720;
 const PACK_OPEN_DELAY = 1480;
 const PAUSE_BETWEEN_SIGNAL_AND_REVEAL = 1200;
-const FALLBACK_PROFILE = { droppedCardIds: [], coins: 50 };
+const FALLBACK_PROFILE = { droppedCardIds: [], ownedCards: {}, coins: 50 };
 
 const getSequenceDuration = (cardCount) => PACK_OPEN_DELAY + 220 + ((Math.max(0, cardCount - 1)) * SIGNAL_STEP_DELAY) + PAUSE_BETWEEN_SIGNAL_AND_REVEAL + (cardCount * REVEAL_STEP_DELAY);
 
@@ -285,7 +285,10 @@ export const initBoosterPage = async () => {
   };
 
   const updateCollectionSummary = () => {
-    const ownedCount = new Set(latestProfileAlbum.droppedCardIds || []).size;
+    const ownedCount = new Set([
+      ...(latestProfileAlbum.droppedCardIds || []),
+      ...Object.keys(latestProfileAlbum.ownedCards || {})
+    ]).size;
     const totalCards = approvedCards.length;
     const completion = totalCards ? Math.round((ownedCount / totalCards) * 100) : 0;
 
@@ -396,6 +399,7 @@ export const initBoosterPage = async () => {
       setCoins(outcome.balance);
       latestProfileAlbum = {
         droppedCardIds: outcome.droppedCardIds,
+        ownedCards: outcome.ownedCards,
         coins: outcome.balance
       };
       updateCollectionSummary();

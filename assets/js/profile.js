@@ -25,7 +25,10 @@ export const initProfilePage = async () => {
     if (profileCoins) profileCoins.textContent = `${profileAlbum.coins} coin${profileAlbum.coins > 1 ? 's' : ''}`;
     if (profileDaily) profileDaily.textContent = `Connexion du jour : +${DAILY_LOGIN_REWARD} coins`;
     if (profileDrops) {
-      const uniqueDrops = new Set(profileAlbum.droppedCardIds).size;
+      const uniqueDrops = new Set([
+        ...(profileAlbum.droppedCardIds || []),
+        ...Object.keys(profileAlbum.ownedCards || {})
+      ]).size;
       profileDrops.textContent = `${uniqueDrops} carte${uniqueDrops > 1 ? 's' : ''} unique${uniqueDrops > 1 ? 's' : ''}`;
     }
   };

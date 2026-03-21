@@ -1,4 +1,5 @@
-import { db, get, normalizeCardNumber, normalizeRank, ref } from '../firebase.js';
+import { db, get, ref } from '../firebase.js';
+import { normalizeCardRecord as normalizeCatalogCardRecord } from './card-data.js';
 
 const rarityRanks = ['D', 'C', 'B', 'A', 'S', 'Ω'];
 const TARGET_RANK_CARD_COUNT = 10;
@@ -35,21 +36,7 @@ const rarityPriceConfig = {
   Ω: { basePrice: 28, targetDrop: 0.01, targetCount: TARGET_RANK_CARD_COUNT }
 };
 
-const normalizeCardRecord = ([id, record]) => {
-  const cardNumber = normalizeCardNumber(record?.cardNumber ?? record?.cardId);
-
-  return {
-    id,
-    cardNumber,
-    uniqueId: cardNumber || id,
-    name: record?.name || record?.cardName || '',
-    cardName: record?.cardName || record?.name || '',
-    rank: normalizeRank(record?.rank || record?.rarity),
-    creatorName: record?.creatorName || record?.createdBy || record?.ownerNickname || 'Créateur inconnu',
-    cardCapture: record?.cardCapture || record?.cardImage || record?.image || '',
-    createdAt: record?.createdAt || record?.submittedAt || 0
-  };
-};
+const normalizeCardRecord = ([id, record]) => normalizeCatalogCardRecord(record, id);
 
 const getCardWeight = (card = {}, catalogStats = null) => {
   const rank = normalizeRank(card?.rank);

@@ -2522,6 +2522,65 @@ body {
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 }
 
+.managed-card-list,
+.managed-card__body,
+.managed-card__actions,
+.card-audit-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.managed-card-list {
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
+.managed-card {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 180px) minmax(0, 1fr);
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(10, 16, 39, 0.72);
+  border-radius: 24px;
+}
+
+.managed-card__media {
+  min-height: 220px;
+}
+
+.managed-card__media img,
+.managed-card__media .booster-placeholder {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 20px;
+}
+
+.managed-card__actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.card-audit-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+}
+
+.card-audit-list div {
+  padding: 0.6rem 0.75rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.card-audit-list dt {
+  font-size: 0.78rem;
+  opacity: 0.7;
+}
+
+.card-audit-list dd {
+  margin: 0.15rem 0 0;
+  font-weight: 600;
+}
+
 .tinder-card,
 .pending-item--visual,
 .booster-capture,
@@ -2570,6 +2629,12 @@ select {
   .auth-actions__buttons--inline,
   .actions--editor,
   .toolbar--revamp {
+    grid-template-columns: 1fr;
+  }
+
+  .managed-card,
+  .managed-card__actions,
+  .card-audit-list {
     grid-template-columns: 1fr;
   }
 
