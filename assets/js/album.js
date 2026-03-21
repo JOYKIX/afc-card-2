@@ -1,12 +1,13 @@
 import { escapeHtml, formatCardNumber, normalizeCardNumber } from './firebase.js';
 import { initCommon } from './common.js';
 import { loadAlbum } from './lib/album-storage.js';
-import { loadApprovedCards } from './lib/cards-catalog.js';
+import { loadApprovedCards, rarityRanks } from './lib/cards-catalog.js';
 
 const CARDS_PER_PAGE = 9;
 const PAGE_TURN_ANIMATION_MS = 560;
 
 const getDisplayName = (card = {}) => card.cardName || card.name || card.creatorName || 'Carte';
+const rankOrder = Object.fromEntries(rarityRanks.map((rank, index) => [rank, index]));
 
 const buildAlbumSlots = (catalog = [], ownedEntries = []) => {
   const ownedById = new Map(ownedEntries.map((entry) => [String(entry.uniqueId), entry]));
@@ -37,6 +38,22 @@ const buildAlbumSlots = (catalog = [], ownedEntries = []) => {
     });
 };
 
+const sortAlbumEntries = (entries = []) => [...entries].sort((left, right) => {
+  if (left.owned !== right.owned) return left.owned ? -1 : 1;
+
+  const leftRank = rankOrder[left.rank] ?? -1;
+  const rightRank = rankOrder[right.rank] ?? -1;
+  if (leftRank !== rightRank) return rightRank - leftRank;
+
+  const leftNumber = normalizeCardNumber(left.cardNumber);
+  const rightNumber = normalizeCardNumber(right.cardNumber);
+  if (leftNumber && rightNumber) return leftNumber - rightNumber;
+  if (leftNumber) return -1;
+  if (rightNumber) return 1;
+
+  return getDisplayName(left).localeCompare(getDisplayName(right), 'fr');
+});
+
 export const initAlbumPage = async () => {
   const albumGrid = document.getElementById('albumGrid');
   const albumHint = document.getElementById('albumHint');
@@ -51,16 +68,30 @@ export const initAlbumPage = async () => {
   const albumViewerSubtitle = document.getElementById('albumViewerSubtitle');
   const albumViewerRank = document.getElementById('albumViewerRank');
   const closeAlbumViewerBtn = document.getElementById('closeAlbumViewer');
+  const albumCompletionPercent = document.getElementById('albumCompletionPercent');
+  const albumCompletionText = document.getElementById('albumCompletionText');
+  const albumCompletionBar = document.getElementById('albumCompletionBar');
+  const albumOwnedCount = document.getElementById('albumOwnedCount');
+  const albumMissingCount = document.getElementById('albumMissingCount');
+  const albumRecentCard = document.getElementById('albumRecentCard');
+  const albumSearch = document.getElementById('albumSearch');
+  const albumOwnershipFilter = document.getElementById('albumOwnershipFilter');
+  const albumRankFilter = document.getElementById('albumRankFilter');
+  const albumFilterSummary = document.getElementById('albumFilterSummary');
+
+  let allAlbumEntries = [];
   let albumEntries = [];
   let currentPage = 0;
   let totalPages = 1;
   let pageTurnTimer = null;
+  let currentFilters = { search: '', ownership: 'all', rank: 'all' };
 
   const handleAlbumError = (error, message = 'Impossible de charger l’album.') => {
     console.error('Erreur album :', error);
     renderEmpty(message);
     setHint(message, true);
     if (albumCount) albumCount.textContent = '0 / 0 carte';
+    updateOverviewStats({ ownedCount: 0, totalCount: 0 });
   };
 
   const setHint = (message, isError = false) => {
@@ -85,6 +116,25 @@ export const initAlbumPage = async () => {
 
     if (albumPrevPage) albumPrevPage.disabled = currentPage <= 0;
     if (albumNextPage) albumNextPage.disabled = currentPage >= totalPages - 1;
+  };
+
+  const updateOverviewStats = ({ ownedCount = 0, totalCount = 0 } = {}) => {
+    const missingCount = Math.max(0, totalCount - ownedCount);
+    const completion = totalCount ? Math.round((ownedCount / totalCount) * 100) : 0;
+    const mostRecentOwned = [...allAlbumEntries]
+      .filter((entry) => entry.owned)
+      .sort((left, right) => (Number(right.droppedAt) || 0) - (Number(left.droppedAt) || 0))[0];
+
+    if (albumCompletionPercent) albumCompletionPercent.textContent = `${completion}%`;
+    if (albumCompletionText) {
+      albumCompletionText.textContent = totalCount
+        ? `${ownedCount} carte${ownedCount > 1 ? 's' : ''} obtenue${ownedCount > 1 ? 's' : ''} sur ${totalCount}.`
+        : 'Aucune carte synchronisée pour le moment.';
+    }
+    if (albumCompletionBar) albumCompletionBar.style.width = `${completion}%`;
+    if (albumOwnedCount) albumOwnedCount.textContent = String(ownedCount);
+    if (albumMissingCount) albumMissingCount.textContent = String(missingCount);
+    if (albumRecentCard) albumRecentCard.textContent = mostRecentOwned ? getDisplayName(mostRecentOwned) : '—';
   };
 
   const openViewer = (index) => {
@@ -113,12 +163,25 @@ export const initAlbumPage = async () => {
     }, PAGE_TURN_ANIMATION_MS);
   };
 
+  const updateFilterSummary = () => {
+    if (!albumFilterSummary) return;
+
+    const labels = [];
+    if (currentFilters.ownership === 'owned') labels.push('obtenues');
+    if (currentFilters.ownership === 'missing') labels.push('manquantes');
+    if (currentFilters.rank !== 'all') labels.push(`rang ${currentFilters.rank}`);
+    if (currentFilters.search) labels.push(`"${currentFilters.search}"`);
+
+    albumFilterSummary.textContent = `${albumEntries.length} carte${albumEntries.length > 1 ? 's' : ''} affichée${albumEntries.length > 1 ? 's' : ''}${labels.length ? ` · ${labels.join(' · ')}` : ''}`;
+  };
+
   const renderEmpty = (message) => {
     if (!albumGrid) return;
     albumGrid.innerHTML = `<article class="album-empty"><p>${escapeHtml(message)}</p></article>`;
     albumEntries = [];
     currentPage = 0;
     updatePaginationUi();
+    updateFilterSummary();
     closeViewer();
   };
 
@@ -126,6 +189,7 @@ export const initAlbumPage = async () => {
     if (!albumGrid) return;
 
     updatePaginationUi();
+    updateFilterSummary();
 
     const pageEntries = albumEntries.slice(currentPage * CARDS_PER_PAGE, (currentPage + 1) * CARDS_PER_PAGE);
     const pageMarkup = pageEntries.map((card, pageIndex) => {
@@ -150,7 +214,7 @@ export const initAlbumPage = async () => {
           <span class="album-card__meta">
             <span class="album-card__status">${card.owned ? 'Obtenue' : 'À découvrir'}</span>
             <strong>${escapeHtml(card.owned ? displayName : 'Nom masqué')}</strong>
-            <small>${escapeHtml(card.owned ? creatorName : 'Créateur masqué')}</small>
+            <small>${escapeHtml(card.owned ? `${creatorName} · rang ${card.rank}` : `Créateur masqué · rang ${card.rank}`)}</small>
           </span>
         </button>
       `;
@@ -163,9 +227,41 @@ export const initAlbumPage = async () => {
     albumGrid.innerHTML = pageMarkup.join('');
   };
 
+  const applyFilters = ({ preservePage = false } = {}) => {
+    const search = currentFilters.search.trim().toLowerCase();
+
+    albumEntries = sortAlbumEntries(allAlbumEntries.filter((card) => {
+      if (currentFilters.ownership === 'owned' && !card.owned) return false;
+      if (currentFilters.ownership === 'missing' && card.owned) return false;
+      if (currentFilters.rank !== 'all' && card.rank !== currentFilters.rank) return false;
+      if (!search) return true;
+
+      const haystack = [
+        getDisplayName(card),
+        card.creatorName,
+        formatCardNumber(card.cardNumber, ''),
+        card.rank,
+        card.uniqueId
+      ].join(' ').toLowerCase();
+
+      return haystack.includes(search);
+    }));
+
+    if (!preservePage) currentPage = 0;
+
+    if (!albumEntries.length) {
+      renderEmpty('Aucune carte ne correspond à ces filtres.');
+      setHint('Ajuste tes filtres pour voir plus de cartes.', true);
+      return;
+    }
+
+    renderCurrentPage();
+    setHint(`Collection triée et filtrée · ${albumEntries.length} résultat${albumEntries.length > 1 ? 's' : ''}.`);
+  };
+
   const renderAlbum = (entries = [], { ownedCount = 0, totalCount = 0, source = 'database' } = {}) => {
-    albumEntries = entries;
-    currentPage = 0;
+    allAlbumEntries = entries;
+    updateOverviewStats({ ownedCount, totalCount });
 
     if (albumCount) {
       albumCount.textContent = `${ownedCount} / ${totalCount} carte${totalCount > 1 ? 's' : ''}`;
@@ -177,10 +273,10 @@ export const initAlbumPage = async () => {
       return;
     }
 
-    renderCurrentPage();
+    applyFilters();
 
     const sourceMessage = source === 'local' ? ' · Cache local utilisé.' : '';
-    setHint(`Collection triée par numéro · ${ownedCount} carte${ownedCount > 1 ? 's' : ''} obtenue${ownedCount > 1 ? 's' : ''}${sourceMessage}`);
+    setHint(`Collection triée par progression et rareté · ${ownedCount} carte${ownedCount > 1 ? 's' : ''} obtenue${ownedCount > 1 ? 's' : ''}${sourceMessage}`);
   };
 
   const onAlbumGridClick = (event) => {
@@ -207,6 +303,21 @@ export const initAlbumPage = async () => {
     }
   });
 
+  albumSearch?.addEventListener('input', (event) => {
+    currentFilters.search = event.target.value || '';
+    applyFilters();
+  });
+
+  albumOwnershipFilter?.addEventListener('change', (event) => {
+    currentFilters.ownership = event.target.value || 'all';
+    applyFilters();
+  });
+
+  albumRankFilter?.addEventListener('change', (event) => {
+    currentFilters.rank = event.target.value || 'all';
+    applyFilters();
+  });
+
   const onKeyDown = (event) => {
     if (event.key === 'Escape') {
       closeViewer();
@@ -227,9 +338,11 @@ export const initAlbumPage = async () => {
     requireAuth: true,
     onUserChanged: async (user) => {
       if (!user) {
+        allAlbumEntries = [];
         renderEmpty('Connecte-toi pour consulter ton album.');
         setHint('Connexion requise.', true);
         if (albumCount) albumCount.textContent = '0 / 0 carte';
+        updateOverviewStats({ ownedCount: 0, totalCount: 0 });
         return;
       }
 
